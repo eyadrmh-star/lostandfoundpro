@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<!-- © 2025 Lost & Found Worldwide (L&F). All rights reserved. See LICENSE. -->
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Lost & Found Pro - Global Edition</title>
+    
+    <!-- Open Graph - فيسبوك، واتساب، تويتر، لينكدإن -->
+    <meta property="og:title" content="Lost & Found Pro - اعثر على ما فقدته">
+    <meta property="og:description" content="منصة عالمية للعثور على المفقودات. أبلغ عن مفقود أو موجود وتواصل مع الآخرين.">
+    <meta property="og:image" content="https://yourdomain.com/logo.png">
+    <meta property="og:url" content="https://yourdomain.com">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Lost & Found Worldwide (L&F)">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lost & Found Pro">
+    <meta name="twitter:description" content="منصة عالمية للعثور على المفقودات">
+    <meta name="twitter:image" content="https://yourdomain.com/logo.png">
+    
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Lost & Found Pro - Global Edition</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a237e">
+</head>
+<body>
+
+    <div class="lang-bar">
+        <span class="lang-bar-text">🌍 Lost & Found Pro v3.1</span>
+        <select id="langSelect" onchange="setLang(this.value)" style="padding:6px 12px;border-radius:20px;border:2px solid #fff;background:transparent;color:#fff;font-weight:bold;cursor:pointer;font-size:14px;">
+    <option value="en">🇬🇧 English</option>
+    <option value="ar">🇸🇦 العربية</option>
+    <option value="es">🇪🇸 Español</option>
+    <option value="fr">🇫🇷 Français</option>
+    <option value="zh">🇨🇳 中文</option>
+    <option value="it">🇮🇹 Italiano</option>
+    <option value="de">🇩🇪 Deutsch</option>
+</select>
+    </div>
+
+    <!-- ========== صفحة تسجيل الدخول ========== -->
+    <div id="loginPage">
+        <div class="login-hero" style="background-image: url('https://i.postimg.cc/nrHrRZnv/Chat-GPT-Image-May-6-2026-02-11-58-PM.png');"></div>
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-logo">🔍</div>
+                <h1 class="login-title" data-t="appName">Lost & Found Pro</h1>
+                <p class="login-subtitle" data-t="appSlogan">Find it, Report it, Get it back</p>
+                
+                <div id="publicMap" class="public-map"></div>
+                <p class="map-hint">🗺️ <span data-t="liveMap">Live global activity</span></p>
+                
+                <div class="input-icon-group"><span class="input-icon">📧</span><input type="text" id="loginEmail" class="modern-input" data-t="emailPhone" placeholder="Email or Phone"></div>
+                <div class="input-icon-group"><span class="input-icon">🔒</span><input type="password" id="loginPassword" class="modern-input" data-t="password" placeholder="Password"></div>
+                
+                <label class="remember-check"><input type="checkbox" id="rememberMe"><span data-t="rememberMe">Remember me</span></label>
+                
+                <button id="loginBtn" class="btn-primary" data-t="login">🔑 Login</button>
+                <button id="adminLoginBtn" class="btn-purple" data-t="adminLogin">🔐 Admin Login</button>
+                
+                <div class="divider"><span data-t="orContinue">or continue with</span></div>
+                
+                <div class="social-row">
+                    <button id="googleBtn" class="btn-social" onclick="firebaseGoogleLogin()"><span>G</span> <span data-t="googleAccount">Google Account</span></button>
+                    <button id="appleBtn" class="btn-social btn-apple"><span>🍎</span> <span data-t="appleId">Apple ID</span></button>
+                </div>
+                
+                <div class="recovery-counter">
+                    <span>🎉</span> <strong><span id="recoveryCount">0</span></strong> <span data-t="recoveredItems">items recovered so far!</span>
+                </div>
+                
+                <div class="quick-stats">
+                    <div class="quick-stat lost"><span class="quick-stat-icon">📦</span><span class="quick-stat-num" id="quickLostCount">0</span><span data-t="newLost">New Lost</span></div>
+                    <div class="quick-stat found"><span class="quick-stat-icon">✅</span><span class="quick-stat-num" id="quickFoundCount">0</span><span data-t="newFound">New Found</span></div>
+                    <div class="quick-stat match"><span class="quick-stat-icon">🎯</span><span class="quick-stat-num" id="quickMatchCount">0</span><span data-t="newMatch">New Match</span></div>
+                </div>
+                
+                <p class="register-link"><span data-t="newUser">New user?</span> <a href="#" id="showRegisterBtn" data-t="registerHere">Register here</a> <span class="approval-note" data-t="needsApproval">(needs admin approval)</span></p>
+                <p class="register-link" style="margin-top:2px; font-size:11px;">🔒 <a href="privacy.html" target="_blank" data-t="privacyPolicy">Privacy Policy</a></p>
+                <p class="register-link" style="margin-top:4px;">🏛️ <a href="#" id="showOrgRegisterBtn" data-t="forOrganizations">For Organizations</a></p>
+                
+                <div id="registerForm" style="display:none;">
+                    <input type="text" id="regName" class="modern-input" data-t="fullName" placeholder="Full Name">
+                    <input type="text" id="regEmail" class="modern-input" placeholder="Email or Phone">
+                    <input type="password" id="regPwd" class="modern-input" data-t="regPassword" placeholder="Password">
+                    <button id="submitRegisterBtn" class="btn-success" data-t="requestReg">Request Registration</button>
+                </div>
+                <div id="orgRegisterForm" style="display:none;">
+                    <input type="text" id="orgName" class="modern-input" data-t="orgName" placeholder="Organization Name">
+                    <select id="orgType" class="modern-select">
+                        <option value="police" data-t="police">Police</option>
+                        <option value="hospital" data-t="hospital">Hospital</option>
+                        <option value="hotel" data-t="hotel">Hotel</option>
+                        <option value="airport" data-t="airport">Airport</option>
+                        <option value="embassy" data-t="embassy">Embassy</option>
+                        <option value="school" data-t="school">School</option>
+                        <option value="company" data-t="company">Company</option>
+                        <option value="other" data-t="otherOrg">Other</option>
+                    </select>
+                    <input type="text" id="orgEmail" class="modern-input" data-t="orgEmail" placeholder="Organization Email">
+                    <input type="text" id="orgPhone" class="modern-input" data-t="orgPhone" placeholder="Organization Phone">
+                    <input type="password" id="orgPassword" class="modern-input" data-t="orgPassword" placeholder="Password">
+                    <button id="submitOrgRegisterBtn" class="btn-save" data-t="orgRegister">Register Organization</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== لوحة التحكم ========== -->
+    <div id="dashboardPage" class="hidden">
+        <div class="top-nav">
+            <div class="nav-brand">🌍 Lost & Found Pro</div>
+            <div class="nav-actions">
+                <span class="nav-user" id="dashboardUserName"></span>
+                <button class="btn-icon" id="dashboardNotificationsBtn" title="Notifications">🔔</button>
+                <button class="btn-icon" id="dashboardProfileBtn" title="Profile">👤</button>
+                <button class="btn-icon" id="dashboardDarkModeBtn" title="Dark Mode">🌙</button>
+                <button class="btn-sm" id="dashboardAddReportBtn" data-t="addNewReport">➕ Add New Report</button>
+                <button class="btn-sm btn-purple" id="dashboardAdminBtn" data-t="adminPanel">👑 Admin Panel</button>
+                <button class="btn-sm btn-red" id="dashboardLogoutBtn" data-t="logout">🚪 Logout</button>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="stats-cards">
+                <div class="stat-card lost"><div class="stat-card-icon">📦</div><div class="stat-card-info"><span class="stat-card-num" id="dashStatLostCount">0</span><span data-t="lostItems">Lost Items</span></div></div>
+                <div class="stat-card found"><div class="stat-card-icon">✅</div><div class="stat-card-info"><span class="stat-card-num" id="dashStatFoundCount">0</span><span data-t="foundItems">Found Items</span></div></div>
+                <div class="stat-card match"><div class="stat-card-icon">🎯</div><div class="stat-card-info"><span class="stat-card-num" id="dashStatMatchCount">0</span><span data-t="matchedItems">Matches</span></div></div>
+                <div class="stat-card today"><div class="stat-card-icon">📅</div><div class="stat-card-info"><span class="stat-card-num" id="dashTodayCount">0</span><span data-t="todayStats">Today's Reports</span></div></div>
+            </div>
+            
+            <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="dashboardGlobalSearch" class="modern-input" data-t="searchAll" placeholder="Search all reports..."><div id="dashboardSearchResults"></div></div>
+            <div id="dashboardMap" class="map-container"></div>
+            
+            <div class="filter-bar">
+                <select id="filterCategory" class="modern-select"><option value="all" data-t="all">All</option><option value="lost" data-t="lost">Lost</option><option value="found" data-t="found">Found</option><option value="match" data-t="match">Matches</option></select>
+                <select id="filterTime" class="modern-select"><option value="all">📅 All Time</option><option value="today">🕐 Today</option><option value="week">📆 This Week</option></select>
+                <select id="filterCountry" class="modern-select"><option value="" data-t="allCountries">All Countries</option></select>
+                <select id="filterCity" class="modern-select"><option value="" data-t="allCities">All Cities</option></select>
+                <button id="resetFiltersBtn" class="btn-sm btn-gray" data-t="resetFilters">Reset Filters</button>
+                <button id="nearMeBtn" class="btn-sm btn-teal">📍 NEAR ME</button>
+                <button id="filterRewardBtn" class="btn-sm" style="background:#f0a500; color:#000;">💰 With Reward</button>
+                <button id="promoteReportBtn" class="btn-sm" style="background:#8e44ad; color:#fff;">⭐ Promote ($)</button>
+                <button id="refreshDashboardBtn" class="btn-sm btn-teal">🔄 Refresh</button>
+                <button id="dashboardBackupBtn" class="btn-sm btn-teal" data-t="backup">💾 Backup</button>
+                <button id="dashboardRestoreBtn" class="btn-sm btn-yellow" data-t="restore">📂 Restore</button>
+            </div>
+            
+            <div class="reports-grid">
+                <div class="report-column lost-column"><h3 class="column-title lost-title">📦 <span data-t="lostItems">Lost Items</span></h3><div id="dashLost"></div></div>
+                <div class="report-column found-column"><h3 class="column-title found-title">✅ <span data-t="foundItems">Found Items</span></h3><div id="dashFound"></div></div>
+                <div class="report-column match-column"><h3 class="column-title match-title">🎯 <span data-t="matchedItems">Matches</span></h3><div id="dashMatches"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== صفحة الإشعارات ========== -->
+    <div id="notificationsPage" class="hidden">
+        <div class="top-nav">
+            <div class="nav-brand">🔔 <span data-t="notifications">Notifications</span></div>
+            <div class="nav-actions"><button class="btn-sm" id="notificationsBackToDashboardBtn" data-t="backToDashboard">← Back to Dashboard</button></div>
+        </div>
+        <div class="dashboard-content"><div id="notificationsList"></div></div>
+    </div>
+
+    <!-- ========== صفحة الملف الشخصي ========== -->
+    <div id="profilePage" class="hidden">
+        <div class="top-nav">
+            <div class="nav-brand">👤 <span data-t="myProfile">My Profile</span></div>
+            <div class="nav-actions"><button class="btn-sm" id="profileBackToDashboardBtn" data-t="backToDashboard">← Back to Dashboard</button><button class="btn-sm btn-red" id="profileLogoutBtn" data-t="logout">🚪 Logout</button></div>
+        </div>
+        <div class="profile-page" id="profileContent"><p style="text-align:center;padding:40px;">⏳ <span data-t="loading">Loading...</span></p></div>
+    </div>
+
+    <!-- ========== صفحة إضافة بلاغ ========== -->
+    <div id="mainApp">
+        <div class="top-nav">
+            <div class="nav-brand">🌍 <span data-t="addReport">Add Report</span></div>
+            <div class="nav-actions"><span class="nav-user" id="headerUserName"></span><button class="btn-sm btn-teal" id="backToDashboardBtn" data-t="backToDashboard">← Back to Dashboard</button><button class="btn-sm btn-red" id="logoutUserBtn" data-t="logout">🚪 Logout</button></div>
+        </div>
+        <div class="report-container">
+            <div class="report-section lost-section">
+                <h2 class="section-title">❌ <span data-t="iLostSomething">I Lost Something</span></h2>
+                <div class="category-chips"><span class="chip" data-cat="person">👤 <span data-t="person">Person</span></span><span class="chip" data-cat="items">📦 <span data-t="items">Items</span></span><span class="chip" data-cat="money">💵 <span data-t="money">Money</span></span><span class="chip" data-cat="vehicle">🚗 <span data-t="vehicle">Vehicle</span></span><span class="chip" data-cat="animal">🐾 <span data-t="animal">Animal</span></span><span class="chip" data-cat="device">📱 <span data-t="device">Device</span></span><span class="chip" data-cat="other">📋 <span data-t="other">Other</span></span></div>
+                <input type="text" id="lostDesc" class="modern-input" data-t="description" placeholder="Description">
+                <div class="image-upload-area" onclick="document.getElementById('lostImages').click()"><span>📷</span><span data-t="uploadImages">Upload Images (up to 5)</span><input type="file" id="lostImages" multiple accept="image/*" style="display:none;"></div>
+                <div id="lostImagePreview" class="image-preview-area"></div>
+                <div class="form-row"><input type="date" id="lostDate" class="modern-input"><select id="lostCountry" class="modern-select country-select"></select><select id="lostCity" class="modern-select"></select></div>
+                <div class="opt-group"><b>Reward:</b><label><input type="checkbox" class="tellRose"> 🌹 Rose</label><label><input type="checkbox" class="tellThanks"> 🙏 Thanks</label><label><input type="checkbox" class="tellInvite"> 📩 Invitation</label></div>
+                <div class="reward-row"><label class="check-label"><input type="checkbox" class="rewardMoneyCheck" onchange="showMoneyField(this, 'lost-money')"><span>💰 Money Reward</span></label><input id="lost-money" class="modern-input money-input" placeholder="Amount $"></div>
+                <div class="opt-group"><b>Notify:</b><label><input type="checkbox" class="notifyPolice"> 🚔 Police</label><label><input type="checkbox" class="notifyUN"> 🇺🇳 UN</label><label><input type="checkbox" class="notifyInterpol"> 🌐 Interpol</label><label><input type="checkbox" class="notifyForeign"> 🏛️ Foreign Affairs</label><label><input type="checkbox" class="notifyRecord"> 📋 Record</label></div>
+                <div class="phone-row"><select id="lostPhoneCode" class="modern-select phone-code"></select><input id="lostPhone1" class="modern-input" data-t="phone1" placeholder="Phone 1"></div>
+                <div class="phone-row"><select id="lostPhoneCode2" class="modern-select phone-code"></select><input id="lostPhone2" class="modern-input" data-t="phone2" placeholder="Phone 2"></div>
+                <input type="hidden" id="lostLat"><input type="hidden" id="lostLng">
+                <div class="map-row"><div id="lostSelectMap" class="mini-map"></div><button id="lostCurrentLocationBtn" class="loc-btn" data-t="currentLocation">📍</button></div>
+                <div class="btn-row"><button id="saveLostBtn" class="btn-save" data-t="save">💾 Save</button><button id="resetLostBtn" class="btn-reset" data-t="clearAll">🗑️ Clear All</button><button id="shareLostBtn" class="btn-share" data-t="share">📤 Share</button></div>
+                <input type="text" id="searchLost" class="modern-input" data-t="searchLost" placeholder="Search lost items..."><div id="lostItemsList"></div>
+            </div>
+            <div class="report-section found-section">
+                <h2 class="section-title">✅ <span data-t="iFoundSomething">I Found Something</span></h2>
+                <div class="category-chips"><span class="chip" data-cat="person">👤 <span data-t="person">Person</span></span><span class="chip" data-cat="items">📦 <span data-t="items">Items</span></span><span class="chip" data-cat="money">💵 <span data-t="money">Money</span></span><span class="chip" data-cat="vehicle">🚗 <span data-t="vehicle">Vehicle</span></span><span class="chip" data-cat="animal">🐾 <span data-t="animal">Animal</span></span><span class="chip" data-cat="device">📱 <span data-t="device">Device</span></span><span class="chip" data-cat="other">📋 <span data-t="other">Other</span></span></div>
+                <input type="text" id="foundDesc" class="modern-input" data-t="description" placeholder="Description">
+                <div class="image-upload-area" onclick="document.getElementById('foundImages').click()"><span>📷</span><span data-t="uploadImages">Upload Images (up to 5)</span><input type="file" id="foundImages" multiple accept="image/*" style="display:none;"></div>
+                <div id="foundImagePreview" class="image-preview-area"></div>
+                <div class="form-row"><input type="date" id="foundDate" class="modern-input"><select id="foundCountry" class="modern-select country-select"></select><select id="foundCity" class="modern-select"></select></div>
+                <div class="opt-group"><b>Reward:</b><label><input type="checkbox" class="tellRose"> 🌹 Rose</label><label><input type="checkbox" class="tellThanks"> 🙏 Thanks</label><label><input type="checkbox" class="tellInvite"> 📩 Invitation</label></div>
+                <div class="reward-row"><label class="check-label"><input type="checkbox" class="rewardMoneyCheck" onchange="showMoneyField(this, 'found-money')"><span>💰 Money Reward</span></label><input id="found-money" class="modern-input money-input" placeholder="Amount $"></div>
+                <div class="opt-group"><b>Notify:</b><label><input type="checkbox" class="notifyPolice"> 🚔 Police</label><label><input type="checkbox" class="notifyUN"> 🇺🇳 UN</label><label><input type="checkbox" class="notifyInterpol"> 🌐 Interpol</label><label><input type="checkbox" class="notifyForeign"> 🏛️ Foreign Affairs</label><label><input type="checkbox" class="notifyRecord"> 📋 Record</label></div>
+                <div class="phone-row"><select id="foundPhoneCode" class="modern-select phone-code"></select><input id="foundPhone1" class="modern-input" data-t="phone1" placeholder="Phone 1"></div>
+                <div class="phone-row"><select id="foundPhoneCode2" class="modern-select phone-code"></select><input id="foundPhone2" class="modern-input" data-t="phone2" placeholder="Phone 2"></div>
+                <input type="hidden" id="foundLat"><input type="hidden" id="foundLng">
+                <div class="map-row"><div id="foundSelectMap" class="mini-map"></div><button id="foundCurrentLocationBtn" class="loc-btn" data-t="currentLocation">📍</button></div>
+                <div class="btn-row"><button id="saveFoundBtn" class="btn-save" data-t="save">💾 Save</button><button id="resetFoundBtn" class="btn-reset" data-t="clearAll">🗑️ Clear All</button><button id="matchBtn" class="btn-match" data-t="matchItems">🔍 Match</button><button id="shareFoundBtn" class="btn-share" data-t="share">📤 Share</button></div>
+                <input type="text" id="searchFound" class="modern-input" data-t="searchFound" placeholder="Search found items..."><div id="foundItemsList"></div><div id="matchResults"></div>
+            </div>
+        </div>
+        <div id="qrModal" class="modal-overlay" style="display:none;"><div class="modal-box"><div id="qrCode"></div><button class="btn-sm" onclick="document.getElementById('qrModal').style.display='none'" data-t="close">Close</button></div></div>
+    </div>
+
+    <!-- ========== لوحة الإدارة ========== -->
+    <div id="adminPanel" class="hidden">
+        <div class="top-nav">
+            <div class="nav-brand">👑 <span data-t="adminControlPanel">Admin Control Panel</span></div>
+            <div class="nav-actions">
+                <span class="nav-user" id="adminUserName"></span>
+                <button class="btn-sm btn-yellow" id="adminSettingsBtn" data-t="settings">⚙️ Settings</button>
+                <button class="btn-sm" id="adminBackToDashboardBtn" data-t="backToDashboard">← Back to Dashboard</button>
+                <button class="btn-sm btn-teal" id="adminExportAllBtn">📥 Export All Data</button>
+                <button class="btn-sm btn-yellow" id="adminImportDataBtn">📤 Import Data</button>
+                <button class="btn-sm btn-red" id="logoutAdminBtn" data-t="logout">🚪 Logout</button>
+            </div>
+        </div>
+        <div class="admin-content" id="adminDynamicContent"><p style="text-align:center;padding:40px;color:var(--text-light);">⏳ <span data-t="loading">Loading...</span></p></div>
+    </div>
+
+    <!-- ========== صفحة إعدادات المشرف ========== -->
+    <div id="adminSettingsPage" class="hidden">
+        <div class="top-nav">
+            <div class="nav-brand">⚙️ <span data-t="adminSettings">Admin Settings</span></div>
+            <div class="nav-actions"><button class="btn-sm" id="adminSettingsBackBtn" data-t="backToDashboard">← Back to Admin Panel</button></div>
+        </div>
+        <div class="profile-page" id="adminSettingsContent"></div>
+    </div>
+
+    <!-- ========== صفحة تفاصيل مستخدم ========== -->
+    <div id="userDetailsPage" class="hidden">
+        <div class="top-nav">
+            <div class="nav-brand">👤 <span data-t="userDetails">User Details</span></div>
+            <div class="nav-actions"><button class="btn-sm" id="userDetailsBackBtn" data-t="backToDashboard">← Back to Admin Panel</button></div>
+        </div>
+        <div class="profile-page" id="userDetailsContent"></div>
+    </div>
+
+    <!-- شريط الإعلانات -->
+    <div class="ad-bar" id="adBar"><span>🔍 <strong>Lost & Found Pro</strong> - <span data-t="helpUs">Help us continue</span></span><a href="#" id="showPremiumModal" class="ad-link" data-t="premium">⭐ Subscribe Premium</a><button class="ad-donate" id="donateBtn" data-t="donate">❤️ Donate</button><button id="closeAdBar" class="ad-close" data-t="closeAd">✖ Close</button></div>
+
+    <!-- نافذة Premium -->
+    <div id="premiumModal" class="modal-overlay" style="display:none;"><div class="modal-box premium-box"><h2 style="color:#f0a500;">⭐ <span data-t="premium">Premium Package</span></h2><ul class="premium-list"><li data-t="unlimitedReports">✅ Unlimited reports</li><li data-t="instantNotifications">✅ Instant match notifications</li><li data-t="topReports">✅ Your reports appear on top</li><li data-t="removeAds">✅ Remove ads</li></ul><p class="premium-price" data-t="subscribeMonthly">$4.99 / month</p><button id="subscribePremiumBtn" class="btn-save" data-t="subscribeNow">Subscribe now (simulated)</button><button class="btn-reset" onclick="document.getElementById('premiumModal').style.display='none'" data-t="close">Close</button></div></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script>
+    // firebase-config.js
+    const firebaseConfig = {
+      apiKey: "AIzaSyCeC8-ZrmsBNG4qx-hydqekrrqA29wTz0A",
+      authDomain: "lostandfoundpro-9a14d.firebaseapp.com",
+      projectId: "lostandfoundpro-9a14d",
+      storageBucket: "lostandfoundpro-9a14d.firebasestorage.app",
+      messagingSenderId: "401878871280",
+      appId: "1:401878871280:web:41dc64b460079664d4e635"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // firebase-auth.js - Google Sign-In
+    async function firebaseGoogleLogin() {
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithRedirect(provider);
+      } catch (error) {
+        console.error("Google login error:", error.message);
+      }
+    }
+
+    auth.getRedirectResult().then(function(result) {
+      if (result.user) {
+        db.collection("users").doc(result.user.uid).set({
+          name: result.user.displayName || result.user.email,
+          email: result.user.email,
+          role: "user",
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+    }).catch(function(error) {
+      console.error("Redirect error:", error.message);
+    });
+
+    // إضافة المستخدم للـ localStorage
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+        if (!allUsers.find(u => u.email === user.email)) {
+          allUsers.push({
+            id: user.uid,
+            name: user.displayName || user.email,
+            email: user.email,
+            approved: true,
+            isAdmin: false
+          });
+          localStorage.setItem('users', JSON.stringify(allUsers));
+        }
+        currentUser = { email: user.email, name: user.displayName, approved: true, isAdmin: false };
+        localStorage.setItem('currentUserCredential', user.email);
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('dashboardPage').classList.remove('hidden');
+        updateAllUI();
+      }
+    });
+    </script>
+
+    <script src="script.js"></script>
+    <script>
+            // if ('serviceWorker' in navigator) {
+    //     navigator.serviceWorker.register('service-worker.js').then(reg => {
+    //         console.log('Service Worker registered', reg);
+    //     }).catch(err => console.log('SW error:', err));
+    // }
+    </script>
+</body>
+<!-- مكان إعلان Google AdSense (سيتفعل بعد ربط الدومين) -->
+<div id="adBanner" style="max-width:728px;height:90px;margin:10px auto;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;text-align:center;padding:10px;">
+    📢 Your Ad Here - Contact us
+</div>
+</html>

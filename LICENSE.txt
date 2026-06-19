@@ -1,0 +1,97 @@
+All Rights Reserved License - Legal Notice
+
+Copyright (c) 2025 Lost & Found Worldwide (L&F)
+Proprietor: Eyad Rajab Mohammad Al-Hiarey (اياد رجب محمد الحياري)
+Contact: eyadrmh@gmail.com | +962 7 7538 8520
+
+═══════════════════════════════════════════════
+This software and associated documentation files (the "Software") are the 
+exclusive intellectual property of the copyright holder and proprietor.
+═══════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRICTLY PROHIBITED - يحظر منعاً باتاً
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Copying, reproducing, or distributing the Software in any form without prior 
+   written permission from the proprietor.
+
+2. Modifying, adapting, or creating derivative works based on the Software 
+   without prior written permission from the proprietor.
+
+3. Selling, sublicensing, or commercially exploiting the Software in any way 
+   without prior written permission from the proprietor.
+
+4. Removing or altering this copyright notice and license terms.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PERMISSION - إذن الاستخدام
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Any use, copying, modification, or distribution of this Software requires 
+explicit prior written consent from the proprietor. To request permission, 
+contact:
+   Email: eyadrmh@gmail.com
+   Phone: +962 7 7538 8520
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DISCLAIMER OF LIABILITY - إخلاء المسؤولية القانونية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+   FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+2. IN NO EVENT SHALL THE COPYRIGHT HOLDER, PROPRIETOR, OR CONTRIBUTORS BE 
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; SYSTEM 
+   FAILURE OR MALFUNCTION; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+3. USER RESPONSIBILITY - مسؤولية المستخدم:
+   a. Users are solely responsible for all information, data, and content 
+      they submit, upload, or transmit through the Software.
+   b. The Software acts only as a platform for connecting users and does not 
+      verify, guarantee, or warrant the accuracy, completeness, or legality 
+      of any user-submitted information.
+   c. The proprietor and the Software shall not be held liable for any false, 
+      misleading, fraudulent, or illegal information provided by users.
+   d. Any transactions, agreements, or interactions between users are solely 
+      between those users. The proprietor is not a party to any such 
+      interactions and bears no responsibility.
+
+4. NO GUARANTEE OF SERVICE - لا ضمان للخدمة:
+   The proprietor does not guarantee uninterrupted, secure, or error-free 
+   operation of the Software. The proprietor reserves the right to modify, 
+   suspend, or discontinue the Software at any time without prior notice or 
+   liability.
+
+5. THIRD-PARTY SERVICES:
+   The Software may integrate with third-party services (including but not 
+   limited to Google, Apple, Firebase, Leaflet, and payment processors). 
+   The proprietor is not responsible for the availability, accuracy, or 
+   functionality of any third-party services.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GOVERNING LAW - القانون الحاكم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This license shall be governed by and construed in accordance with applicable 
+international copyright laws and the laws of the Hashemite Kingdom of Jordan. 
+Any disputes shall be subject to the exclusive jurisdiction of the courts of 
+Amman, Jordan.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UNAUTHORIZED USE - الاستخدام غير المصرح
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Any unauthorized use of this Software will result in legal action to the 
+fullest extent permitted by applicable law, including but not limited to 
+criminal prosecution and civil claims for damages.
+
+═══════════════════════════════════════════════
+END OF LICENSE
+═══════════════════════════════════════════════
