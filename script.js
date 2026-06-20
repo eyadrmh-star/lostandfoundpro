@@ -1067,6 +1067,8 @@ async function refreshAdminPanel() {
                     const data = doc.data();
                     data.approved = true;
                     await db.collection('users').add(data);
+                    users.push(data);
+localStorage.setItem('users', JSON.stringify(users));
                     await docRef.delete();
                     refreshAdminPanel();
                     showToast(t('userApproved'));
