@@ -896,19 +896,47 @@ function renderDashboardData() {
     document.querySelectorAll('.printPdfBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); printReportAsPDF(btn.dataset.desc, btn.dataset.city, btn.dataset.date, btn.dataset.name, btn.dataset.phone, btn.dataset.type); }; });
     document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); sendMessageToReporter(parseInt(btn.dataset.id), btn.dataset.type, btn.dataset.name, btn.dataset.email); }; });
 }
-function loginUser(credential, pwd, isAdminLogin = false) {
-    let allUsers = JSON.parse(localStorage.getItem('users')) || [];
-    let allPending = JSON.parse(localStorage.getItem('pendingUsers')) || [];
-    let user = allUsers.find(u => (u.email === credential || u.phone === credential) && u.password === pwd);
+async function loginUser(credential, pwd, isAdminLogin = false) {
+    let user = null;
+    
+    // 1. جرب Firestore أولاً
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+        const db = firebase.firestore();
+        const q = credential.includes('@') 
+            ? db.collection('users').where('email', '==', credential)
+            : db.collection('users').where('phone', '==', credential);
+        const snap = await q.get();
+        if (!snap.empty) {
+            snap.forEach(doc => {
+                const u = doc.data();
+                if (u.password === pwd) user = u;
+            });
+        }
+    }
+    
+    // 2. إذا لم يوجد في Firestore، جرب localStorage
+    if (!user) {
+        let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+        user = allUsers.find(u => (u.email === credential || u.phone === credential) && u.password === pwd);
+    }
+    
+    // 3. تحقق من وجود المستخدم
     if (!user) { showAlert(t('error'), t('invalidCredentials'), 'error'); return false; }
     if (!user.approved && !user.isAdmin) { showAlert(t('accountPending'), t('accountPending'), 'warning'); return false; }
-    if (user.banned) { showAlert('Banned', 'Your account has been banned. Please contact the admin.', 'error'); return false; }
+    if (user.banned) { showAlert('Banned', 'Your account has been banned.', 'error'); return false; }
     if (isAdminLogin && !user.isAdmin) { showAlert(t('unauthorized'), t('adminOnly'), 'error'); return false; }
+    
     currentUser = user;
     isAdmin = user.isAdmin || false;
-    users = allUsers;
-    pendingUsers = allPending;
-    if (typeof auth !== 'undefined') { auth.signInWithEmailAndPassword(credential, pwd).catch(() => {}); }
+    
+    // تحديث localStorage ليكون متزامنًا
+    let localUsers = JSON.parse(localStorage.getItem('users')) || [];
+    if (!localUsers.find(u => (u.email && u.email === user.email) || (u.phone && u.phone === user.phone))) {
+        localUsers.push(user);
+        localStorage.setItem('users', JSON.stringify(localUsers));
+    }
+    
+    // إكمال تسجيل الدخول (نفس الكود القديم)
     let hu = document.getElementById('headerUserName'), du = document.getElementById('dashboardUserName'), au = document.getElementById('adminUserName');
     if (hu) hu.innerText = currentUser.name || currentUser.email || currentUser.phone;
     if (du) du.innerText = currentUser.name || currentUser.email || currentUser.phone;
@@ -923,17 +951,6 @@ function loginUser(credential, pwd, isAdminLogin = false) {
         loadSystemData(); refreshAdminPanel(); updateDashboardStats(); updateDashboardMap();
     } else {
         document.getElementById('dashboardPage').classList.remove('hidden');
-        if (currentUser.isOrganization && !currentUser.subscriptionActive) {
-    let trialEnd = new Date(currentUser.trialStart);
-    trialEnd.setDate(trialEnd.getDate() + 7);
-    let now = new Date();
-    if (now > trialEnd) {
-        Swal.fire({title:'انتهت التجربة',text:'للاشتراك تواصل معنا',confirmButtonText:'📧 Contact Us'});
-    } else {
-        let days = Math.ceil((trialEnd - now)/(1000*60*60*24));
-        showToast(`🏛️ تجربة مجانية - متبقي ${days} أيام`,'info');
-    }
-}
         document.getElementById('mainApp').classList.add('hidden');
         document.getElementById('adminPanel').classList.add('hidden');
         loadFromLocalStorage();
