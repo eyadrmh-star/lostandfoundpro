@@ -958,25 +958,19 @@ function submitRegistration() {
     let pwd = document.getElementById('regPwd').value;
     let isEmail = email.includes('@') && email.includes('.');
     let isPhone = !isEmail && email.length >= 7;
-    
     if (!name || !email || !pwd) return showAlert(t('error'), 'Please fill all fields', 'error');
     if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error');
-    
-    // حفظ في Firestore
     db.collection('pendingUsers').add({
-        name: name,
-        email: isEmail ? email : '',
-        phone: isPhone ? email : '',
-        password: pwd,
-        approved: false,
+        name: name, email: isEmail ? email : '', phone: isPhone ? email : '',
+        password: pwd, approved: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         showAlert(t('success'), t('regSent'));
         document.getElementById('registerForm').style.display = 'none';
         addLog('Registration Request', email, 'Pending approval');
-    }).catch(error => {
+    }).catch(function(error) {
         console.error('Error:', error);
-        showAlert(t('error'), 'Registration failed. Please try again.', 'error');
+        showAlert(t('error'), 'Registration failed.', 'error');
     });
 }
 // ========== تسجيل الجهات الرسمية ==========
