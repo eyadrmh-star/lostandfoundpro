@@ -952,7 +952,33 @@ function loginUser(credential, pwd, isAdminLogin = false) {
 function logoutAdmin() { isAdmin = false; currentUser = null; localStorage.removeItem('currentUserCredential'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
 function logoutUser() { currentUser = null; localStorage.removeItem('currentUserCredential'); document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
 function showRegisterForm() { document.getElementById('registerForm').style.display = 'block'; document.getElementById('orgRegisterForm').style.display = 'none'; }
-function submitRegistration() { let name = document.getElementById('regName').value.trim(), email = document.getElementById('regEmail').value.trim(), pwd = document.getElementById('regPwd').value; let isEmail = email.includes('@') && email.includes('.'), isPhone = !isEmail && email.length >= 7; if (!name || !email || !pwd) return showAlert(t('error'), 'Please fill all fields', 'error'); if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error'); let allUsers = JSON.parse(localStorage.getItem('users')) || []; if(allUsers.find(u => u.email === email || u.phone === email)) return showAlert(t('error'), 'Email or phone already registered', 'error'); pendingUsers.push({ id: Date.now(), name, [isEmail ? 'email' : 'phone']: email, password: pwd, approved: false }); localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers)); showAlert(t('success'), t('regSent')); document.getElementById('registerForm').style.display = 'none'; addLog('Registration Request', email, 'Pending approval'); }
+function submitRegistration() {
+    let name = document.getElementById('regName').value.trim();
+    let email = document.getElementById('regEmail').value.trim();
+    let pwd = document.getElementById('regPwd').value;
+    let isEmail = email.includes('@') && email.includes('.');
+    let isPhone = !isEmail && email.length >= 7;
+    
+    if (!name || !email || !pwd) return showAlert(t('error'), 'Please fill all fields', 'error');
+    if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error');
+    
+    // حفظ في Firestore
+    db.collection('pendingUsers').add({
+        name: name,
+        email: isEmail ? email : '',
+        phone: isPhone ? email : '',
+        password: pwd,
+        approved: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        showAlert(t('success'), t('regSent'));
+        document.getElementById('registerForm').style.display = 'none';
+        addLog('Registration Request', email, 'Pending approval');
+    }).catch(error => {
+        console.error('Error:', error);
+        showAlert(t('error'), 'Registration failed. Please try again.', 'error');
+    });
+}
 // ========== تسجيل الجهات الرسمية ==========
 function showOrgRegisterForm() { document.getElementById('orgRegisterForm').style.display = 'block'; document.getElementById('registerForm').style.display = 'none'; }
 function submitOrgRegistration() {
