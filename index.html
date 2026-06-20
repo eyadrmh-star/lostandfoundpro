@@ -345,6 +345,21 @@
     //     }).catch(err => console.log('SW error:', err));
     // }
     </script>
+    <script>
+// تحميل pendingUsers من Firestore تلقائياً
+setTimeout(function() {
+  if (typeof db !== 'undefined' && document.getElementById('pendingUsersList')) {
+    db.collection('pendingUsers').get().then(function(snapshot) {
+      var pending = [];
+      snapshot.forEach(function(doc) { pending.push({ id: doc.id, name: doc.data().name, email: doc.data().email, phone: doc.data().phone }); });
+      var listEl = document.getElementById('pendingUsersList');
+      if (listEl && pending.length > 0) {
+        listEl.innerHTML = pending.map(function(u) { return '<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:var(--bg);border-radius:12px;"><div><strong>' + (u.name||'') + '</strong><br><small>' + (u.email||u.phone||'') + '</small></div></div>'; }).join('');
+      }
+    });
+  }
+}, 1500);
+</script>
 </body>
 <!-- مكان إعلان Google AdSense (سيتفعل بعد ربط الدومين) -->
 <div id="adBanner" style="max-width:728px;height:90px;margin:10px auto;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;text-align:center;padding:10px;">
