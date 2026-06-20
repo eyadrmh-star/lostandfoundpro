@@ -1008,6 +1008,11 @@ function refreshAdminPanel() {
     [...lostArray, ...foundArray].forEach(item => { if (item.city) countryCount[item.city] = (countryCount[item.city] || 0) + 1; });
     let topCountry = Object.entries(countryCount).sort((a, b) => b[1] - a[1])[0];
     let totalUsers = users.filter(u => u.approved && !u.isAdmin).length;
+    db.collection('pendingUsers').get().then(snapshot => {
+    pendingUsers = [];
+    snapshot.forEach(doc => { pendingUsers.push({ id: doc.id, ...doc.data() }); });
+    refreshPendingList();
+});
     let pendingUsersCount = pendingUsers.length;
     let subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
     let html = `
