@@ -1008,12 +1008,19 @@ function refreshAdminPanel() {
     [...lostArray, ...foundArray].forEach(item => { if (item.city) countryCount[item.city] = (countryCount[item.city] || 0) + 1; });
     let topCountry = Object.entries(countryCount).sort((a, b) => b[1] - a[1])[0];
     let totalUsers = users.filter(u => u.approved && !u.isAdmin).length;
+        let pendingUsersCount = 0;
     db.collection('pendingUsers').get().then(snapshot => {
-    pendingUsers = [];
-    snapshot.forEach(doc => { pendingUsers.push({ id: doc.id, ...doc.data() }); });
-    refreshPendingList();
-});
-    let pendingUsersCount = pendingUsers.length;
+        pendingUsers = [];
+        snapshot.forEach(doc => { pendingUsers.push({ id: doc.id, ...doc.data() }); });
+        let listEl = document.getElementById('pendingUsersList');
+        if (listEl) {
+            listEl.innerHTML = pendingUsers.length === 0 
+                ? `<p style="color:var(--text-light);">${t('noPending')}</p>` 
+                : pendingUsers.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:var(--bg);border-radius:12px;flex-wrap:wrap;gap:8px;"><div><strong>${u.name}</strong><br><small>${u.email || u.phone}</small></div><div style="display:flex;gap:6px;"><button class="approve-btn btn-sm btn-save" data-id="${u.id}">✅ ${t('approve')}</button><button class="reject-btn btn-sm btn-red" data-id="${u.id}">❌ ${t('reject')}</button></div></div>`).join('');
+        }
+        let countEl = document.querySelector('.dash-pending-count');
+        if (countEl) countEl.innerText = pendingUsers.length;
+    });
     let subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
     let html = `
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
@@ -1021,7 +1028,7 @@ function refreshAdminPanel() {
         <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#27ae60,#1e8449);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${foundArray.length}</div><small>✅ ${t('totalFound')}</small></div>
         <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#8e44ad,#6c3cb3);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${countMatches()}</div><small>🎯 ${t('totalMatches')}</small></div>
         <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#3498db,#2471a3);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${totalUsers}</div><small>👥 ${t('totalUsers')}</small></div>
-        <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#f0a500,#d68910);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${pendingUsersCount}</div><small>⏳ ${t('pending')}</small></div>
+        <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#f0a500,#d68910);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;" class="dash-pending-count">0</div><small>⏳ ${t('pending')}</small></div>
     </div>
     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;">
         <div style="flex:2;min-width:300px;background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);"><h3 style="margin:0 0 15px;color:var(--primary);">📈 Lost vs Found (Last 7 days)</h3><canvas id="trendLineChart" width="400" height="200" style="width:100%;max-height:250px;"></canvas></div>
