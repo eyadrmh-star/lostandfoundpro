@@ -473,19 +473,25 @@ function printReportAsPDF(desc, city, date, name, phone, type) {
     html2pdf().set({ margin: 0.5, filename: `${type}_report_${Date.now()}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(element).save().then(() => { document.body.removeChild(element); showToast(t('posterGenerated'), 'success'); });
 }
 
-// ========== إرسال رسالة لصاحب البلاغ ==========
-function sendMessageToReporter(reportId, reportType, reporterName, reporterEmail) {
+async function sendMessageToReporter(reportId, reportType, reporterName, reporterEmail) {
     let msg = prompt(`📨 Send message to ${reporterName || reporterEmail}:`);
     if (!msg) return;
     let recipientId = reporterEmail;
     if (!recipientId) { showToast("لا يمكن إرسال الرسالة، معلومات المرسل غير متوفرة", 'error'); return; }
     let senderName = currentUser?.name || currentUser?.email || currentUser?.phone || 'مستخدم';
     let fullMsg = `📩 من: ${senderName}\n📝 الرسالة: ${msg}\n📎 بخصوص: ${reportType === 'lost' ? 'بلاغ مفقود' : 'بلاغ موجود'} (ID: ${reportId})`;
-    adminNotifications[recipientId] = adminNotifications[recipientId] || [];
-    adminNotifications[recipientId].push({ msg: fullMsg, timestamp: new Date().toISOString(), from: senderName, reportId: reportId });
+
+    await db.collection('notifications').add({
+        recipientId: recipientId,
+        msg: fullMsg,
+        timestamp: new Date().toISOString(),
+        from: senderName,
+        reportId: reportId,
+        read: false
+    });
+
     showToast(`✅ تم إرسال رسالتك إلى ${reporterName || reporterEmail}`, 'success');
 }
-
 // ========== حفظ واسترجاع البيانات ==========
 function loadSystemData() {
     lostArray = JSON.parse(localStorage.getItem('lostArray')) || [];
