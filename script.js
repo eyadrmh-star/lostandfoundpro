@@ -1467,9 +1467,8 @@ function disableNearMeFilter() {
 
 function toggleNearMeFilter() { if (nearMeActive) disableNearMeFilter(); else enableNearMeFilter(); }
 // ========== بدء التشغيل ==========
-window.onload = () => {
-    users = JSON.parse(localStorage.getItem('users')) || [];
-    loadSystemData();
+window.onload = async () => {
+    await loadSystemData();
     document.getElementById('loginPage').classList.remove('hidden');
     document.getElementById('dashboardPage').classList.add('hidden');
     document.getElementById('mainApp').classList.add('hidden');
@@ -1478,11 +1477,11 @@ window.onload = () => {
     document.getElementById('notificationsPage').classList.add('hidden');
     document.getElementById('adminSettingsPage').classList.add('hidden');
     document.getElementById('userDetailsPage').classList.add('hidden');
-    if(localStorage.getItem('currentUserCredential')){ document.getElementById('loginEmail').value = localStorage.getItem('currentUserCredential'); }
-    if(!localStorage.getItem('appLang')){ let browserLang = navigator.language || navigator.userLanguage; setLang(browserLang.startsWith('ar') ? 'ar' : 'en'); }
+    let browserLang = navigator.language || navigator.userLanguage;
+    setLang(browserLang.startsWith('ar') ? 'ar' : 'en');
     translatePage();
     let langSelect = document.getElementById('langSelect');
-if(langSelect) langSelect.value = getLang();
+    if(langSelect) langSelect.value = getLang();
     document.getElementById('loginBtn').onclick = () => loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value, false);
     document.getElementById('adminLoginBtn').onclick = () => loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value, true);
     document.getElementById('showRegisterBtn').onclick = (e) => { e.preventDefault(); showRegisterForm(); };
@@ -1494,8 +1493,6 @@ if(langSelect) langSelect.value = getLang();
     document.getElementById('dashboardProfileBtn')?.addEventListener('click', showProfile);
     document.getElementById('profileBackToDashboardBtn')?.addEventListener('click', () => { document.getElementById('profilePage').classList.add('hidden'); document.getElementById('dashboardPage').classList.remove('hidden'); updateDashboardStats(); updateDashboardMap(); populateDashboardFilters(); renderDashboardData(); });
     document.getElementById('profileLogoutBtn')?.addEventListener('click', logoutUser);
-    document.getElementById('showPremiumModal')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('premiumModal').style.display = 'flex'; });
-    document.getElementById('subscribePremiumBtn')?.addEventListener('click', () => { localStorage.setItem('isPremiumUser', 'true'); showAlert(t('success'), t('premiumActivated')); document.getElementById('premiumModal').style.display = 'none'; document.getElementById('adBar').style.display = 'none'; });
     document.getElementById('adminSettingsBtn').onclick = showAdminSettings;
     document.getElementById('adminExportAllBtn')?.addEventListener('click', () => { let data = { lostArray, foundArray, users, pendingUsers, activityLogs }; let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)])); a.download = `full_backup_${new Date().toISOString().slice(0, 19)}.json`; a.click(); showToast(t('backupExported')); });
     document.getElementById('adminImportDataBtn')?.addEventListener('click', () => { let input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json'; input.onchange = e => { let file = e.target.files[0]; let reader = new FileReader(); reader.onload = ev => { try { let data = JSON.parse(ev.target.result); lostArray = data.lostArray || []; foundArray = data.foundArray || []; users = data.users || []; pendingUsers = data.pendingUsers || []; activityLogs = data.activityLogs || []; updateAllUI(); showAlert(t('success'), t('imported')); refreshAdminPanel(); } catch(ex) { showAlert(t('error'), t('invalidFile'), 'error'); } }; reader.readAsText(file); }; input.click(); });
@@ -1532,14 +1529,6 @@ if(langSelect) langSelect.value = getLang();
     document.getElementById('userDetailsBackBtn').onclick = () => { document.getElementById('userDetailsPage').classList.add('hidden'); document.getElementById('adminPanel').classList.remove('hidden'); };
     document.getElementById('dashboardBackupBtn').onclick = () => { let data={lostArray,foundArray,users,pendingUsers,activityLogs}; let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)])); a.download=`backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); showToast(t('backupExported')); };
     document.getElementById('dashboardRestoreBtn').onclick = () => { let input=document.createElement('input'); input.type='file'; input.accept='application/json'; input.onchange=e=>{ let file=e.target.files[0]; let reader=new FileReader(); reader.onload=ev=>{ try{ let data=JSON.parse(ev.target.result); lostArray=data.lostArray||[]; foundArray=data.foundArray||[]; users=data.users||[]; pendingUsers=data.pendingUsers||[]; activityLogs=data.activityLogs||[]; updateAllUI(); showAlert(t('success'),t('restored')); }catch(ex){ showAlert(t('error'),t('invalidFile'),'error'); } }; reader.readAsText(file); }; input.click(); };
-    document.getElementById('refreshDashboardBtn').onclick = () => {
-        lostArray = JSON.parse(localStorage.getItem('lostArray')) || [];
-        foundArray = JSON.parse(localStorage.getItem('foundArray')) || [];
-        renderDashboardData();
-        updateDashboardStats();
-        updateDashboardMap();
-        showToast("Dashboard refreshed", 'success');
-    };
     document.getElementById('promoteReportBtn').onclick = () => {
     if (!currentUser) return showToast("سجل دخول أولاً", 'error');
     Swal.fire({
@@ -1554,7 +1543,6 @@ if(langSelect) langSelect.value = getLang();
         }
     });
 };
-    // ✅ فلتر With Reward
     document.getElementById('filterRewardBtn').onclick = () => {
         let cat = document.getElementById('filterCategory');
         if (!cat.querySelector('option[value="reward"]')) {
@@ -1566,7 +1554,6 @@ if(langSelect) langSelect.value = getLang();
         cat.value = 'reward';
         renderDashboardData();
     };
-    // ✅ فلتر Near Me
     document.getElementById('nearMeBtn').onclick = toggleNearMeFilter;
     
     if (navigator.geolocation) {
