@@ -1161,7 +1161,7 @@ async function refreshAdminPanel() {
         }
     });
 
-    // الرسوم البيانية وأزرار المستخدمين
+    // الرسوم البيانية والأزرار
     setTimeout(() => {
         let lc = document.getElementById('trendLineChart')?.getContext('2d'); if (lc) new Chart(lc, { type: 'line', data: { labels: last7Dates, datasets: [{ label: 'Lost', data: lost7, borderColor: '#e74c3c', backgroundColor: '#e74c3c20', fill: true, tension: 0.3 }, { label: 'Found', data: found7, borderColor: '#27ae60', backgroundColor: '#27ae6020', fill: true, tension: 0.3 }] }, options: { responsive: true } });
         let pc = document.getElementById('categoryPieChart')?.getContext('2d'); if (pc) new Chart(pc, { type: 'pie', data: { labels: ['Person', 'Items', 'Money', 'Vehicle', 'Animal', 'Device', 'Other'], datasets: [{ data: [categories.person, categories.items, categories.money, categories.vehicle, categories.animal, categories.device, categories.other], backgroundColor: ['#e74c3c', '#3498db', '#f0a500', '#27ae60', '#e91e63', '#9c27b0', '#607d8b'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
@@ -1189,6 +1189,47 @@ async function refreshAdminPanel() {
                 await db.collection('pendingUsers').doc(id).delete();
                 refreshAdminPanel();
                 showToast(t('userRejected'), 'error');
+            };
+        });
+        
+        // أزرار Details / Send Message / Ban / Delete
+        document.querySelectorAll('.view-user-btn').forEach(btn => {
+            btn.onclick = () => showUserDetails(btn.dataset.email);
+        });
+        document.querySelectorAll('.send-msg-btn').forEach(btn => {
+            btn.onclick = () => {
+                const email = btn.dataset.email;
+                const msg = prompt(t('writeMessage'));
+                if (msg) {
+                    sendMessageToUser(email, msg);
+                    showToast(t('messageSent'));
+                }
+            };
+        });
+        document.querySelectorAll('.ban-user').forEach(btn => {
+            btn.onclick = async () => {
+                const email = btn.dataset.email;
+                const snap = await db.collection('users').where('email', '==', email).get();
+                if (!snap.empty) {
+                    const doc = snap.docs[0];
+                    const data = doc.data();
+                    data.banned = !data.banned;
+                    await doc.ref.update({ banned: data.banned });
+                    refreshAdminPanel();
+                    showToast(data.banned ? '🚫 تم حظر المستخدم' : '✅ تم فك الحظر');
+                }
+            };
+        });
+        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const email = btn.dataset.email;
+                if (!confirm('⚠️ Delete user and all their reports permanently?')) return;
+                const snap = await db.collection('users').where('email', '==', email).get();
+                for (const doc of snap.docs) {
+                    await doc.ref.delete();
+                }
+                refreshAdminPanel();
+                showToast('✅ User deleted', 'success');
             };
         });
         
