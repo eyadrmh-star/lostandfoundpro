@@ -1233,14 +1233,51 @@ async function refreshAdminPanel() {
             };
         });
         
+                document.querySelectorAll('.view-user-btn').forEach(btn => {
+            btn.onclick = () => showUserDetails(btn.dataset.email);
+        });
+        document.querySelectorAll('.send-msg-btn').forEach(btn => {
+            btn.onclick = () => {
+                const email = btn.dataset.email;
+                const msg = prompt(t('writeMessage'));
+                if (msg) {
+                    sendMessageToUser(email, msg);
+                    showToast(t('messageSent'));
+                }
+            };
+        });
+        document.querySelectorAll('.ban-user').forEach(btn => {
+            btn.onclick = async () => {
+                const email = btn.dataset.email;
+                const snap = await db.collection('users').where('email', '==', email).get();
+                if (!snap.empty) {
+                    const doc = snap.docs[0];
+                    const data = doc.data();
+                    data.banned = !data.banned;
+                    await doc.ref.update({ banned: data.banned });
+                    refreshAdminPanel();
+                    showToast(data.banned ? '🚫 تم حظر المستخدم' : '✅ تم فك الحظر');
+                }
+            };
+        });
+        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const email = btn.dataset.email;
+                if (!confirm('⚠️ Delete user and all their reports permanently?')) return;
+                const snap = await db.collection('users').where('email', '==', email).get();
+                for (const doc of snap.docs) {
+                    await doc.ref.delete();
+                }
+                refreshAdminPanel();
+                showToast('✅ User deleted', 'success');
+            };
+        });
         document.querySelectorAll('.remove-subadmin-btn').forEach(btn => { /* يمكن تركها كما هي أو تعديلها لاحقاً */ });
         document.querySelectorAll('.admin-delete-item').forEach(btn => { /* كما هي */ });
         document.getElementById('addSubAdminBtn')?.addEventListener('click', () => { /* كما هي */ });
         document.getElementById('broadcastBtn')?.addEventListener('click', () => { /* كما هي */ });
         document.querySelectorAll('.approve-org-btn').forEach(btn => { btn.onclick = () => approveOrganization(parseInt(btn.dataset.id)); });
-        document.querySelectorAll('.reject-org-btn').forEach(btn => { btn.onclick = () => rejectOrganization(parseInt(btn.dataset.id)); });
-    }, 200);
-}    
+        document.querySelectorAll('.reject-org-btn').forEach(btn => { btn.onclick = () => rejectOrganization(parseInt(btn.dataset.id)); });    
 // ========== إعدادات المشرف ==========
 function showAdminSettings() { document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('adminSettingsPage').classList.remove('hidden'); renderAdminSettings(); }
 function renderAdminSettings() {
