@@ -318,3 +318,4 @@ body.rtl-mode .premium-list { text-align: right; }
 }
 .saved-item.banned-item { opacity: 0.6; border: 2px dashed #e74c3c; background: #fff5f5; }
 .badge-banned { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.hidden { display: none !important; }
