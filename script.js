@@ -1651,7 +1651,7 @@ function deleteMyAccount() {
             lostArray = lostArray.filter(i => i.userEmail !== userId);
             foundArray = foundArray.filter(i => i.userEmail !== userId);
             users = users.filter(u => (u.email || u.phone) !== userId);
-            currentUser = null; localStorage.removeItem('currentUserCredential');
+            currentUser = null; // لا حاجة لحذف شيء من localStorage
             updateAllUI();
             document.getElementById('dashboardPage').classList.add('hidden');
             document.getElementById('loginPage').classList.remove('hidden');
