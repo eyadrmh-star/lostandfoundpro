@@ -858,8 +858,13 @@ function clearFoundForm() {
     selectedCategory = 'other'; 
 }
 
-function saveAllDataToLocalStorage() { localStorage.setItem('lostArray', JSON.stringify(lostArray)); localStorage.setItem('foundArray', JSON.stringify(foundArray)); }
-function loadAllDataFromLocalStorage() { let savedLost = localStorage.getItem('lostArray'), savedFound = localStorage.getItem('foundArray'); if (savedLost) lostArray = JSON.parse(savedLost); if (savedFound) foundArray = JSON.parse(savedFound); }
+function saveAllDataToLocalStorage() {
+    // Firestore هو المصدر الآن
+}
+
+function loadAllDataFromLocalStorage() {
+    // Firestore هو المصدر الآن
+}
 function autoMatchAndNotify() {
     let matches = [];
     for (let l of lostArray) {
