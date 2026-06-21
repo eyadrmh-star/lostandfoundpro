@@ -704,6 +704,7 @@ async function saveLost() {
         showAlert(t('success'), t('reportSaved'));
     } else {
         db.collection('pendingReports').add(newItem);
+        db.collection('lostItems').add(newItem);
         saveToLocalStorage();
         showAlert(t('success'), "Report sent to admin for approval");
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
@@ -720,7 +721,6 @@ async function saveLost() {
     addLog('Add Lost', userId, desc);
     autoMatchAndNotify();
 }
-
 async function saveFound() {
     let desc = document.getElementById('foundDesc').value.trim();
     if (!desc) return showToast(t('enterDescription'), 'error');
@@ -756,6 +756,7 @@ async function saveFound() {
         showAlert(t('success'), t('reportSaved'));
     } else {
         db.collection('pendingReports').add(newItem);
+        db.collection('foundItems').add(newItem);
         saveToLocalStorage();
         showAlert(t('success'), "Report sent to admin for approval");
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
