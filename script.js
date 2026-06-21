@@ -964,6 +964,7 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
         document.getElementById('adminPanel').classList.remove('hidden');
         loadSystemData(); refreshAdminPanel(); updateDashboardStats(); updateDashboardMap();
     } else {
+        document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('dashboardPage').classList.remove('hidden');
         document.getElementById('mainApp').classList.add('hidden');
         document.getElementById('adminPanel').classList.add('hidden');
