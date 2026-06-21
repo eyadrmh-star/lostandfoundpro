@@ -1841,4 +1841,4 @@ refreshAdminPanel = async function() {
             };
         });
     }, 300);
-};
+}
