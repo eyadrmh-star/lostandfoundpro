@@ -1999,4 +1999,4 @@ function loadFromLocalStorage() {
   };
 
   console.log('✅ لوحة الإدارة مرتبطة بـ Firestore');
-})();
+
