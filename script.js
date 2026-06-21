@@ -585,7 +585,7 @@ function attachItemEvents() {
 function filterItems(type) { let search = document.getElementById(type==='lost'?'searchLostInput':'searchFoundInput'); if(!search) return; let q = search.value.toLowerCase(); let items = document.querySelectorAll(`.saved-item[data-type="${type}"]`); items.forEach(div=>{ div.style.display = div.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
 
 // ========== الخرائط ==========
-function updateDashboardMap() {
+async function updateDashboardMap() {
     await refreshDataFromFirestore();
     if (dashboardMap) { dashboardMap.off(); dashboardMap.remove(); dashboardMap = null; }
     if (!document.getElementById('dashboardMap')) return;
