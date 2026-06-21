@@ -1241,7 +1241,7 @@ localStorage.setItem('users', JSON.stringify(users));
             };
         });
     }, 200);
-}
+
 // ========== إعدادات المشرف ==========
 function showAdminSettings() { document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('adminSettingsPage').classList.remove('hidden'); renderAdminSettings(); }
 function renderAdminSettings() {
