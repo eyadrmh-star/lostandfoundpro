@@ -738,24 +738,26 @@ async function saveLost() {
     let userId = currentUser?.email || currentUser?.phone || currentUser?.id || 'unknown';
     let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     let newItem = { id: Date.now(), type: 'lost', desc, date, city, name, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
+    
+    const db = firebase.firestore();
+    
     if (isAdmin) {
         lostArray.push(newItem);
-        if (typeof firebaseSaveLost !== 'undefined') { firebaseSaveLost(newItem); }
-        saveToLocalStorage();
+        await db.collection('lostItems').add(newItem);
         showAlert(t('success'), t('reportSaved'));
     } else {
-        db.collection('pendingReports').add(newItem);
-        saveToLocalStorage();
+        await db.collection('pendingReports').add(newItem);
         showAlert(t('success'), "Report sent to admin for approval");
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
     }
+    
     checkRealtimeMatch(newItem, 'lost');
-    addPoints(userId, 10);
-    if (isUrgent) addPoints(userId, 5);
-    if (isFeatured) addPoints(userId, 10);
-    if (isUrgent) addBalance(userId, 0.99);
-    if (isFeatured) addBalance(userId, 1.99);
-    if (reward.money) addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
+    await addPoints(userId, 10);
+    if (isUrgent) await addPoints(userId, 5);
+    if (isFeatured) await addPoints(userId, 10);
+    if (isUrgent) await addBalance(userId, 0.99);
+    if (isFeatured) await addBalance(userId, 1.99);
+    if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
     updateAllUI();
     clearLostForm();
     addLog('Add Lost', userId, desc);
