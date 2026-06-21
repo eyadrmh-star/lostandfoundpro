@@ -1682,24 +1682,13 @@ function applyQuickImprovements() {
 setInterval(addMapExpiryCounter, 60000);
 setTimeout(applyQuickImprovements, 1000);
 
-// ========== دوال الحفظ والتحميل في localStorage ==========
+// ========== دوال الحفظ والتحميل من Firestore ==========
 function saveToLocalStorage() {
-    localStorage.setItem('lostArray', JSON.stringify(lostArray));
-    localStorage.setItem('foundArray', JSON.stringify(foundArray));
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
-    localStorage.setItem('pendingReports', JSON.stringify(pendingReports));
+    // Firestore هو المصدر الآن
 }
 
 function loadFromLocalStorage() {
-    const savedLost = localStorage.getItem('lostArray');
-    const savedFound = localStorage.getItem('foundArray');
-    const savedPending = localStorage.getItem('pendingUsers');
-    const savedPendingReports = localStorage.getItem('pendingReports');
-    if (savedLost) lostArray = JSON.parse(savedLost);
-    if (savedFound) foundArray = JSON.parse(savedFound);
-    if (savedPending) pendingUsers = JSON.parse(savedPending);
-    if (savedPendingReports) pendingReports = JSON.parse(savedPendingReports);
+    // Firestore هو المصدر الآن
 }
 // ======== ربط Firestore بلوحة الإدارة – تلقائي ========
 (async function patchAdmin() {
