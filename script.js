@@ -690,7 +690,7 @@ async function saveLost() {
         saveToLocalStorage();
         showAlert(t('success'), t('reportSaved'));
     } else {
-        pendingReports.push(newItem);
+        db.collection('pendingReports').add(newItem);
         saveToLocalStorage();
         showAlert(t('success'), "Report sent to admin for approval");
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
@@ -742,7 +742,7 @@ async function saveFound() {
         saveToLocalStorage();
         showAlert(t('success'), t('reportSaved'));
     } else {
-        pendingReports.push(newItem);
+        db.collection('pendingReports').add(newItem);
         saveToLocalStorage();
         showAlert(t('success'), "Report sent to admin for approval");
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
