@@ -25,7 +25,7 @@ let userPoints = {};
 let userBalances = {};
 let reportViews = {};
 let adminNotifications = {};
-let pendingOrganizations = JSON.parse(localStorage.getItem('pendingOrganizations')) || [];
+let pendingOrganizations = [];
 
 // ========== البيانات العالمية للدول والمدن ==========
 const geoData = [
