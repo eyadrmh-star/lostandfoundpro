@@ -1383,8 +1383,7 @@ function attachAppEvents() {
     document.getElementById('lostCurrentLocationBtn')?.addEventListener('click',()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{lostSelectMap.setView([pos.coords.latitude,pos.coords.longitude],13);if(lostMarker)lostSelectMap.removeLayer(lostMarker);lostMarker=L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(lostSelectMap);document.getElementById('lostLat').value=pos.coords.latitude;document.getElementById('lostLng').value=pos.coords.longitude;});else showToast(t('locationNotSupported'),'error');});
     document.getElementById('foundCurrentLocationBtn')?.addEventListener('click',()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{foundSelectMap.setView([pos.coords.latitude,pos.coords.longitude],13);if(foundMarker)foundSelectMap.removeLayer(foundMarker);foundMarker=L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(foundSelectMap);document.getElementById('foundLat').value=pos.coords.latitude;document.getElementById('foundLng').value=pos.coords.longitude;});else showToast(t('locationNotSupported'),'error');});
     document.getElementById('closeAdBar')?.addEventListener('click',()=>{document.getElementById('adBar').style.display='none';});
-    if(localStorage.getItem('isPremiumUser')==='true')document.getElementById('adBar').style.display='none';
-    if(localStorage.getItem('darkMode')==='true')document.body.classList.add('dark');
+    
 }
 
 function checkMapExpiryNotifications() {
