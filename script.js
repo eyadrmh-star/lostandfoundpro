@@ -1188,11 +1188,73 @@ function showUserDetails(email) {
 }
 
 // ========== الإشعارات ==========
-function sendMessageToUser(credential, msg) { let user = users.find(u => (u.email === credential || u.phone === credential)); if (user) { let userId = user.id || user.email || user.phone; adminNotifications[userId] = adminNotifications[userId] || []; adminNotifications[userId].push({ msg, timestamp: new Date().toISOString() }); addLog('Message Sent', currentUser?.email, `To: ${credential}`); } }
-function showNotificationsBadge() { if (!currentUser || currentUser.isAdmin) return; let userId = currentUser.id || currentUser.email || currentUser.phone; let notifs = adminNotifications[userId] || []; let btn = document.getElementById('dashboardNotificationsBtn'); if (btn) { if (notifs.length > 0) { btn.style.background = '#ff4444'; btn.title = `${notifs.length} new notifications`; } else { btn.style.background = 'rgba(255,255,255,0.15)'; btn.title = t('notifications'); } } }
-function showNotifications() { document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('notificationsPage').classList.remove('hidden'); let userId = currentUser?.id || currentUser?.email || currentUser?.phone || ''; let notifs = adminNotifications[userId] || []; let container = document.getElementById('notificationsList'); if (notifs.length === 0) { container.innerHTML = `<p style="text-align:center;padding:40px;color:var(--text-light);">${t('noNotifications')}</p>`; return; } container.innerHTML = notifs.reverse().map(n => { let extendHTML = ''; if (n.type === 'mapExpiry' && n.reportId) { extendHTML = `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},30)">📅 1M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},90)">📅 3M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},180)">📅 6M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},270)">📅 9M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},365)">📅 1Y</button></div>`; } return `<div style="background:var(--card);border-radius:12px;padding:14px;margin:8px 0;border-left:4px solid var(--primary);"><strong>📢 ${t('fromAdmin')}</strong><br><p>${n.msg}</p><small>${new Date(n.timestamp).toLocaleString()}</small>${extendHTML}</div>`; }).join(''); }
-function extendMapExpiry(reportId, days) { let item = lostArray.find(i => i.id === reportId) || foundArray.find(i => i.id === reportId); if (!item) return; item.mapExpiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(); item.expiryNotified = false; showAlert(t('success'), '✅ Map visibility extended for ' + days + ' days!'); updateDashboardMap(); initPublicMap(); }
+async function sendMessageToUser(credential, msg) {
+    let user = users.find(u => (u.email === credential || u.phone === credential));
+    if (user) {
+        let userId = user.id || user.email || user.phone;
+        await db.collection('notifications').add({
+            recipientId: userId,
+            msg: msg,
+            timestamp: new Date().toISOString(),
+            from: currentUser?.name || 'Admin',
+            read: false
+        });
+        addLog('Message Sent', currentUser?.email, `To: ${credential}`);
+    }
+}
 
+async function showNotificationsBadge() {
+    if (!currentUser || currentUser.isAdmin) return;
+    let userId = currentUser.id || currentUser.email || currentUser.phone;
+    let snap = await db.collection('notifications')
+        .where('recipientId', '==', userId)
+        .where('read', '==', false)
+        .get();
+    let count = snap.docs.length;
+    let btn = document.getElementById('dashboardNotificationsBtn');
+    if (btn) {
+        if (count > 0) {
+            btn.style.background = '#ff4444';
+            btn.title = `${count} new notifications`;
+        } else {
+            btn.style.background = 'rgba(255,255,255,0.15)';
+            btn.title = t('notifications');
+        }
+    }
+}
+
+async function showNotifications() {
+    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('notificationsPage').classList.remove('hidden');
+    let userId = currentUser?.id || currentUser?.email || currentUser?.phone || '';
+    let snap = await db.collection('notifications')
+        .where('recipientId', '==', userId)
+        .orderBy('timestamp', 'desc')
+        .get();
+    let notifs = snap.docs.map(d => d.data());
+    let container = document.getElementById('notificationsList');
+    if (notifs.length === 0) {
+        container.innerHTML = `<p style="text-align:center;padding:40px;color:var(--text-light);">${t('noNotifications')}</p>`;
+        return;
+    }
+    container.innerHTML = notifs.map(n => {
+        let extendHTML = '';
+        if (n.type === 'mapExpiry' && n.reportId) {
+            extendHTML = `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},30)">📅 1M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},90)">📅 3M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},180)">📅 6M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},270)">📅 9M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},365)">📅 1Y</button></div>`;
+        }
+        return `<div style="background:var(--card);border-radius:12px;padding:14px;margin:8px 0;border-left:4px solid var(--primary);"><strong>📢 ${t('fromAdmin')}</strong><br><p>${n.msg}</p><small>${new Date(n.timestamp).toLocaleString()}</small>${extendHTML}</div>`;
+    }).join('');
+}
+
+function extendMapExpiry(reportId, days) {
+    let item = lostArray.find(i => i.id === reportId) || foundArray.find(i => i.id === reportId);
+    if (!item) return;
+    item.mapExpiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    item.expiryNotified = false;
+    showAlert(t('success'), '✅ Map visibility extended for ' + days + ' days!');
+    updateDashboardMap();
+    initPublicMap();
+}
 // ========== الخريطة العامة ==========
 function initPublicMap() {
     setTimeout(() => {
