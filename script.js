@@ -383,9 +383,8 @@ const translations = {
         liveMap: "Globale Live-Aktivität", welcome: "Willkommen"
     }
 };
-
 function t(key) { return (translations[currentLang] && translations[currentLang][key]) || (translations['en'][key]) || key; }
-function setLang(lang) { currentLang = lang; localStorage.setItem('appLang', lang); translatePage(); }
+function setLang(lang) { currentLang = lang; translatePage(); }
 function getLang() { return currentLang; }
 function translatePage() { document.querySelectorAll('[data-t]').forEach(el => { const key = el.getAttribute('data-t'); if (key && t(key)) el.innerText = t(key); }); }
 
@@ -400,9 +399,24 @@ function showMoneyField(checkbox, fieldId) { document.getElementById(fieldId).st
 function timeAgo(timestamp) { let now = Date.now(); let then = new Date(timestamp).getTime(); let diff = Math.floor((now - then) / 1000); if (diff < 60) return t('justNow'); if (diff < 3600) return Math.floor(diff/60) + ' ' + t('minutesAgo'); if (diff < 86400) return Math.floor(diff/3600) + ' ' + t('hoursAgo'); return Math.floor(diff/86400) + ' ' + t('daysAgo'); }
 function isNew(timestamp) { let now = Date.now(); let then = new Date(timestamp).getTime(); return (now - then) < 86400000; }
 function getUserLevel(points) { if (points >= 1000) return t('investigator'); if (points >= 500) return t('expert'); if (points >= 100) return t('helper'); return t('beginner'); }
-function addPoints(userId, pts) { userPoints[userId] = (userPoints[userId] || 0) + pts; localStorage.setItem('userPoints', JSON.stringify(userPoints)); }
-function addBalance(userId, amount) { userBalances[userId] = (userBalances[userId] || 0) + amount; localStorage.setItem('userBalances', JSON.stringify(userBalances)); }
-function addView(reportId) { reportViews[reportId] = (reportViews[reportId] || 0) + 1; localStorage.setItem('reportViews', JSON.stringify(reportViews)); }
+
+async function addPoints(userId, pts) {
+    userPoints[userId] = (userPoints[userId] || 0) + pts;
+    const db = firebase.firestore();
+    await db.collection('userPoints').doc(userId).set({ userId, points: userPoints[userId] }, { merge: true });
+}
+
+async function addBalance(userId, amount) {
+    userBalances[userId] = (userBalances[userId] || 0) + amount;
+    const db = firebase.firestore();
+    await db.collection('userBalances').doc(userId).set({ userId, balance: userBalances[userId] }, { merge: true });
+}
+
+async function addView(reportId) {
+    reportViews[reportId] = (reportViews[reportId] || 0) + 1;
+    const db = firebase.firestore();
+    await db.collection('reportViews').doc(String(reportId)).set({ reportId, views: reportViews[reportId] }, { merge: true });
+}
 
 // ========== ضغط الصور ==========
 function compressImage(file, maxWidth = 800, quality = 0.7) {
@@ -447,20 +461,12 @@ function sendDesktopNotification(title, body) {
 }
 function playMatchSound() { let audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'); audio.play().catch(e => console.log("Sound error:", e)); }
 
-// ========== دوال حفظ واسترجاع الفلتر ==========
+// ========== دوال حفظ واسترجاع الفلتر (بدون localStorage) ==========
 function saveFiltersToLocalStorage() {
-    const filters = { category: document.getElementById('filterCategory')?.value || 'all', time: document.getElementById('filterTime')?.value || 'all', country: document.getElementById('filterCountry')?.value || '', city: document.getElementById('filterCity')?.value || '' };
-    localStorage.setItem('dashboardFilters', JSON.stringify(filters));
+    // الفلاتر تبقى في الذاكرة فقط أثناء الجلسة
 }
 function loadFiltersFromLocalStorage() {
-    const saved = localStorage.getItem('dashboardFilters');
-    if (!saved) return;
-    const filters = JSON.parse(saved);
-    if (document.getElementById('filterCategory')) document.getElementById('filterCategory').value = filters.category;
-    if (document.getElementById('filterTime')) document.getElementById('filterTime').value = filters.time;
-    if (document.getElementById('filterCountry')) document.getElementById('filterCountry').value = filters.country;
-    if (document.getElementById('filterCity')) document.getElementById('filterCity').value = filters.city;
-    updateDashboardCities(); renderDashboardData();
+    // الفلاتر تبدأ افتراضية
 }
 
 // ========== طباعة PDF ==========
@@ -481,6 +487,7 @@ async function sendMessageToReporter(reportId, reportType, reporterName, reporte
     let senderName = currentUser?.name || currentUser?.email || currentUser?.phone || 'مستخدم';
     let fullMsg = `📩 من: ${senderName}\n📝 الرسالة: ${msg}\n📎 بخصوص: ${reportType === 'lost' ? 'بلاغ مفقود' : 'بلاغ موجود'} (ID: ${reportId})`;
 
+    const db = firebase.firestore();
     await db.collection('notifications').add({
         recipientId: recipientId,
         msg: fullMsg,
