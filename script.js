@@ -493,32 +493,48 @@ async function sendMessageToReporter(reportId, reportType, reporterName, reporte
     showToast(`✅ تم إرسال رسالتك إلى ${reporterName || reporterEmail}`, 'success');
 }
 // ========== حفظ واسترجاع البيانات ==========
-function loadSystemData() {
-    lostArray = JSON.parse(localStorage.getItem('lostArray')) || [];
-    foundArray = JSON.parse(localStorage.getItem('foundArray')) || [];
-    if (typeof auth !== 'undefined' && auth.currentUser) {
-        firebaseGetLost().then(data => { if (data.length > 0) lostArray = data; });
-        firebaseGetFound().then(data => { if (data.length > 0) foundArray = data; });
-    }
-    users = JSON.parse(localStorage.getItem('users')) || [];
-    let savedPending = localStorage.getItem('pendingUsers');
-    pendingUsers = savedPending ? JSON.parse(savedPending) : [];
-    let savedPendingReports = localStorage.getItem('pendingReports');
-    pendingReports = savedPendingReports ? JSON.parse(savedPendingReports) : [];
+async function loadSystemData() {
+    const db = firebase.firestore();
+    
+    // قراءة lostArray من Firestore
+    const lostSnap = await db.collection('lostItems').get();
+    lostArray = [];
+    lostSnap.forEach(doc => lostArray.push(doc.data()));
+    
+    // قراءة foundArray من Firestore
+    const foundSnap = await db.collection('foundItems').get();
+    foundArray = [];
+    foundSnap.forEach(doc => foundArray.push(doc.data()));
+    
+    // قراءة users من Firestore
+    const usersSnap = await db.collection('users').where('approved', '==', true).get();
+    users = [];
+    usersSnap.forEach(doc => users.push(doc.data()));
+    
+    // قراءة pendingUsers من Firestore
+    const pendingSnap = await db.collection('pendingUsers').get();
+    pendingUsers = [];
+    pendingSnap.forEach(doc => pendingUsers.push({ id: doc.id, ...doc.data() }));
+    
+    // قراءة pendingReports من Firestore
+    const reportsSnap = await db.collection('pendingReports').get();
+    pendingReports = [];
+    reportsSnap.forEach(doc => pendingReports.push({ id: doc.id, ...doc.data() }));
+    
     activityLogs = [];
-    userPoints = JSON.parse(localStorage.getItem('userPoints')) || {};
-    userBalances = JSON.parse(localStorage.getItem('userBalances')) || {};
-    reportViews = JSON.parse(localStorage.getItem('reportViews')) || {};
-    adminNotifications = JSON.parse(localStorage.getItem('adminNotifications')) || {};
+    userPoints = {};
+    userBalances = {};
+    reportViews = {};
+    adminNotifications = {};
     pendingOrganizations = [];
+    
+    // إنشاء الأدمن إذا لم يكن موجوداً
     if (!users.find(u => u.email === 'eyadrmh@system.com' || u.phone === '0000000')) {
-    users.push({ id: 'admin', name: 'Eyad Admin', email: 'eyadrmh@system.com', phone: '0000000', password: 'eyadrmh1491979', approved: true, isAdmin: true, isSuperAdmin: true });
-    localStorage.setItem('users', JSON.stringify(users));
-}
-    if (!users.find(u => u.email === 'user@test.com' || u.phone === '1111111')) {
-        users.push({ id: 'user1', name: 'Test User', email: 'user@test.com', phone: '1111111', password: '123456', approved: true, isAdmin: false, banned: false });
-        localStorage.setItem('users', JSON.stringify(users));
+        const adminUser = { id: 'admin', name: 'Eyad Admin', email: 'eyadrmh@system.com', phone: '0000000', password: 'eyadrmh1491979', approved: true, isAdmin: true, isSuperAdmin: true };
+        users.push(adminUser);
+        await db.collection('users').add(adminUser);
     }
+    
     setTimeout(() => { initPublicMap(); }, 1000);
 }
 
