@@ -1123,7 +1123,7 @@ async function refreshAdminPanel() {
         }
     });
 
-    // الرسوم البيانية
+        // الرسوم البيانية
     setTimeout(() => {
         let lc = document.getElementById('trendLineChart')?.getContext('2d'); if (lc) new Chart(lc, { type: 'line', data: { labels: last7Dates, datasets: [{ label: 'Lost', data: lost7, borderColor: '#e74c3c', backgroundColor: '#e74c3c20', fill: true, tension: 0.3 }, { label: 'Found', data: found7, borderColor: '#27ae60', backgroundColor: '#27ae6020', fill: true, tension: 0.3 }] }, options: { responsive: true } });
         let pc = document.getElementById('categoryPieChart')?.getContext('2d'); if (pc) new Chart(pc, { type: 'pie', data: { labels: ['Person', 'Items', 'Money', 'Vehicle', 'Animal', 'Device', 'Other'], datasets: [{ data: [categories.person, categories.items, categories.money, categories.vehicle, categories.animal, categories.device, categories.other], backgroundColor: ['#e74c3c', '#3498db', '#f0a500', '#27ae60', '#e91e63', '#9c27b0', '#607d8b'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
@@ -1135,112 +1135,7 @@ async function refreshAdminPanel() {
         document.querySelectorAll('.approve-org-btn').forEach(btn => { btn.onclick = () => approveOrganization(parseInt(btn.dataset.id)); });
         document.querySelectorAll('.reject-org-btn').forEach(btn => { btn.onclick = () => rejectOrganization(parseInt(btn.dataset.id)); });
     }, 200);
-}        
-        // ربط الأزرار (كلها Firestore)
-        document.querySelectorAll('.approve-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const id = btn.dataset.id;
-                const docRef = db.collection('pendingUsers').doc(id);
-                const doc = await docRef.get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    data.approved = true;
-                    await db.collection('users').add(data);
-                    users.push(data);
-localStorage.setItem('users', JSON.stringify(users));
-                    await docRef.delete();
-                    refreshAdminPanel();
-                    showToast(t('userApproved'));
-                }
-            };
-        });
-        document.querySelectorAll('.reject-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const id = btn.dataset.id;
-                await db.collection('pendingUsers').doc(id).delete();
-                refreshAdminPanel();
-                showToast(t('userRejected'), 'error');
-            };
-        });
-        document.querySelectorAll('.view-user-btn').forEach(btn => {
-            btn.onclick = () => showUserDetails(btn.dataset.email);
-        });
-        document.querySelectorAll('.send-msg-btn').forEach(btn => {
-            btn.onclick = () => {
-                const email = btn.dataset.email;
-                const msg = prompt(t('writeMessage'));
-                if (msg) {
-                    sendMessageToUser(email, msg);
-                    showToast(t('messageSent'));
-                }
-            };
-        });
-        document.querySelectorAll('.ban-user').forEach(btn => {
-            btn.onclick = async () => {
-                const email = btn.dataset.email;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                if (!snap.empty) {
-                    const doc = snap.docs[0];
-                    const data = doc.data();
-                    data.banned = !data.banned;
-                    await doc.ref.update({ banned: data.banned });
-                    refreshAdminPanel();
-                    showToast(data.banned ? '🚫 تم حظر المستخدم' : '✅ تم فك الحظر');
-                }
-            };
-        });
-        document.querySelectorAll('.delete-user-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const email = btn.dataset.email;
-                if (!confirm('⚠️ Delete user and all their reports permanently?')) return;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                for (const doc of snap.docs) {
-                    await doc.ref.delete();
-                }
-                refreshAdminPanel();
-                showToast('✅ User deleted', 'success');
-            };
-        });
-                document.querySelectorAll('.remove-subadmin-btn').forEach(btn => { /* يمكن تركها كما هي أو تعديلها لاحقاً */ });
-        document.querySelectorAll('.admin-delete-item').forEach(btn => { /* كما هي */ });
-        document.getElementById('addSubAdminBtn')?.addEventListener('click', () => { /* كما هي */ });
-        document.getElementById('broadcastBtn')?.addEventListener('click', () => { /* كما هي */ });
-        document.querySelectorAll('.approve-report-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const id = parseInt(btn.dataset.id);
-                const snap = await db.collection('pendingReports').where('id', '==', id).get();
-                for (const doc of snap.docs) {
-                    const data = doc.data();
-                    if (data.type === 'lost') {
-                        lostArray.push(data);
-                        await db.collection('lostItems').add(data);
-                    } else {
-                        foundArray.push(data);
-                        await db.collection('foundItems').add(data);
-                    }
-                    await doc.ref.delete();
-                }
-                saveToLocalStorage();
-                updateAllUI();
-                updateDashboardMap();
-                refreshAdminPanel();
-                showToast('✅ Report approved');
-            };
-        });
-        document.querySelectorAll('.approve-org-btn').forEach(btn => { btn.onclick = () => approveOrganization(parseInt(btn.dataset.id)); });
-        document.querySelectorAll('.reject-org-btn').forEach(btn => { btn.onclick = () => rejectOrganization(parseInt(btn.dataset.id)); });
-        document.querySelectorAll('.reject-report-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const id = parseInt(btn.dataset.id);
-                const snap = await db.collection('pendingReports').where('id', '==', id).get();
-                for (const doc of snap.docs) {
-                    await doc.ref.delete();
-                }
-                refreshAdminPanel();
-                showToast('❌ Report rejected');
-            };
-        });
-    }, 200);
+}    
 // ========== إعدادات المشرف ==========
 function showAdminSettings() { document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('adminSettingsPage').classList.remove('hidden'); renderAdminSettings(); }
 function renderAdminSettings() {
