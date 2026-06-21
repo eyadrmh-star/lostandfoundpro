@@ -1400,9 +1400,8 @@ function checkMapExpiryNotifications() {
     });
 }
 
-// ========== تفعيل المنظمات ==========
 // ========== تفعيل ورفض المنظمات ==========
-function approveOrganization(orgId) {
+async function approveOrganization(orgId) {
     let org = pendingOrganizations.find(o => o.id == orgId);
     if (org) {
         org.approved = true;
@@ -1412,8 +1411,8 @@ function approveOrganization(orgId) {
         org.trialStart = new Date().toISOString();
         users.push(org);
         pendingOrganizations = pendingOrganizations.filter(o => o.id != orgId);
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('pendingOrganizations', JSON.stringify(pendingOrganizations));
+        const db = firebase.firestore();
+        await db.collection('users').add(org);
         refreshAdminPanel();
         showToast("✅ أسبوع تجربة مجاني", 'success');
     }
@@ -1421,7 +1420,6 @@ function approveOrganization(orgId) {
 
 function rejectOrganization(orgId) {
     pendingOrganizations = pendingOrganizations.filter(o => o.id != orgId);
-    localStorage.setItem('pendingOrganizations', JSON.stringify(pendingOrganizations));
     refreshAdminPanel();
     showToast("تم رفض المنظمة", 'error');
 }
