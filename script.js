@@ -1154,14 +1154,45 @@ localStorage.setItem('users', JSON.stringify(users));
                 showToast('✅ User deleted', 'success');
             };
         });
-        document.querySelectorAll('.remove-subadmin-btn').forEach(btn => { /* يمكن تركها كما هي أو تعديلها لاحقاً */ });
+                document.querySelectorAll('.remove-subadmin-btn').forEach(btn => { /* يمكن تركها كما هي أو تعديلها لاحقاً */ });
         document.querySelectorAll('.admin-delete-item').forEach(btn => { /* كما هي */ });
         document.getElementById('addSubAdminBtn')?.addEventListener('click', () => { /* كما هي */ });
         document.getElementById('broadcastBtn')?.addEventListener('click', () => { /* كما هي */ });
-        document.querySelectorAll('.approve-report-btn').forEach(btn => { /* كما هي */ });
+        document.querySelectorAll('.approve-report-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = parseInt(btn.dataset.id);
+                const snap = await db.collection('pendingReports').where('id', '==', id).get();
+                for (const doc of snap.docs) {
+                    const data = doc.data();
+                    if (data.type === 'lost') {
+                        lostArray.push(data);
+                        await db.collection('lostItems').add(data);
+                    } else {
+                        foundArray.push(data);
+                        await db.collection('foundItems').add(data);
+                    }
+                    await doc.ref.delete();
+                }
+                saveToLocalStorage();
+                updateAllUI();
+                updateDashboardMap();
+                refreshAdminPanel();
+                showToast('✅ Report approved');
+            };
+        });
         document.querySelectorAll('.approve-org-btn').forEach(btn => { btn.onclick = () => approveOrganization(parseInt(btn.dataset.id)); });
         document.querySelectorAll('.reject-org-btn').forEach(btn => { btn.onclick = () => rejectOrganization(parseInt(btn.dataset.id)); });
-        document.querySelectorAll('.reject-report-btn').forEach(btn => { /* كما هي */ });
+        document.querySelectorAll('.reject-report-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = parseInt(btn.dataset.id);
+                const snap = await db.collection('pendingReports').where('id', '==', id).get();
+                for (const doc of snap.docs) {
+                    await doc.ref.delete();
+                }
+                refreshAdminPanel();
+                showToast('❌ Report rejected');
+            };
+        });
     }, 200);
 }
 // ========== إعدادات المشرف ==========
