@@ -1057,7 +1057,6 @@ async function refreshAdminPanel() {
     const container = document.getElementById('adminDynamicContent');
     if (!container) return;
 
-    // إحصائيات من المصفوفات المحلية (كما هي)
     let lostDaily = {}, foundDaily = {};
     lostArray.forEach(i => lostDaily[i.date] = (lostDaily[i.date] || 0) + 1);
     foundArray.forEach(i => foundDaily[i.date] = (foundDaily[i.date] || 0) + 1);
@@ -1080,7 +1079,6 @@ async function refreshAdminPanel() {
     [...lostArray, ...foundArray].forEach(item => { if (item.city) countryCount[item.city] = (countryCount[item.city] || 0) + 1; });
     let topCountry = Object.entries(countryCount).sort((a,b) => b[1] - a[1])[0];
 
-    // جلب بيانات Firestore
     const db = firebase.firestore();
     const [pendingSnap, approvedSnap] = await Promise.all([
         db.collection('pendingUsers').get(),
@@ -1096,7 +1094,6 @@ async function refreshAdminPanel() {
     let pendingUsersCount = pendingUsers.length;
     let subAdmins = approvedUsers.filter(u => u.isAdmin && !u.isSuperAdmin);
 
-    // بناء HTML
     let html = `
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
         <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${lostArray.length}</div><small>📦 ${t('totalLost')}</small></div>
@@ -1164,11 +1161,37 @@ async function refreshAdminPanel() {
         }
     });
 
-        // الرسوم البيانية
+    // الرسوم البيانية وأزرار المستخدمين
     setTimeout(() => {
         let lc = document.getElementById('trendLineChart')?.getContext('2d'); if (lc) new Chart(lc, { type: 'line', data: { labels: last7Dates, datasets: [{ label: 'Lost', data: lost7, borderColor: '#e74c3c', backgroundColor: '#e74c3c20', fill: true, tension: 0.3 }, { label: 'Found', data: found7, borderColor: '#27ae60', backgroundColor: '#27ae6020', fill: true, tension: 0.3 }] }, options: { responsive: true } });
         let pc = document.getElementById('categoryPieChart')?.getContext('2d'); if (pc) new Chart(pc, { type: 'pie', data: { labels: ['Person', 'Items', 'Money', 'Vehicle', 'Animal', 'Device', 'Other'], datasets: [{ data: [categories.person, categories.items, categories.money, categories.vehicle, categories.animal, categories.device, categories.other], backgroundColor: ['#e74c3c', '#3498db', '#f0a500', '#27ae60', '#e91e63', '#9c27b0', '#607d8b'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
         document.getElementById('adminExportReportBtn')?.addEventListener('click', () => { let rows = [["Date","Lost","Found"]]; last7Dates.forEach((d,idx) => rows.push([d,lost7[idx],found7[idx]])); let csv = rows.map(r=>r.join(",")).join("\n"); let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv])); a.download=`report_${new Date().toISOString().slice(0,10)}.csv`; a.click(); showToast(t('backupExported')); });
+        
+        // أزرار Approve/Reject للمستخدمين
+        document.querySelectorAll('.approve-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                const docRef = db.collection('pendingUsers').doc(id);
+                const doc = await docRef.get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    data.approved = true;
+                    await db.collection('users').add(data);
+                    await docRef.delete();
+                    refreshAdminPanel();
+                    showToast(t('userApproved'));
+                }
+            };
+        });
+        document.querySelectorAll('.reject-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                await db.collection('pendingUsers').doc(id).delete();
+                refreshAdminPanel();
+                showToast(t('userRejected'), 'error');
+            };
+        });
+        
         document.querySelectorAll('.remove-subadmin-btn').forEach(btn => { /* يمكن تركها كما هي أو تعديلها لاحقاً */ });
         document.querySelectorAll('.admin-delete-item').forEach(btn => { /* كما هي */ });
         document.getElementById('addSubAdminBtn')?.addEventListener('click', () => { /* كما هي */ });
