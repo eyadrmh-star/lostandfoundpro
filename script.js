@@ -521,11 +521,32 @@ async function loadSystemData() {
     pendingReports = [];
     reportsSnap.forEach(doc => pendingReports.push({ id: doc.id, ...doc.data() }));
     
-    activityLogs = [];
+    // قراءة userPoints و userBalances من Firestore
+    const pointsSnap = await db.collection('userPoints').get();
     userPoints = {};
+    pointsSnap.forEach(doc => {
+        const data = doc.data();
+        userPoints[data.userId] = data.points || 0;
+    });
+    
+    const balanceSnap = await db.collection('userBalances').get();
     userBalances = {};
-    reportViews = {};
+    balanceSnap.forEach(doc => {
+        const data = doc.data();
+        userBalances[data.userId] = data.balance || 0;
+    });
+    
+    // قراءة adminNotifications من Firestore
+    const notifSnap = await db.collection('adminNotifications').get();
     adminNotifications = {};
+    notifSnap.forEach(doc => {
+        const data = doc.data();
+        if (!adminNotifications[data.recipientId]) adminNotifications[data.recipientId] = [];
+        adminNotifications[data.recipientId].push(data);
+    });
+    
+    activityLogs = [];
+    reportViews = {};
     pendingOrganizations = [];
     
     // إنشاء الأدمن إذا لم يكن موجوداً
@@ -537,8 +558,6 @@ async function loadSystemData() {
     
     setTimeout(() => { initPublicMap(); }, 1000);
 }
-
-function addLog(action, user, details) { activityLogs.unshift({action,user,timestamp:new Date().toISOString(),details}); if(activityLogs.length>200) activityLogs.pop(); }
 
 function addLog(action, user, details) { activityLogs.unshift({action,user,timestamp:new Date().toISOString(),details}); if(activityLogs.length>200) activityLogs.pop(); }
 
@@ -566,7 +585,6 @@ function renderItemsList(type) {
     let div = document.getElementById(listId);
     if(!div) return;
     
-    // فلترة: إذا مش أدمن، شوف بس تقاريره
     let filteredArray = array;
     if (currentUser && !isAdmin) {
         let userId = currentUser.email || currentUser.phone;
@@ -589,12 +607,12 @@ function renderLostList() { renderItemsList('lost'); }
 function renderFoundList() { renderItemsList('found'); }
 
 function attachItemEvents() {
-    document.querySelectorAll('.delItem').forEach(btn=>{ btn.onclick=()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; if(confirm(t('confirmDelete'))){ if(type==='lost') lostArray=lostArray.filter(i=>i.id!==id); else foundArray=foundArray.filter(i=>i.id!==id); updateAllUI(); addLog('Delete',currentUser?.email||currentUser?.phone||'user',`Deleted ${type} item ${id}`); showToast(t('reportDeleted'),'error'); } }; });
-    document.querySelectorAll('.editItem').forEach(btn=>{ btn.onclick=()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ let nd=prompt('Edit description:',item.desc); if(nd) item.desc=nd; let dt=prompt('Edit date (YYYY-MM-DD):',item.date); if(dt) item.date=dt; let nc=prompt('Edit city:',item.city); if(nc) item.city=nc; updateAllUI(); showToast('Updated!'); } }; });
+    document.querySelectorAll('.delItem').forEach(btn=>{ btn.onclick=async ()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; if(confirm(t('confirmDelete'))){ const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.delete()); if(type==='lost') lostArray=lostArray.filter(i=>i.id!==id); else foundArray=foundArray.filter(i=>i.id!==id); updateAllUI(); addLog('Delete',currentUser?.email||currentUser?.phone||'user',`Deleted ${type} item ${id}`); showToast(t('reportDeleted'),'error'); } }; });
+    document.querySelectorAll('.editItem').forEach(btn=>{ btn.onclick=async ()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ let nd=prompt('Edit description:',item.desc); if(nd) item.desc=nd; let dt=prompt('Edit date (YYYY-MM-DD):',item.date); if(dt) item.date=dt; let nc=prompt('Edit city:',item.city); if(nc) item.city=nc; const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.update(item)); updateAllUI(); showToast('Updated!'); } }; });
     document.querySelectorAll('.shareItem').forEach(btn=>{ btn.onclick=()=>{ let text=`${btn.dataset.desc} - ${btn.dataset.city} - ${btn.dataset.date}`; if(navigator.share) navigator.share({title:'Lost & Found',text}); else copyToClipboard(text); }; });
     document.querySelectorAll('.copyLinkBtn').forEach(btn=>{ btn.onclick=()=>{ let id=btn.dataset.id, type=btn.dataset.type; let link = window.location.origin + window.location.pathname + `?report=${type}-${id}`; copyToClipboard(link); showToast(t('linkCopied')); }; });
     document.querySelectorAll('.qrItem').forEach(btn=>{ btn.onclick=()=>{ let text=`${btn.dataset.desc} - ${btn.dataset.city} - ${btn.dataset.date}`; document.getElementById('qrModal').style.display='flex'; document.getElementById('qrCode').innerHTML=''; new QRCode(document.getElementById('qrCode'),{text,width:128,height:128}); }; });
-    document.querySelectorAll('.status-select').forEach(sel=>{ sel.onchange=()=>{ let id=parseInt(sel.dataset.id), type=sel.dataset.type, ns=sel.value; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ item.status=ns; updateAllUI(); if(ns==='resolved' && currentUser) addPoints(currentUser.id||currentUser.email, 50); showToast(`Status: ${ns}`); } }; });
+    document.querySelectorAll('.status-select').forEach(sel=>{ sel.onchange=async ()=>{ let id=parseInt(sel.dataset.id), type=sel.dataset.type, ns=sel.value; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ item.status=ns; const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.update({ status: ns })); updateAllUI(); if(ns==='resolved' && currentUser) addPoints(currentUser.id||currentUser.email, 50); showToast(`Status: ${ns}`); } }; });
     document.querySelectorAll('.favoriteBtn').forEach(btn=>{ btn.onclick=()=>addToFavorites(parseInt(btn.dataset.id),btn.dataset.type); });
     document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); let id = parseInt(btn.dataset.id), type = btn.dataset.type, name = btn.dataset.name, email = btn.dataset.email; sendMessageToReporter(id, type, name, email); }; });
 }
@@ -671,6 +689,7 @@ async function updateDashboardMap() {
     if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { dashboardMap.setView([p.coords.latitude, p.coords.longitude], 13); L.marker([p.coords.latitude, p.coords.longitude]).bindPopup('📍 Your location').addTo(dashboardMap); });
 }
 async function refreshDataFromFirestore() {
+    const db = firebase.firestore();
     let fSnap = await db.collection('foundItems').get();
     foundArray = fSnap.docs.map(d => d.data());
     let lSnap = await db.collection('lostItems').get();
@@ -683,7 +702,6 @@ function initFoundMap() { if (foundSelectMap) return; foundSelectMap = L.map('fo
 function fillPhoneCodes() { document.querySelectorAll('.phone-code').forEach(sel => { sel.innerHTML = '<option value="">--</option>'; geoData.forEach(c => sel.add(new Option(c.name + ' (' + c.code + ')', c.code))); }); }
 function initCountries() { document.querySelectorAll('.country-select').forEach(sel => { geoData.forEach(c => sel.add(new Option(c.name, c.name))); }); function fillCities(sc, tc) { let country = sc.value; let cities = geoData.find(c => c.name === country)?.cities || []; let cs = document.getElementById(tc); if (cs) { cs.innerHTML = '<option value="">-- Select City --</option>'; cities.forEach(c => cs.add(new Option(c, c))); } } let lc = document.getElementById('lostCountry'), fc = document.getElementById('foundCountry'); if (lc) { lc.onchange = () => fillCities(lc, 'lostCity'); fillCities(lc, 'lostCity'); } if (fc) { fc.onchange = () => fillCities(fc, 'foundCity'); fillCities(fc, 'foundCity'); } fillPhoneCodes(); }
 function setupImagePreview(inputId, previewId) { let input = document.getElementById(inputId), preview = document.getElementById(previewId); if (!input) return; input.onchange = () => { preview.innerHTML = ''; Array.from(input.files).slice(0, 5).forEach(file => { let r = new FileReader(); r.onload = e => { let img = document.createElement('img'); img.src = e.target.result; preview.appendChild(img); }; r.readAsDataURL(file); }); }; }
-
 // ========== حفظ البلاغات ==========
 async function saveLost() {
     let desc = document.getElementById('lostDesc').value.trim();
