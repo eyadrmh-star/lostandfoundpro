@@ -881,14 +881,23 @@ function autoMatchAndNotify() {
 
 function matchItems() { let results = []; for (let l of lostArray) for (let f of foundArray) if (isSimilar(l.desc, f.desc)) results.push({ l, f }); let div = document.getElementById('matchResults'); if (results.length === 0) div.innerHTML = `<p style="text-align:center;padding:20px;">${t('noMatches')}</p>`; else { let html = `<h4>${t('potentialMatches')}</h4>`; results.forEach(r => html += `<div class="saved-item"><div>🔴 Lost: ${escapeHtml(r.l.desc)}<br>🟢 Found: ${escapeHtml(r.f.desc)}<br><small>📍 ${r.l.city}</small></div></div>`); div.innerHTML = html; showToast(`🎯 ${results.length} ${t('matches')}!`, 'success'); } }
 function toggleDarkMode() { document.body.classList.toggle('dark'); saveUserPrefs(); }
-function saveUserPrefs() { if (currentUser) localStorage.setItem(`prefs_${currentUser.email || currentUser.phone}`, JSON.stringify({ darkMode: document.body.classList.contains('dark') })); }
-function loadUserPrefs() { if (currentUser) { let prefs = JSON.parse(localStorage.getItem(`prefs_${currentUser.email || currentUser.phone}`)); if (prefs?.darkMode) document.body.classList.add('dark'); } }
-function addToFavorites(id, type) { if (!currentUser) { showToast(t('loginFirst'), 'error'); return; } let favs = JSON.parse(localStorage.getItem(`favs_${currentUser.email || currentUser.phone}`) || '[]'); if (favs.find(f => f.id === id && f.type === type)) { showToast(t('alreadyFav'), 'info'); return; } favs.push({ id, type }); localStorage.setItem(`favs_${currentUser.email || currentUser.phone}`, JSON.stringify(favs)); showToast(t('addedToFav')); }
+function saveUserPrefs() { /* تفضيلات محلية تبقى في الذاكرة */ }
+function loadUserPrefs() { /* تفضيلات محلية تبقى في الذاكرة */ }
+
+async function addToFavorites(id, type) {
+    if (!currentUser) { showToast(t('loginFirst'), 'error'); return; }
+    const db = firebase.firestore();
+    const userId = currentUser.email || currentUser.phone;
+    const snap = await db.collection('favorites').where('userId', '==', userId).where('reportId', '==', id).get();
+    if (!snap.empty) { showToast(t('alreadyFav'), 'info'); return; }
+    await db.collection('favorites').add({ userId, reportId: id, type, timestamp: new Date().toISOString() });
+    showToast(t('addedToFav'));
+}
+
 function dashboardGlobalSearch() { let query = document.getElementById('dashboardGlobalSearch')?.value.toLowerCase().trim(); let resultsDiv = document.getElementById('dashboardSearchResults'); if (!query) { if (resultsDiv) resultsDiv.innerHTML = ''; return; } let results = []; lostArray.forEach(item => { if (item.mapExpiry && new Date() > new Date(item.mapExpiry)) return; if (item.desc.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)) results.push({ ...item, type: 'lost' }); }); foundArray.forEach(item => { if (item.desc.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)) results.push({ ...item, type: 'found' }); }); if (resultsDiv) { if (results.length === 0) resultsDiv.innerHTML = `<p style="padding:10px;color:var(--text-light);">${t('noResults')}</p>`; else resultsDiv.innerHTML = results.map(item => `<div class="saved-item" style="background:${item.type === 'lost' ? 'var(--lost-bg)' : 'var(--found-bg)'};"><div><strong>${escapeHtml(item.desc)}</strong><br><small>📍 ${item.city} | 📅 ${item.date}</small></div></div>`).join(''); } }
 function populateDashboardFilters() { let allCities = [...new Set([...lostArray, ...foundArray].map(i => i.city).filter(c => c))]; let cs = document.getElementById('filterCountry'); if (cs) { cs.innerHTML = `<option value="">${t('allCountries')}</option>`; allCities.forEach(c => cs.add(new Option(c, c))); } updateDashboardCities(); }
 function updateDashboardCities() { let country = document.getElementById('filterCountry')?.value; let cs = document.getElementById('filterCity'); if (cs) { let allCities = [...new Set([...lostArray, ...foundArray].filter(i => !country || i.city === country).map(i => i.city))]; cs.innerHTML = `<option value="">${t('allCities')}</option>`; allCities.forEach(c => cs.add(new Option(c, c))); } }
 function renderDashboardData() {
-    saveFiltersToLocalStorage();
     let category = document.getElementById('filterCategory')?.value || 'all';
     let country = document.getElementById('filterCountry')?.value || '';
     let city = document.getElementById('filterCity')?.value || '';
