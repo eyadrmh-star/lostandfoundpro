@@ -1018,8 +1018,8 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
     }
     return true;
 }
-function logoutAdmin() { isAdmin = false; currentUser = null; localStorage.removeItem('currentUserCredential'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
-function logoutUser() { currentUser = null; localStorage.removeItem('currentUserCredential'); document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
+function logoutAdmin() { isAdmin = false; currentUser = null; document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
+function logoutUser() { currentUser = null; document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
 function showRegisterForm() { document.getElementById('registerForm').style.display = 'block'; document.getElementById('orgRegisterForm').style.display = 'none'; }
 function submitRegistration() {
     let name = document.getElementById('regName').value.trim();
@@ -1029,6 +1029,7 @@ function submitRegistration() {
     let isPhone = !isEmail && email.length >= 7;
     if (!name || !email || !pwd) return showAlert(t('error'), 'Please fill all fields', 'error');
     if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error');
+    const db = firebase.firestore();
     db.collection('pendingUsers').add({
         name: name, email: isEmail ? email : '', phone: isPhone ? email : '',
         password: pwd, approved: false,
