@@ -710,7 +710,13 @@ async function updateDashboardMap() {
     let weekMs = 7 * 24 * 60 * 60 * 1000;
     let yearMs = 365 * 24 * 60 * 60 * 1000;
     
-    let bannedUsers = users.filter(u => u.banned).map(u => u.email || u.phone);
+    // جلب المستخدمين المحظورين من Firestore
+    let bannedUsers = [];
+    const usersSnap = await db.collection('users').where('banned', '==', true).get();
+    usersSnap.forEach(doc => {
+        const data = doc.data();
+        bannedUsers.push(data.email || data.phone);
+    });
     
     var lostIconNormal = L.divIcon({className:'', html:"<div style='background:#e74c3c;color:white;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:bold;'>L</div>", iconSize:[24,24], popupAnchor:[0,-12]});
     var lostIconGlow = L.divIcon({className:'', html:"<div style='background:#e74c3c;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #e74c3c;'>L</div>", iconSize:[28,28], popupAnchor:[0,-14]});
@@ -789,7 +795,26 @@ async function saveLost() {
     let date = document.getElementById('lostDate').value;
     let citySel = document.getElementById('lostCity');
     let city = citySel.options[citySel.selectedIndex]?.text || '';
-    let name = currentUser?.name || currentUser?.email || currentUser?.phone || '';
+    
+    // الحصول على المستخدم الحالي من Firebase Auth
+    const user = firebase.auth().currentUser;
+    let userName = '';
+    let userId = '';
+    let isAdminFlag = false;
+    
+    if (user) {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            userName = data.name || data.email || user.email || '';
+            userId = data.email || data.phone || user.uid;
+            isAdminFlag = data.isAdmin || false;
+        } else {
+            userName = user.displayName || user.email || '';
+            userId = user.email || user.uid;
+        }
+    }
+    
     let phoneCode1 = document.getElementById('lostPhoneCode').value;
     let phone1 = document.getElementById('lostPhone1').value;
     let phoneCode2 = document.getElementById('lostPhoneCode2').value;
@@ -808,13 +833,12 @@ async function saveLost() {
     let reward = { money: false, moneyAmount: null };
     let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[0];
     if (moneyCheck?.checked) { reward.money = true; reward.moneyAmount = document.getElementById('lost-money').value; }
-    let userId = currentUser?.email || currentUser?.phone || currentUser?.id || 'unknown';
     let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    let newItem = { id: Date.now(), type: 'lost', desc, date, city, name, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
+    let newItem = { id: Date.now(), type: 'lost', desc, date, city, name: userName, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
     
     const db = firebase.firestore();
     
-    if (isAdmin) {
+    if (isAdminFlag) {
         lostArray.push(newItem);
         await db.collection('lostItems').add(newItem);
         showAlert(t('success'), t('reportSaved'));
@@ -836,13 +860,33 @@ async function saveLost() {
     addLog('Add Lost', userId, desc);
     autoMatchAndNotify();
 }
+
 async function saveFound() {
     let desc = document.getElementById('foundDesc').value.trim();
     if (!desc) return showToast(t('enterDescription'), 'error');
     let date = document.getElementById('foundDate').value;
     let citySel = document.getElementById('foundCity');
     let city = citySel.options[citySel.selectedIndex]?.text || '';
-    let name = currentUser?.name || currentUser?.email || currentUser?.phone || '';
+    
+    // الحصول على المستخدم الحالي من Firebase Auth
+    const user = firebase.auth().currentUser;
+    let userName = '';
+    let userId = '';
+    let isAdminFlag = false;
+    
+    if (user) {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            userName = data.name || data.email || user.email || '';
+            userId = data.email || data.phone || user.uid;
+            isAdminFlag = data.isAdmin || false;
+        } else {
+            userName = user.displayName || user.email || '';
+            userId = user.email || user.uid;
+        }
+    }
+    
     let phoneCode1 = document.getElementById('foundPhoneCode').value;
     let phone1 = document.getElementById('foundPhone1').value;
     let phoneCode2 = document.getElementById('foundPhoneCode2').value;
@@ -861,13 +905,12 @@ async function saveFound() {
     let reward = { money: false, moneyAmount: null };
     let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[1];
     if (moneyCheck?.checked) { reward.money = true; reward.moneyAmount = document.getElementById('found-money').value; }
-    let userId = currentUser?.email || currentUser?.phone || currentUser?.id || 'unknown';
     let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    let newItem = { id: Date.now(), type: 'found', desc, date, city, name, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
+    let newItem = { id: Date.now(), type: 'found', desc, date, city, name: userName, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
     
     const db = firebase.firestore();
     
-    if (isAdmin) {
+    if (isAdminFlag) {
         foundArray.push(newItem);
         await db.collection('foundItems').add(newItem);
         showAlert(t('success'), t('reportSaved'));
