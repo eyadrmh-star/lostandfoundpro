@@ -397,10 +397,21 @@ const translations = {
     }
 };
 function t(key) { return (translations[currentLang] && translations[currentLang][key]) || (translations['en'][key]) || key; }
-function setLang(lang) { currentLang = lang; translatePage(); }
-function getLang() { return currentLang; }
-function translatePage() { document.querySelectorAll('[data-t]').forEach(el => { const key = el.getAttribute('data-t'); if (key && t(key)) el.innerText = t(key); }); }
 
+function setLang(lang) {
+  currentLang = lang;
+  // حفظ اللغة في Firestore
+  if (firebase.auth().currentUser) {
+    db.collection('users').doc(firebase.auth().currentUser.uid).update({
+      lang: lang
+    }).catch(function() {});
+  }
+  translatePage();
+}
+
+function getLang() { return currentLang; }
+
+function translatePage() { document.querySelectorAll('[data-t]').forEach(el => { const key = el.getAttribute('data-t'); if (key && t(key)) el.innerText = t(key); }); }
 // ========== دوال مساعدة ==========
 function showToast(msg, type='success') { let toast = document.createElement('div'); toast.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${type==='success'?'#27ae60':type==='error'?'#e74c3c':'#f0a500'};color:white;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:bold;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,0.3);`; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000); }
 function showAlert(title, text, icon='success') { Swal.fire({ title, text, icon, confirmButtonColor: '#1a237e' }); }
