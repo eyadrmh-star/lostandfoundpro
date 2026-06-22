@@ -1838,3 +1838,4 @@ const snap = await db.collection('users').where('email', '==', email).get();
 for (const doc of snap.docs) await doc.ref.delete();
 refreshAdminPanel();
 showToast('✅ User deleted', 'success');
+}
