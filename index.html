@@ -314,25 +314,22 @@
       console.error("Redirect error:", error.message);
     });
 
-// إضافة المستخدم للـ localStorage
+// إضافة المستخدم للـ Firebase (بدلاً من localStorage)
 auth.onAuthStateChanged(function(user) {
   const loginPage = document.getElementById('loginPage');
   const dashboardPage = document.getElementById('dashboardPage');
   
   if (user) {
-    let allUsers = JSON.parse(localStorage.getItem('users')) || [];
-    if (!allUsers.find(u => u.email === user.email)) {
-      allUsers.push({
-        id: user.uid,
-        name: user.displayName || user.email,
-        email: user.email,
-        approved: true,
-        isAdmin: false
-      });
-      localStorage.setItem('users', JSON.stringify(allUsers));
-    }
+    // حفظ المستخدم في Firestore بدلاً من localStorage
+    db.collection('users').doc(user.uid).set({
+      name: user.displayName || user.email,
+      email: user.email,
+      approved: true,
+      isAdmin: false,
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    
     currentUser = { email: user.email, name: user.displayName, approved: true, isAdmin: false };
-    localStorage.setItem('currentUserCredential', user.email);
     
     if (loginPage) loginPage.style.display = 'none';
     if (dashboardPage) {
@@ -382,9 +379,5 @@ setTimeout(function() {
     📢 Your Ad Here - Contact us
 </div>
 
-<script>
-// إخفاء كل الصفحات وإظهار صفحة تسجيل الدخول فقط
-document.body.innerHTML = document.getElementById('loginPage').outerHTML;
-</script>
-
+<!-- تم حذف السطر الذي كان يحذف كل الصفحات -->
 </html>
