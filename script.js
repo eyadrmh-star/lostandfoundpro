@@ -508,7 +508,19 @@ async function sendMessageToReporter(reportId, reportType, reporterName, reporte
     if (!msg) return;
     let recipientId = reporterEmail;
     if (!recipientId) { showToast("لا يمكن إرسال الرسالة، معلومات المرسل غير متوفرة", 'error'); return; }
-    let senderName = currentUser?.name || currentUser?.email || currentUser?.phone || 'مستخدم';
+    
+    // الحصول على المستخدم الحالي من Firebase Auth
+    let senderName = 'مستخدم';
+    const user = firebase.auth().currentUser;
+    if (user) {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+            senderName = doc.data().name || doc.data().email || user.email || 'مستخدم';
+        } else {
+            senderName = user.displayName || user.email || 'مستخدم';
+        }
+    }
+    
     let fullMsg = `📩 من: ${senderName}\n📝 الرسالة: ${msg}\n📎 بخصوص: ${reportType === 'lost' ? 'بلاغ مفقود' : 'بلاغ موجود'} (ID: ${reportId})`;
 
     const db = firebase.firestore();
