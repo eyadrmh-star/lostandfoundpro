@@ -542,17 +542,17 @@ async function loadSystemData() {
     // قراءة lostArray من Firestore
     const lostSnap = await db.collection('lostItems').get();
     lostArray = [];
-    lostSnap.forEach(doc => lostArray.push(doc.data()));
+    lostSnap.forEach(doc => lostArray.push({ id: doc.id, ...doc.data() }));
     
     // قراءة foundArray من Firestore
     const foundSnap = await db.collection('foundItems').get();
     foundArray = [];
-    foundSnap.forEach(doc => foundArray.push(doc.data()));
+    foundSnap.forEach(doc => foundArray.push({ id: doc.id, ...doc.data() }));
     
     // قراءة users من Firestore
     const usersSnap = await db.collection('users').where('approved', '==', true).get();
     users = [];
-    usersSnap.forEach(doc => users.push(doc.data()));
+    usersSnap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
     
     // قراءة pendingUsers من Firestore
     const pendingSnap = await db.collection('pendingUsers').get();
@@ -592,6 +592,17 @@ async function loadSystemData() {
     reportViews = {};
     pendingOrganizations = [];
     
+    // جلب المستخدم الحالي من Firebase Auth
+    const user = firebase.auth().currentUser;
+    if (user) {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+            currentUser = { id: user.uid, ...doc.data() };
+        } else {
+            currentUser = { id: user.uid, email: user.email, name: user.displayName || user.email };
+        }
+    }
+    
     // إنشاء الأدمن إذا لم يكن موجوداً
     if (!users.find(u => u.email === 'eyadrmh@system.com' || u.phone === '0000000')) {
         const adminUser = { id: 'admin', name: 'Eyad Admin', email: 'eyadrmh@system.com', phone: '0000000', password: 'eyadrmh1491979', approved: true, isAdmin: true, isSuperAdmin: true };
@@ -618,6 +629,7 @@ function updateDashboardStats() {
 
 // ========== عرض القوائم ==========
 function renderLists() { renderLostList(); renderFoundList(); attachItemEvents(); }
+
 function renderItemsList(type) {
     let listId = type === 'lost' ? 'lostItemsList' : 'foundItemsList';
     let searchId = type === 'lost' ? 'searchLostInput' : 'searchFoundInput';
@@ -629,9 +641,22 @@ function renderItemsList(type) {
     if(!div) return;
     
     let filteredArray = array;
-    if (currentUser && !isAdmin) {
-        let userId = currentUser.email || currentUser.phone;
-        filteredArray = array.filter(item => item.userEmail === userId);
+    
+    // الحصول على المستخدم الحالي من Firebase Auth
+    const user = firebase.auth().currentUser;
+    let isAdminFlag = false;
+    if (user) {
+        db.collection('users').doc(user.uid).get().then(function(doc) {
+            if (doc.exists && doc.data().isAdmin) {
+                isAdminFlag = true;
+            }
+        }).catch(function() {});
+    }
+    
+    // إذا كان المستخدم عادي وليس أدمن، فلترة العناصر الخاصة به فقط
+    if (user && !isAdminFlag) {
+        let userId = user.email || user.phone || user.uid;
+        filteredArray = array.filter(item => item.userEmail === userId || item.userId === user.uid);
     }
     
     if(filteredArray.length===0) { div.innerHTML=`<p style="color:var(--text-light);text-align:center;padding:20px;">${t('noItems')}</p>`; return; }
@@ -642,25 +667,37 @@ function renderItemsList(type) {
         let views = reportViews[item.id] || 0, isNewItem = isNew(item.timestamp), isUrgent = item.isUrgent || false, isFeatured = item.isFeatured || false;
         let cls = ''; if(matched) cls += ' matched'; if(isUrgent) cls += ' urgent'; if(isFeatured) cls += ' featured'; if(item.reward?.money) cls += ' reward-item'; if(isBanned) cls += ' banned-item';
         let badges = ''; if(isNewItem) badges += `<span class="badge-new">🆕 ${t('newBadge')}</span> `; if(isUrgent) badges += `<span class="badge-urgent">🚨 ${t('urgentReport')}</span> `; if(isFeatured) badges += `<span class="badge-featured">📌 ${t('featuredReport')}</span> `; if(matched) badges += `<span class="badge-matched">🎯 Matched</span> `; if(item.reward?.money && item.reward?.moneyAmount) badges += `<span class="badge-reward">💰 $${item.reward.moneyAmount}</span> `; if(isBanned) badges += `<span class="badge-banned">🚫 محظور</span> `;
-        html += `<div class="saved-item ${cls}" data-id="${item.id}" data-type="${type}" onclick="addView(${item.id})"><div style="flex:1;"><strong>${emoji} ${escapeHtml(item.desc)}</strong><div style="margin:4px 0;">${badges}</div><small>📍 ${item.city} | <span class="time-ago">${timeAgo(item.timestamp)}</span> | 👁️ <span class="views-count">${views} ${t('views')}</span></small><br><select class="status-select modern-select" data-id="${item.id}" data-type="${type}" style="margin-top:4px;" onclick="event.stopPropagation();"><option value="open" ${item.status==='open'?'selected':''}>${t('open')}</option><option value="in_review" ${item.status==='in_review'?'selected':''}>${t('inReview')}</option><option value="resolved" ${item.status==='resolved'?'selected':''}>${t('resolved')}</option><option value="invalid" ${item.status==='invalid'?'selected':''}>${t('invalid')}</option></select>${item.images?`<div class="image-preview-area">${item.images.map(img=>`<img src="${img}">`).join('')}</div>`:''}</div><div style="display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation();"><button class="btn-sm editItem" data-id="${item.id}" data-type="${type}">✏️</button><button class="btn-sm btn-red delItem" data-id="${item.id}" data-type="${type}">🗑️</button><button class="btn-sm shareItem" data-desc="${escapeHtml(item.desc)}" data-city="${item.city}" data-date="${item.date}">📤</button><button class="btn-sm copyLinkBtn" data-id="${item.id}" data-type="${type}">🔗</button><button class="btn-sm qrItem" data-desc="${escapeHtml(item.desc)}" data-city="${item.city}" data-date="${item.date}">📱</button><button class="btn-sm favoriteBtn" data-id="${item.id}" data-type="${type}">⭐</button></div></div>`;
+        html += `<div class="saved-item ${cls}" data-id="${item.id}" data-type="${type}" onclick="addView('${item.id}')"><div style="flex:1;"><strong>${emoji} ${escapeHtml(item.desc)}</strong><div style="margin:4px 0;">${badges}</div><small>📍 ${item.city} | <span class="time-ago">${timeAgo(item.timestamp)}</span> | 👁️ <span class="views-count">${views} ${t('views')}</span></small><br><select class="status-select modern-select" data-id="${item.id}" data-type="${type}" style="margin-top:4px;" onclick="event.stopPropagation();"><option value="open" ${item.status==='open'?'selected':''}>${t('open')}</option><option value="in_review" ${item.status==='in_review'?'selected':''}>${t('inReview')}</option><option value="resolved" ${item.status==='resolved'?'selected':''}>${t('resolved')}</option><option value="invalid" ${item.status==='invalid'?'selected':''}>${t('invalid')}</option></select>${item.images?`<div class="image-preview-area">${item.images.map(img=>`<img src="${img}">`).join('')}</div>`:''}</div><div style="display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation();"><button class="btn-sm editItem" data-id="${item.id}" data-type="${type}">✏️</button><button class="btn-sm btn-red delItem" data-id="${item.id}" data-type="${type}">🗑️</button><button class="btn-sm shareItem" data-desc="${escapeHtml(item.desc)}" data-city="${item.city}" data-date="${item.date}">📤</button><button class="btn-sm copyLinkBtn" data-id="${item.id}" data-type="${type}">🔗</button><button class="btn-sm qrItem" data-desc="${escapeHtml(item.desc)}" data-city="${item.city}" data-date="${item.date}">📱</button><button class="btn-sm favoriteBtn" data-id="${item.id}" data-type="${type}">⭐</button></div></div>`;
     });
     div.innerHTML = html + `<input type="text" class="modern-input" id="${searchId}" placeholder="${searchPlaceholder}" onkeyup="filterItems('${type}')" style="margin-top:10px;">`;
 }
+
 function renderLostList() { renderItemsList('lost'); }
 function renderFoundList() { renderItemsList('found'); }
 
 function attachItemEvents() {
-    document.querySelectorAll('.delItem').forEach(btn=>{ btn.onclick=async ()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; if(confirm(t('confirmDelete'))){ const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.delete()); if(type==='lost') lostArray=lostArray.filter(i=>i.id!==id); else foundArray=foundArray.filter(i=>i.id!==id); updateAllUI(); addLog('Delete',currentUser?.email||currentUser?.phone||'user',`Deleted ${type} item ${id}`); showToast(t('reportDeleted'),'error'); } }; });
+    // الحصول على المستخدم الحالي من Firebase Auth
+    const user = firebase.auth().currentUser;
+    let userEmail = user ? user.email : 'user';
+    
+    document.querySelectorAll('.delItem').forEach(btn=>{ btn.onclick=async ()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; if(confirm(t('confirmDelete'))){ const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.delete()); if(type==='lost') lostArray=lostArray.filter(i=>i.id!==id); else foundArray=foundArray.filter(i=>i.id!==id); updateAllUI(); addLog('Delete', userEmail, `Deleted ${type} item ${id}`); showToast(t('reportDeleted'),'error'); } }; });
+    
     document.querySelectorAll('.editItem').forEach(btn=>{ btn.onclick=async ()=>{ let id=parseInt(btn.dataset.id), type=btn.dataset.type; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ let nd=prompt('Edit description:',item.desc); if(nd) item.desc=nd; let dt=prompt('Edit date (YYYY-MM-DD):',item.date); if(dt) item.date=dt; let nc=prompt('Edit city:',item.city); if(nc) item.city=nc; const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.update(item)); updateAllUI(); showToast('Updated!'); } }; });
+    
     document.querySelectorAll('.shareItem').forEach(btn=>{ btn.onclick=()=>{ let text=`${btn.dataset.desc} - ${btn.dataset.city} - ${btn.dataset.date}`; if(navigator.share) navigator.share({title:'Lost & Found',text}); else copyToClipboard(text); }; });
+    
     document.querySelectorAll('.copyLinkBtn').forEach(btn=>{ btn.onclick=()=>{ let id=btn.dataset.id, type=btn.dataset.type; let link = window.location.origin + window.location.pathname + `?report=${type}-${id}`; copyToClipboard(link); showToast(t('linkCopied')); }; });
+    
     document.querySelectorAll('.qrItem').forEach(btn=>{ btn.onclick=()=>{ let text=`${btn.dataset.desc} - ${btn.dataset.city} - ${btn.dataset.date}`; document.getElementById('qrModal').style.display='flex'; document.getElementById('qrCode').innerHTML=''; new QRCode(document.getElementById('qrCode'),{text,width:128,height:128}); }; });
-    document.querySelectorAll('.status-select').forEach(sel=>{ sel.onchange=async ()=>{ let id=parseInt(sel.dataset.id), type=sel.dataset.type, ns=sel.value; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ item.status=ns; const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.update({ status: ns })); updateAllUI(); if(ns==='resolved' && currentUser) addPoints(currentUser.id||currentUser.email, 50); showToast(`Status: ${ns}`); } }; });
+    
+    document.querySelectorAll('.status-select').forEach(sel=>{ sel.onchange=async ()=>{ let id=parseInt(sel.dataset.id), type=sel.dataset.type, ns=sel.value; let item=type==='lost'?lostArray.find(i=>i.id===id):foundArray.find(i=>i.id===id); if(item){ item.status=ns; const db = firebase.firestore(); const coll = type === 'lost' ? 'lostItems' : 'foundItems'; const snap = await db.collection(coll).where('id', '==', id).get(); snap.forEach(async doc => await doc.ref.update({ status: ns })); updateAllUI(); if(ns==='resolved'){ const user = firebase.auth().currentUser; if(user) addPoints(user.uid, 50); } showToast(`Status: ${ns}`); } }; });
+    
     document.querySelectorAll('.favoriteBtn').forEach(btn=>{ btn.onclick=()=>addToFavorites(parseInt(btn.dataset.id),btn.dataset.type); });
+    
     document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); let id = parseInt(btn.dataset.id), type = btn.dataset.type, name = btn.dataset.name, email = btn.dataset.email; sendMessageToReporter(id, type, name, email); }; });
 }
-function filterItems(type) { let search = document.getElementById(type==='lost'?'searchLostInput':'searchFoundInput'); if(!search) return; let q = search.value.toLowerCase(); let items = document.querySelectorAll(`.saved-item[data-type="${type}"]`); items.forEach(div=>{ div.style.display = div.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
 
+function filterItems(type) { let search = document.getElementById(type==='lost'?'searchLostInput':'searchFoundInput'); if(!search) return; let q = search.value.toLowerCase(); let items = document.querySelectorAll(`.saved-item[data-type="${type}"]`); items.forEach(div=>{ div.style.display = div.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
 // ========== الخرائط ==========
 async function updateDashboardMap() {
     await refreshDataFromFirestore();
