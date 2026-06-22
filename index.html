@@ -350,6 +350,17 @@ auth.onAuthStateChanged(function(user) {
 </script>
 
 <script src="script.js"></script>
+    <script>
+// إظهار صفحة تسجيل الدخول فقط عند تحميل الصفحة
+document.getElementById('loginPage').style.display = 'block';
+document.getElementById('dashboardPage').style.display = 'none';
+document.getElementById('mainApp').style.display = 'none';
+document.getElementById('notificationsPage').style.display = 'none';
+document.getElementById('profilePage').style.display = 'none';
+document.getElementById('adminPanel').style.display = 'none';
+document.getElementById('adminSettingsPage').style.display = 'none';
+document.getElementById('userDetailsPage').style.display = 'none';
+</script>
 <script>
 // if ('serviceWorker' in navigator) {
 //     navigator.serviceWorker.register('service-worker.js').then(reg => {
