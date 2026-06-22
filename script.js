@@ -1840,4 +1840,4 @@ refreshAdminPanel();
 showToast('✅ User deleted', 'success');
     };
 })
-}
+});
