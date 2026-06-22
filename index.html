@@ -372,8 +372,8 @@ setTimeout(function() {
 </div>
 
 <script>
-document.getElementById('loginPage').classList.remove('hidden');
-document.getElementById('dashboardPage').classList.add('hidden');
+// إخفاء كل الصفحات وإظهار صفحة تسجيل الدخول فقط
+document.body.innerHTML = document.getElementById('loginPage').outerHTML;
 </script>
 
 </html>
