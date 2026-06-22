@@ -314,8 +314,11 @@
       console.error("Redirect error:", error.message);
     });
 
-   // إضافة المستخدم للـ localStorage
+// إضافة المستخدم للـ localStorage
 auth.onAuthStateChanged(function(user) {
+  const loginPage = document.getElementById('loginPage');
+  const dashboardPage = document.getElementById('dashboardPage');
+  
   if (user) {
     let allUsers = JSON.parse(localStorage.getItem('users')) || [];
     if (!allUsers.find(u => u.email === user.email)) {
@@ -330,13 +333,21 @@ auth.onAuthStateChanged(function(user) {
     }
     currentUser = { email: user.email, name: user.displayName, approved: true, isAdmin: false };
     localStorage.setItem('currentUserCredential', user.email);
-    // تم التعليق على التوجيه التلقائي للصفحة الثانية
-    // document.getElementById('loginPage').classList.add('hidden');
-    // document.getElementById('dashboardPage').classList.remove('hidden');
-    // updateAllUI();
+    
+    if (loginPage) loginPage.style.display = 'none';
+    if (dashboardPage) {
+      dashboardPage.style.display = 'block';
+      dashboardPage.classList.remove('hidden');
+    }
   } else {
-    document.getElementById('loginPage').classList.remove('hidden');
-    document.getElementById('dashboardPage').classList.add('hidden');
+    if (loginPage) {
+      loginPage.style.display = 'block';
+      loginPage.classList.remove('hidden');
+    }
+    if (dashboardPage) {
+      dashboardPage.style.display = 'none';
+      dashboardPage.classList.add('hidden');
+    }
   }
 });
 </script>
