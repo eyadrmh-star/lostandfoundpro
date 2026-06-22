@@ -1253,6 +1253,8 @@ function submitOrgRegistration() {
 }
 // ========== لوحة الإدارة (Firestore) ==========
 async function refreshAdminPanel() {
+    const db = firebase.firestore(); // تعريف db محلياً
+    
     // التحقق من حالة الأدمن من Firebase
     const user = firebase.auth().currentUser;
     let isAdminFlag = false;
@@ -1294,7 +1296,6 @@ async function refreshAdminPanel() {
     [...lostArray, ...foundArray].forEach(item => { if (item.city) countryCount[item.city] = (countryCount[item.city] || 0) + 1; });
     let topCountry = Object.entries(countryCount).sort((a,b) => b[1] - a[1])[0];
 
-    const db = firebase.firestore();
     const [pendingSnap, approvedSnap] = await Promise.all([
         db.collection('pendingUsers').get(),
         db.collection('users').where('approved', '==', true).get()
@@ -1533,6 +1534,7 @@ async function refreshAdminPanel() {
         });
     }, 300);
 }
+
 // ========== إعدادات المشرف ==========
 function showAdminSettings() {
     document.getElementById('adminPanel').classList.add('hidden');
@@ -1541,6 +1543,7 @@ function showAdminSettings() {
 }
 
 function renderAdminSettings() {
+    const db = firebase.firestore(); // تعريف db محلياً
     let container = document.getElementById('adminSettingsContent');
     if (!container) return;
     
@@ -1599,6 +1602,7 @@ function renderAdminSettings() {
 
 // ========== تفاصيل المستخدم ==========
 function showUserDetails(email) {
+    const db = firebase.firestore(); // تعريف db محلياً
     // جلب المستخدم من Firestore
     db.collection('users').where('email', '==', email).get().then(function(snap) {
         if (snap.empty) {
@@ -1654,7 +1658,7 @@ function renderUserDetails(userId, user, email) {
 // ========== دوال مساعدة للإدارة ==========
 function sendMessageToUser(email, msg) {
     if (!email || !msg) return;
-    const db = firebase.firestore();
+    const db = firebase.firestore(); // تعريف db محلياً
     db.collection('notifications').add({
         recipientId: email,
         msg: msg,
@@ -1671,7 +1675,7 @@ async function sendMessageToUser(credential, msg) {
     if (!msg) return;
     
     // جلب المستخدم من Firestore
-    const db = firebase.firestore();
+    const db = firebase.firestore(); // تعريف db محلياً
     let userDoc = null;
     
     const snap = await db.collection('users').where('email', '==', credential).get();
@@ -1713,11 +1717,11 @@ async function sendMessageToUser(credential, msg) {
 }
 
 async function showNotificationsBadge() {
+    const db = firebase.firestore(); // تعريف db محلياً
     const user = firebase.auth().currentUser;
     if (!user) return;
     
     // جلب بيانات المستخدم من Firestore
-    const db = firebase.firestore();
     const doc = await db.collection('users').doc(user.uid).get();
     if (doc.exists && doc.data().isAdmin) return;
     
@@ -1739,7 +1743,9 @@ async function showNotificationsBadge() {
         }
     }
 }
+
 async function showNotifications() {
+    const db = firebase.firestore(); // تعريف db محلياً
     document.getElementById('dashboardPage').classList.add('hidden');
     document.getElementById('notificationsPage').classList.remove('hidden');
     
