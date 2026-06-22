@@ -205,7 +205,20 @@ const geoData = [
 ];
 
 // ========== دوال الترجمة ==========
-let currentLang = localStorage.getItem('appLang') || 'en';
+let currentLang = 'en';
+
+// تحميل اللغة من Firestore عند بدء التشغيل
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    db.collection('users').doc(user.uid).get().then(function(doc) {
+      if (doc.exists && doc.data().lang) {
+        currentLang = doc.data().lang;
+        applyTranslations();
+      }
+    }).catch(function() {});
+  }
+});
+
 const translations = {
     en: {
         loginFirst: "Please login first", alreadyFav: "Already in favorites", addedToFav: "Added to favorites", copied: "Copied!", error: "Error",
