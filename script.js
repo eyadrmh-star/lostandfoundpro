@@ -2136,12 +2136,17 @@ refreshAdminPanel = async function() {
                 }
             };
         });
-                document.querySelectorAll('.delete-user-btn').forEach(btn => {
-    btn.onclick = async () => {
-        const email = btn.dataset.email;
-if (!confirm('⚠️ Delete user permanently?')) return;
-const snap = await db.collection('users').where('email', '==', email).get();
-for (const doc of snap.docs) await doc.ref.delete();
-refreshAdminPanel();
-showToast('✅ User deleted', 'success');
-}
+        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const email = btn.dataset.email;
+                if (!confirm('⚠️ Delete user permanently?')) return;
+                const snap = await db.collection('users').where('email', '==', email).get();
+                for (const doc of snap.docs) {
+                    await doc.ref.delete();
+                }
+                refreshAdminPanel();
+                showToast('✅ User deleted', 'success');
+            };
+        });
+    }, 100);
+};
