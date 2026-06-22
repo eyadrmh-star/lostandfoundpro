@@ -330,9 +330,10 @@ auth.onAuthStateChanged(function(user) {
     }
     currentUser = { email: user.email, name: user.displayName, approved: true, isAdmin: false };
     localStorage.setItem('currentUserCredential', user.email);
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('dashboardPage').classList.remove('hidden');
-    updateAllUI();
+    // تم التعليق على التوجيه التلقائي للصفحة الثانية
+    // document.getElementById('loginPage').classList.add('hidden');
+    // document.getElementById('dashboardPage').classList.remove('hidden');
+    // updateAllUI();
   } else {
     document.getElementById('loginPage').classList.remove('hidden');
     document.getElementById('dashboardPage').classList.add('hidden');
