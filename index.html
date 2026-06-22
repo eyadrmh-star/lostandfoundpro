@@ -314,37 +314,40 @@
       console.error("Redirect error:", error.message);
     });
 
-    // إضافة المستخدم للـ localStorage
-    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        let allUsers = JSON.parse(localStorage.getItem('users')) || [];
-        if (!allUsers.find(u => u.email === user.email)) {
-          allUsers.push({
-            id: user.uid,
-            name: user.displayName || user.email,
-            email: user.email,
-            approved: true,
-            isAdmin: false
-          });
-          localStorage.setItem('users', JSON.stringify(allUsers));
-        }
-        currentUser = { email: user.email, name: user.displayName, approved: true, isAdmin: false };
-        localStorage.setItem('currentUserCredential', user.email);
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('dashboardPage').classList.remove('hidden');
-        updateAllUI();
-      }
-    });
-    </script>
+   // إضافة المستخدم للـ localStorage
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    let allUsers = JSON.parse(localStorage.getItem('users')) || [];
+    if (!allUsers.find(u => u.email === user.email)) {
+      allUsers.push({
+        id: user.uid,
+        name: user.displayName || user.email,
+        email: user.email,
+        approved: true,
+        isAdmin: false
+      });
+      localStorage.setItem('users', JSON.stringify(allUsers));
+    }
+    currentUser = { email: user.email, name: user.displayName, approved: true, isAdmin: false };
+    localStorage.setItem('currentUserCredential', user.email);
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('dashboardPage').classList.remove('hidden');
+    updateAllUI();
+  } else {
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('dashboardPage').classList.add('hidden');
+  }
+});
+</script>
 
-    <script src="script.js"></script>
-    <script>
-            // if ('serviceWorker' in navigator) {
-    //     navigator.serviceWorker.register('service-worker.js').then(reg => {
-    //         console.log('Service Worker registered', reg);
-    //     }).catch(err => console.log('SW error:', err));
-    // }
-    </script>
+<script src="script.js"></script>
+<script>
+// if ('serviceWorker' in navigator) {
+//     navigator.serviceWorker.register('service-worker.js').then(reg => {
+//         console.log('Service Worker registered', reg);
+//     }).catch(err => console.log('SW error:', err));
+// }
+</script>
 <script>
 // تحميل pendingUsers من Firestore تلقائياً
 setTimeout(function() {
@@ -367,4 +370,3 @@ setTimeout(function() {
     📢 Your Ad Here - Contact us
 </div>
 </html>
-
