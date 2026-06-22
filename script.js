@@ -1001,25 +1001,33 @@ function saveUserPrefs() { /* تفضيلات محلية تبقى في الذاك
 function loadUserPrefs() { /* تفضيلات محلية تبقى في الذاكرة */ }
 
 async function addToFavorites(id, type) {
-    if (!currentUser) { showToast(t('loginFirst'), 'error'); return; }
+    const user = firebase.auth().currentUser;
+    if (!user) { showToast(t('loginFirst'), 'error'); return; }
+    
     const db = firebase.firestore();
-    const userId = currentUser.email || currentUser.phone;
+    const userId = user.email || user.phone || user.uid;
+    
     const snap = await db.collection('favorites').where('userId', '==', userId).where('reportId', '==', id).get();
     if (!snap.empty) { showToast(t('alreadyFav'), 'info'); return; }
     await db.collection('favorites').add({ userId, reportId: id, type, timestamp: new Date().toISOString() });
     showToast(t('addedToFav'));
 }
 
-function dashboardGlobalSearch() { let query = document.getElementById('dashboardGlobalSearch')?.value.toLowerCase().trim(); let resultsDiv = document.getElementById('dashboardSearchResults'); if (!query) { if (resultsDiv) resultsDiv.innerHTML = ''; return; } let results = []; lostArray.forEach(item => { if (item.mapExpiry && new Date() > new Date(item.mapExpiry)) return; if (item.desc.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)) results.push({ ...item, type: 'lost' }); }); foundArray.forEach(item => { if (item.desc.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)) results.push({ ...item, type: 'found' }); }); if (resultsDiv) { if (results.length === 0) resultsDiv.innerHTML = `<p style="padding:10px;color:var(--text-light);">${t('noResults')}</p>`; else resultsDiv.innerHTML = results.map(item => `<div class="saved-item" style="background:${item.type === 'lost' ? 'var(--lost-bg)' : 'var(--found-bg)'};"><div><strong>${escapeHtml(item.desc)}</strong><br><small>📍 ${item.city} | 📅 ${item.date}</small></div></div>`).join(''); } }
-function populateDashboardFilters() { let allCities = [...new Set([...lostArray, ...foundArray].map(i => i.city).filter(c => c))]; let cs = document.getElementById('filterCountry'); if (cs) { cs.innerHTML = `<option value="">${t('allCountries')}</option>`; allCities.forEach(c => cs.add(new Option(c, c))); } updateDashboardCities(); }
-function updateDashboardCities() { let country = document.getElementById('filterCountry')?.value; let cs = document.getElementById('filterCity'); if (cs) { let allCities = [...new Set([...lostArray, ...foundArray].filter(i => !country || i.city === country).map(i => i.city))]; cs.innerHTML = `<option value="">${t('allCities')}</option>`; allCities.forEach(c => cs.add(new Option(c, c))); } }
 function renderDashboardData() {
     let category = document.getElementById('filterCategory')?.value || 'all';
     let country = document.getElementById('filterCountry')?.value || '';
     let city = document.getElementById('filterCity')?.value || '';
     let fLost = lostArray, fFound = foundArray;
     let timeFilter = document.getElementById('filterTime')?.value || 'all';
-    let bannedUsers = users.filter(u => u.banned).map(u => u.email || u.phone);
+    
+    // جلب المستخدمين المحظورين من Firestore
+    let bannedUsers = [];
+    db.collection('users').where('banned', '==', true).get().then(function(snapshot) {
+        snapshot.forEach(function(doc) {
+            const data = doc.data();
+            bannedUsers.push(data.email || data.phone);
+        });
+    }).catch(function() {});
     
     if (category === 'reward') {
         fLost = fLost.filter(i => i.reward?.money);
@@ -1082,6 +1090,7 @@ function renderDashboardData() {
     document.querySelectorAll('.printPdfBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); printReportAsPDF(btn.dataset.desc, btn.dataset.city, btn.dataset.date, btn.dataset.name, btn.dataset.phone, btn.dataset.type); }; });
     document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); sendMessageToReporter(parseInt(btn.dataset.id), btn.dataset.type, btn.dataset.name, btn.dataset.email); }; });
 }
+
 async function loginUser(credential, pwd, isAdminLogin = false) {
     let user = null;
     
@@ -1094,7 +1103,7 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
         if (!snap.empty) {
             snap.forEach(doc => {
                 const u = doc.data();
-                if (u.password === pwd) user = u;
+                if (u.password === pwd) user = { id: doc.id, ...u };
             });
         }
     }
@@ -1134,9 +1143,49 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
     }
     return true;
 }
-function logoutAdmin() { isAdmin = false; currentUser = null; document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
-function logoutUser() { currentUser = null; document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); showToast(t('logout')); }
-function showRegisterForm() { document.getElementById('registerForm').style.display = 'block'; document.getElementById('orgRegisterForm').style.display = 'none'; }
+function logoutAdmin() {
+    firebase.auth().signOut().then(function() {
+        isAdmin = false;
+        currentUser = null;
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('loginPage').style.display = 'block';
+        showToast(t('logout'));
+    }).catch(function() {
+        isAdmin = false;
+        currentUser = null;
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('loginPage').style.display = 'block';
+        showToast(t('logout'));
+    });
+}
+
+function logoutUser() {
+    firebase.auth().signOut().then(function() {
+        currentUser = null;
+        document.getElementById('dashboardPage').classList.add('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('loginPage').style.display = 'block';
+        showToast(t('logout'));
+    }).catch(function() {
+        currentUser = null;
+        document.getElementById('dashboardPage').classList.add('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('loginPage').style.display = 'block';
+        showToast(t('logout'));
+    });
+}
+
+function showRegisterForm() {
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('orgRegisterForm').style.display = 'none';
+}
+
 function submitRegistration() {
     let name = document.getElementById('regName').value.trim();
     let email = document.getElementById('regEmail').value.trim();
@@ -1147,8 +1196,11 @@ function submitRegistration() {
     if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error');
     const db = firebase.firestore();
     db.collection('pendingUsers').add({
-        name: name, email: isEmail ? email : '', phone: isPhone ? email : '',
-        password: pwd, approved: false,
+        name: name,
+        email: isEmail ? email : '',
+        phone: isPhone ? email : '',
+        password: pwd,
+        approved: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         showAlert(t('success'), t('regSent'));
@@ -1160,18 +1212,65 @@ function submitRegistration() {
     });
 }
 // ========== تسجيل الجهات الرسمية ==========
-function showOrgRegisterForm() { document.getElementById('orgRegisterForm').style.display = 'block'; document.getElementById('registerForm').style.display = 'none'; }
+function showOrgRegisterForm() {
+    document.getElementById('orgRegisterForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+}
+
 function submitOrgRegistration() {
-    let name = document.getElementById('orgName').value.trim(), type = document.getElementById('orgType').value, email = document.getElementById('orgEmail').value.trim(), phone = document.getElementById('orgPhone').value.trim(), pwd = document.getElementById('orgPassword').value;
+    let name = document.getElementById('orgName').value.trim();
+    let type = document.getElementById('orgType').value;
+    let email = document.getElementById('orgEmail').value.trim();
+    let phone = document.getElementById('orgPhone').value.trim();
+    let pwd = document.getElementById('orgPassword').value;
+    
     if (!name || !pwd || (!email && !phone)) return showAlert(t('error'), 'Please fill all fields', 'error');
-    pendingOrganizations.push({ id: 'org_' + Date.now(), name, type, email, phone, password: pwd, approved: false, isAdmin: false, isOrganization: true, isSuperAdmin: false });
-    showAlert(t('success'), t('orgRegSent')); document.getElementById('orgRegisterForm').style.display = 'none'; addLog('Org Registration', email || phone, name);
+    
+    const db = firebase.firestore();
+    const orgData = {
+        name: name,
+        type: type,
+        email: email,
+        phone: phone,
+        password: pwd,
+        approved: false,
+        isAdmin: false,
+        isOrganization: true,
+        isSuperAdmin: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('pendingOrganizations').add(orgData)
+        .then(() => {
+            showAlert(t('success'), t('orgRegSent'));
+            document.getElementById('orgRegisterForm').style.display = 'none';
+            addLog('Org Registration', email || phone, name);
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showAlert(t('error'), 'Organization registration failed.', 'error');
+        });
 }
 // ========== لوحة الإدارة (Firestore) ==========
 async function refreshAdminPanel() {
-    if (!isAdmin) return;
+    // التحقق من حالة الأدمن من Firebase
+    const user = firebase.auth().currentUser;
+    let isAdminFlag = false;
+    if (user) {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists && doc.data().isAdmin) {
+            isAdminFlag = true;
+        }
+    }
+    if (!isAdminFlag) return;
+    
     const container = document.getElementById('adminDynamicContent');
     if (!container) return;
+
+    // جلب pendingOrganizations من Firestore
+    const orgSnap = await db.collection('pendingOrganizations').get();
+    pendingOrganizations = [];
+    orgSnap.forEach(doc => pendingOrganizations.push({ id: doc.id, ...doc.data() }));
 
     let lostDaily = {}, foundDaily = {};
     lostArray.forEach(i => lostDaily[i.date] = (lostDaily[i.date] || 0) + 1);
@@ -1222,7 +1321,7 @@ async function refreshAdminPanel() {
         <div style="flex:2;min-width:300px;background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);"><h3 style="margin:0 0 15px;color:var(--primary);">📈 Lost vs Found (Last 7 days)</h3><canvas id="trendLineChart" width="400" height="200" style="width:100%;max-height:250px;"></canvas></div>
         <div style="flex:1;min-width:250px;background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);"><h3 style="margin:0 0 15px;color:var(--primary);">🥧 ${t('category')}</h3><canvas id="categoryPieChart" width="200" height="200" style="width:100%;max-height:200px;"></canvas></div>
         ${topCountry ? `<div style="background:var(--card);border-radius:16px;padding:14px;margin-bottom:20px;text-align:center;border-left:5px solid #8e44ad;font-weight:bold;">🌍 ${t('mostActiveCountry')}: ${topCountry[0]} (${topCountry[1]} ${t('reports')})</div>` : ''}
-    <div style="margin-bottom:24px;padding:16px;background:var(--card);border-radius:16px;overflow-x:auto;box-shadow:var(--shadow);"><h3 style="margin:0 0 12px;color:var(--primary);">📅 ${t('dailyReports')}</h3><table style="width:100%;border-collapse:collapse;"><tr style="background:var(--primary);color:white;"><th style="padding:10px;">Date</th><th style="padding:10px;">❌ ${t('lost')}</th><th style="padding:10px;">✅ ${t('found')}</th></tr>${last7Dates.map((d, idx) => `<tr><td style="padding:8px;text-align:center;">${d}</td><td style="color:#e74c3c;text-align:center;">${lost7[idx]}</td><td style="color:#27ae60;text-align:center;">${found7[idx]}</td></tr>`).join('')}}</table><div style="text-align:right;margin-top:10px;"><button id="adminExportReportBtn" class="btn-save" style="padding:8px 20px;">📊 ${t('exportReport')}</button></div></div>
+    <div style="margin-bottom:24px;padding:16px;background:var(--card);border-radius:16px;overflow-x:auto;box-shadow:var(--shadow);"><h3 style="margin:0 0 12px;color:var(--primary);">📅 ${t('dailyReports')}</h3><table style="width:100%;border-collapse:collapse;"><tr style="background:var(--primary);color:white;"><th style="padding:10px;">Date</th><th style="padding:10px;">❌ ${t('lost')}</th><th style="padding:10px;">✅ ${t('found')}</th></tr>${last7Dates.map((d, idx) => `<tr><td style="padding:8px;text-align:center;">${d}</td><td style="color:#e74c3c;text-align:center;">${lost7[idx]}</td><td style="color:#27ae60;text-align:center;">${found7[idx]}</td></tr>`).join('')}</table><div style="text-align:right;margin-top:10px;"><button id="adminExportReportBtn" class="btn-save" style="padding:8px 20px;">📊 ${t('exportReport')}</button></div></div>
     <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">⏳ ${t('userRegRequests')}</h3><div id="pendingUsersList">${pendingUsers.length === 0 ? `<p style="color:var(--text-light);">${t('noPending')}</p>` : pendingUsers.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:var(--bg);border-radius:12px;flex-wrap:wrap;gap:8px;"><div><strong>${u.name}</strong><br><small>${u.email || u.phone}</small></div><div style="display:flex;gap:6px;"><button class="approve-btn btn-sm btn-save" data-id="${u.id}">✅ ${t('approve')}</button><button class="reject-btn btn-sm btn-red" data-id="${u.id}">❌ ${t('reject')}</button></div></div>`).join('')}</div></div>
     <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">👥 ${t('approvedUsers')}</h3><div id="approvedUsersList">${approvedUsers.filter(u => !u.isAdmin).length === 0 ? `<p style="color:var(--text-light);">${t('noItems')}</p>` : approvedUsers.filter(u => !u.isAdmin).map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#e8f5e9;border-radius:12px;"><span>${u.name} (${u.email || u.phone})</span><div style="display:flex;gap:6px;"><button class="view-user-btn btn-sm btn-teal" data-email="${u.email || u.phone}">👁️ ${t('details')}</button><button class="send-msg-btn btn-sm btn-yellow" data-email="${u.email || u.phone}">📨 ${t('sendMessage')}</button><button class="ban-user btn-sm ${u.banned ? 'btn-save' : 'btn-red'}" data-email="${u.email || u.phone}">${u.banned ? '✅ فك الحظر' : '🚫 ' + t('ban')}</button><button class="delete-user-btn btn-sm btn-red" data-email="${u.email || u.phone}">🗑️ Delete</button></div></div>`).join('')}</div></div>
     <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">🏛️ طلبات المنظمات</h3><div id="pendingOrgsList">${pendingOrganizations.length === 0 ? '<p style="color:var(--text-light);">لا توجد طلبات منظمات</p>' : pendingOrganizations.map(o => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:#e8eaf6;border-radius:12px;"><div><strong>🏛️ ${o.name}</strong><br><small>📧 ${o.email || ''} | 📞 ${o.phone || ''} | 🏷️ ${o.type}</small></div><div style="display:flex;gap:6px;"><button class="approve-org-btn btn-sm btn-save" data-id="${o.id}">✅ Approve</button><button class="reject-org-btn btn-sm btn-red" data-id="${o.id}">❌ Reject</button></div></div>`).join('')}</div></div>
@@ -1243,10 +1342,10 @@ async function refreshAdminPanel() {
             list.innerHTML = reps.length === 0 ? '<p>لا توجد بلاغات معلقة</p>' : reps.map(report => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:10px;background:#fff3cd;border-radius:12px;"><div><strong>${report.type === 'lost' ? '🔴 Lost' : '🟢 Found'}</strong><br>${escapeHtml(report.desc)}<br><small>📍 ${report.city}</small></div><div style="display:flex;gap:6px;"><button class="approve-report-btn btn-sm btn-save" data-id="${report.id}">✅ Approve</button><button class="reject-report-btn btn-sm btn-red" data-id="${report.id}">❌ Reject</button></div></div>`).join('');
             document.querySelectorAll('.approve-report-btn').forEach(btn => {
                 btn.onclick = async () => {
-                    const id = parseInt(btn.dataset.id);
-                    const snap = await db.collection('pendingReports').where('id', '==', id).get();
-                    for (const doc of snap.docs) {
-                        const data = doc.data();
+                    const id = btn.dataset.id;
+                    const snap = await db.collection('pendingReports').doc(id).get();
+                    if (snap.exists) {
+                        const data = snap.data();
                         if (data.type === 'lost') {
                             lostArray.push(data);
                             await db.collection('lostItems').add(data);
@@ -1254,9 +1353,8 @@ async function refreshAdminPanel() {
                             foundArray.push(data);
                             await db.collection('foundItems').add(data);
                         }
-                        await doc.ref.delete();
+                        await db.collection('pendingReports').doc(id).delete();
                     }
-                    saveToLocalStorage();
                     updateAllUI();
                     updateDashboardMap();
                     refreshAdminPanel();
@@ -1265,11 +1363,8 @@ async function refreshAdminPanel() {
             });
             document.querySelectorAll('.reject-report-btn').forEach(btn => {
                 btn.onclick = async () => {
-                    const id = parseInt(btn.dataset.id);
-                    const snap = await db.collection('pendingReports').where('id', '==', id).get();
-                    for (const doc of snap.docs) {
-                        await doc.ref.delete();
-                    }
+                    const id = btn.dataset.id;
+                    await db.collection('pendingReports').doc(id).delete();
                     refreshAdminPanel();
                     showToast('❌ Report rejected');
                 };
@@ -1349,96 +1444,286 @@ async function refreshAdminPanel() {
             };
         });
         
-                document.querySelectorAll('.view-user-btn').forEach(btn => {
-            btn.onclick = () => showUserDetails(btn.dataset.email);
-        });
-        document.querySelectorAll('.send-msg-btn').forEach(btn => {
-            btn.onclick = () => {
-                const email = btn.dataset.email;
-                const msg = prompt(t('writeMessage'));
-                if (msg) {
-                    sendMessageToUser(email, msg);
-                    showToast(t('messageSent'));
-                }
-            };
-        });
-        document.querySelectorAll('.ban-user').forEach(btn => {
+        document.querySelectorAll('.remove-subadmin-btn').forEach(btn => {
             btn.onclick = async () => {
                 const email = btn.dataset.email;
                 const snap = await db.collection('users').where('email', '==', email).get();
-                if (!snap.empty) {
-                    const doc = snap.docs[0];
-                    const data = doc.data();
-                    data.banned = !data.banned;
-                    await doc.ref.update({ banned: data.banned });
-                    refreshAdminPanel();
-                    showToast(data.banned ? '🚫 تم حظر المستخدم' : '✅ تم فك الحظر');
+                for (const doc of snap.docs) {
+                    await doc.ref.update({ isAdmin: false });
                 }
+                refreshAdminPanel();
+                showToast('✅ Sub-admin removed');
             };
         });
-        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        
+        document.querySelectorAll('.admin-delete-item').forEach(btn => {
             btn.onclick = async () => {
-                const email = btn.dataset.email;
-                if (!confirm('⚠️ Delete user and all their reports permanently?')) return;
-                const snap = await db.collection('users').where('email', '==', email).get();
+                const id = btn.dataset.id;
+                const type = btn.dataset.type;
+                if (!confirm('Delete this item?')) return;
+                const coll = type === 'lost' ? 'lostItems' : 'foundItems';
+                const snap = await db.collection(coll).where('id', '==', parseInt(id)).get();
                 for (const doc of snap.docs) {
                     await doc.ref.delete();
                 }
                 refreshAdminPanel();
-                showToast('✅ User deleted', 'success');
+                updateAllUI();
+                showToast('Item deleted');
             };
         });
-        document.querySelectorAll('.remove-subadmin-btn').forEach(btn => { /* يمكن تركها كما هي أو تعديلها لاحقاً */ });
-        document.querySelectorAll('.admin-delete-item').forEach(btn => { /* كما هي */ });
-        document.getElementById('addSubAdminBtn')?.addEventListener('click', () => { /* كما هي */ });
-        document.getElementById('broadcastBtn')?.addEventListener('click', () => { /* كما هي */ });
-        document.querySelectorAll('.approve-org-btn').forEach(btn => { btn.onclick = () => approveOrganization(parseInt(btn.dataset.id)); });
-        document.querySelectorAll('.reject-org-btn').forEach(btn => { btn.onclick = () => rejectOrganization(parseInt(btn.dataset.id)); });    
+        
+        document.getElementById('addSubAdminBtn')?.addEventListener('click', async () => {
+            const name = document.getElementById('subAdminName').value.trim();
+            const email = document.getElementById('subAdminEmail').value.trim();
+            const phone = document.getElementById('subAdminPhone').value.trim();
+            const pwd = document.getElementById('subAdminPassword').value;
+            if (!name || !pwd || (!email && !phone)) return showAlert(t('error'), 'Please fill all fields', 'error');
+            await db.collection('users').add({
+                name, email, phone, password: pwd,
+                approved: true, isAdmin: true, isSuperAdmin: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            refreshAdminPanel();
+            showToast('✅ Sub-admin added');
+        });
+        
+        document.getElementById('broadcastBtn')?.addEventListener('click', async () => {
+            const msg = document.getElementById('broadcastMessage').value.trim();
+            if (!msg) return showToast('Write a message', 'error');
+            const usersSnap = await db.collection('users').get();
+            for (const doc of usersSnap.docs) {
+                const data = doc.data();
+                if (data.email) {
+                    await db.collection('notifications').add({
+                        recipientId: data.email,
+                        msg: '📢 Broadcast: ' + msg,
+                        timestamp: new Date().toISOString(),
+                        from: 'Admin',
+                        read: false
+                    });
+                }
+            }
+            showToast('✅ Message sent to all users');
+            document.getElementById('broadcastMessage').value = '';
+        });
+        
+        document.querySelectorAll('.approve-org-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                const docRef = db.collection('pendingOrganizations').doc(id);
+                const doc = await docRef.get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    data.approved = true;
+                    await db.collection('users').add(data);
+                    await docRef.delete();
+                    refreshAdminPanel();
+                    showToast('✅ Organization approved');
+                }
+            };
+        });
+        
+        document.querySelectorAll('.reject-org-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                await db.collection('pendingOrganizations').doc(id).delete();
+                refreshAdminPanel();
+                showToast('❌ Organization rejected');
+            };
+        });
+    }, 300);
+}
 // ========== إعدادات المشرف ==========
-function showAdminSettings() { document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('adminSettingsPage').classList.remove('hidden'); renderAdminSettings(); }
+function showAdminSettings() {
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('adminSettingsPage').classList.remove('hidden');
+    renderAdminSettings();
+}
+
 function renderAdminSettings() {
     let container = document.getElementById('adminSettingsContent');
-    if (!container || !currentUser) return;
-    container.innerHTML = `<div class="profile-card"><h2 style="color:var(--primary);margin-bottom:20px;">⚙️ ${t('adminSettings')}</h2><div style="margin-bottom:20px;"><h3>${t('changeName')}</h3><input type="text" id="adminNewName" class="modern-input" value="${currentUser.name || ''}" placeholder="${t('newName')}" style="margin-bottom:8px;"><button id="changeNameBtn" class="btn-save">${t('changeName')}</button></div><div style="margin-bottom:20px;"><h3>${t('changePassword')}</h3><input type="password" id="adminCurrentPwd" class="modern-input" placeholder="${t('currentPassword')}" style="margin-bottom:8px;"><input type="password" id="adminNewPwd" class="modern-input" placeholder="${t('newPassword')}" style="margin-bottom:8px;"><button id="changePasswordBtn" class="btn-save">${t('changePassword')}</button></div></div>`;
-    document.getElementById('changeNameBtn')?.addEventListener('click',()=>{let nn=document.getElementById('adminNewName').value.trim();if(nn){currentUser.name=nn;let idx=users.findIndex(u=>(u.email||u.phone)===(currentUser.email||currentUser.phone));if(idx>=0)users[idx].name=nn;showToast(t('nameChanged'));}});
-    document.getElementById('changePasswordBtn')?.addEventListener('click',()=>{let cp=document.getElementById('adminCurrentPwd').value,np=document.getElementById('adminNewPwd').value;if(cp!==currentUser.password)return showToast(t('wrongPassword'),'error');if(np.length<4)return showToast('Password too short','error');currentUser.password=np;let idx=users.findIndex(u=>(u.email||u.phone)===(currentUser.email||currentUser.phone));if(idx>=0)users[idx].password=np;showToast(t('passwordChanged'));});
+    if (!container) return;
+    
+    // الحصول على المستخدم الحالي من Firebase Auth
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    // جلب بيانات المستخدم من Firestore
+    db.collection('users').doc(user.uid).get().then(function(doc) {
+        let userData = doc.exists ? doc.data() : {};
+        let userName = userData.name || user.displayName || user.email || '';
+        
+        container.innerHTML = `<div class="profile-card"><h2 style="color:var(--primary);margin-bottom:20px;">⚙️ ${t('adminSettings')}</h2>
+            <div style="margin-bottom:20px;"><h3>${t('changeName')}</h3>
+            <input type="text" id="adminNewName" class="modern-input" value="${userName}" placeholder="${t('newName')}" style="margin-bottom:8px;">
+            <button id="changeNameBtn" class="btn-save">${t('changeName')}</button></div>
+            <div style="margin-bottom:20px;"><h3>${t('changePassword')}</h3>
+            <input type="password" id="adminCurrentPwd" class="modern-input" placeholder="${t('currentPassword')}" style="margin-bottom:8px;">
+            <input type="password" id="adminNewPwd" class="modern-input" placeholder="${t('newPassword')}" style="margin-bottom:8px;">
+            <button id="changePasswordBtn" class="btn-save">${t('changePassword')}</button></div></div>`;
+        
+        document.getElementById('changeNameBtn')?.addEventListener('click', function() {
+            let nn = document.getElementById('adminNewName').value.trim();
+            if (nn) {
+                db.collection('users').doc(user.uid).update({ name: nn })
+                    .then(() => {
+                        showToast(t('nameChanged'));
+                        renderAdminSettings();
+                    })
+                    .catch(() => showToast(t('error'), 'error'));
+            }
+        });
+        
+        document.getElementById('changePasswordBtn')?.addEventListener('click', function() {
+            let cp = document.getElementById('adminCurrentPwd').value;
+            let np = document.getElementById('adminNewPwd').value;
+            if (np.length < 4) return showToast('Password too short', 'error');
+            
+            // تغيير كلمة المرور في Firebase Auth
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, cp);
+            user.reauthenticateWithCredential(credential)
+                .then(function() {
+                    return user.updatePassword(np);
+                })
+                .then(function() {
+                    showToast(t('passwordChanged'));
+                    document.getElementById('adminCurrentPwd').value = '';
+                    document.getElementById('adminNewPwd').value = '';
+                })
+                .catch(function(error) {
+                    showToast(t('wrongPassword'), 'error');
+                });
+        });
+    }).catch(function() {});
 }
 
 // ========== تفاصيل المستخدم ==========
 function showUserDetails(email) {
-    let user = users.find(u => (u.email === email || u.phone === email));
-    if (!user) return;
+    // جلب المستخدم من Firestore
+    db.collection('users').where('email', '==', email).get().then(function(snap) {
+        if (snap.empty) {
+            db.collection('users').where('phone', '==', email).get().then(function(snap2) {
+                if (!snap2.empty) {
+                    snap2.forEach(function(doc) { renderUserDetails(doc.id, doc.data(), email); });
+                }
+            });
+            return;
+        }
+        snap.forEach(function(doc) {
+            renderUserDetails(doc.id, doc.data(), email);
+        });
+    }).catch(function() {});
+}
+
+function renderUserDetails(userId, user, email) {
     document.getElementById('adminPanel').classList.add('hidden');
     document.getElementById('userDetailsPage').classList.remove('hidden');
-    let userId = user.id || user.email || user.phone;
-    let points = userPoints[userId] || 0, balance = userBalances[userId] || 0;
-    let myLost = lostArray.filter(i => i.userEmail === userId).length;
-    let myFound = foundArray.filter(i => i.userEmail === userId).length;
+    
+    let points = userPoints[userId] || 0;
+    let balance = userBalances[userId] || 0;
+    let myLost = lostArray.filter(i => i.userEmail === email || i.userEmail === userId).length;
+    let myFound = foundArray.filter(i => i.userEmail === email || i.userEmail === userId).length;
+    
     let container = document.getElementById('userDetailsContent');
-    container.innerHTML = `<div class="profile-card"><div class="profile-avatar">👤</div><div class="profile-name">${user.name || user.email || user.phone}</div><div class="profile-level">${getUserLevel(points)} • ${points} ${t('points')}</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-num">${myLost}</div><div class="profile-stat-label">📦 ${t('lost')}</div></div><div class="profile-stat"><div class="profile-stat-num">${myFound}</div><div class="profile-stat-label">✅ ${t('found')}</div></div><div class="profile-stat"><div class="profile-stat-num">${points}</div><div class="profile-stat-label">⭐ ${t('points')}</div></div></div>${balance > 0 ? `<div class="balance-card"><div class="balance-amount">$${balance.toFixed(2)}</div><div>${t('earned')}</div></div>` : ''}<div style="margin-top:16px;display:flex;gap:8px;"><input type="text" id="userMessageInput" class="modern-input" placeholder="${t('writeMessage')}" style="flex:1;"><button id="sendUserMessageBtn" class="btn-sm btn-purple" data-email="${user.email || user.phone}">${t('send')}</button></div></div>`;
-    document.getElementById('sendUserMessageBtn')?.addEventListener('click', function() { let msg = document.getElementById('userMessageInput').value.trim(); if (msg) { sendMessageToUser(this.dataset.email, msg); showToast(t('messageSent')); document.getElementById('userMessageInput').value = ''; } });
+    container.innerHTML = `<div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-name">${user.name || user.email || user.phone}</div>
+        <div class="profile-level">${getUserLevel(points)} • ${points} ${t('points')}</div>
+        <div class="profile-stats">
+            <div class="profile-stat"><div class="profile-stat-num">${myLost}</div><div class="profile-stat-label">📦 ${t('lost')}</div></div>
+            <div class="profile-stat"><div class="profile-stat-num">${myFound}</div><div class="profile-stat-label">✅ ${t('found')}</div></div>
+            <div class="profile-stat"><div class="profile-stat-num">${points}</div><div class="profile-stat-label">⭐ ${t('points')}</div></div>
+        </div>
+        ${balance > 0 ? `<div class="balance-card"><div class="balance-amount">$${balance.toFixed(2)}</div><div>${t('earned')}</div></div>` : ''}
+        <div style="margin-top:16px;display:flex;gap:8px;">
+            <input type="text" id="userMessageInput" class="modern-input" placeholder="${t('writeMessage')}" style="flex:1;">
+            <button id="sendUserMessageBtn" class="btn-sm btn-purple" data-email="${user.email || user.phone}">${t('send')}</button>
+        </div>
+    </div>`;
+    
+    document.getElementById('sendUserMessageBtn')?.addEventListener('click', function() {
+        let msg = document.getElementById('userMessageInput').value.trim();
+        if (msg) {
+            sendMessageToUser(this.dataset.email, msg);
+            showToast(t('messageSent'));
+            document.getElementById('userMessageInput').value = '';
+        }
+    });
+}
+
+// ========== دوال مساعدة للإدارة ==========
+function sendMessageToUser(email, msg) {
+    if (!email || !msg) return;
+    const db = firebase.firestore();
+    db.collection('notifications').add({
+        recipientId: email,
+        msg: msg,
+        timestamp: new Date().toISOString(),
+        from: 'Admin',
+        read: false
+    }).catch(function(error) {
+        console.error('Error sending message:', error);
+    });
 }
 
 // ========== الإشعارات ==========
 async function sendMessageToUser(credential, msg) {
-    let user = users.find(u => (u.email === credential || u.phone === credential));
-    if (user) {
-        let userId = user.id || user.email || user.phone;
+    if (!msg) return;
+    
+    // جلب المستخدم من Firestore
+    const db = firebase.firestore();
+    let userDoc = null;
+    
+    const snap = await db.collection('users').where('email', '==', credential).get();
+    if (!snap.empty) {
+        snap.forEach(doc => userDoc = { id: doc.id, ...doc.data() });
+    }
+    
+    if (!userDoc) {
+        const snap2 = await db.collection('users').where('phone', '==', credential).get();
+        if (!snap2.empty) {
+            snap2.forEach(doc => userDoc = { id: doc.id, ...doc.data() });
+        }
+    }
+    
+    if (userDoc) {
+        let userId = userDoc.id || userDoc.email || userDoc.phone;
+        let senderName = 'Admin';
+        
+        // جلب اسم المرسل من Firebase Auth
+        const user = firebase.auth().currentUser;
+        if (user) {
+            const doc = await db.collection('users').doc(user.uid).get();
+            if (doc.exists) {
+                senderName = doc.data().name || user.displayName || user.email || 'Admin';
+            } else {
+                senderName = user.displayName || user.email || 'Admin';
+            }
+        }
+        
         await db.collection('notifications').add({
             recipientId: userId,
             msg: msg,
             timestamp: new Date().toISOString(),
-            from: currentUser?.name || 'Admin',
+            from: senderName,
             read: false
         });
-        addLog('Message Sent', currentUser?.email, `To: ${credential}`);
+        addLog('Message Sent', credential, `To: ${credential}`);
     }
 }
 
 async function showNotificationsBadge() {
-    if (!currentUser || currentUser.isAdmin) return;
-    let userId = currentUser.id || currentUser.email || currentUser.phone;
-    let snap = await db.collection('notifications')
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    // جلب بيانات المستخدم من Firestore
+    const db = firebase.firestore();
+    const doc = await db.collection('users').doc(user.uid).get();
+    if (doc.exists && doc.data().isAdmin) return;
+    
+    let userId = user.uid;
+    
+    const snap = await db.collection('notifications')
         .where('recipientId', '==', userId)
         .where('read', '==', false)
         .get();
@@ -1454,11 +1739,14 @@ async function showNotificationsBadge() {
         }
     }
 }
-
 async function showNotifications() {
     document.getElementById('dashboardPage').classList.add('hidden');
     document.getElementById('notificationsPage').classList.remove('hidden');
-    let userId = currentUser?.id || currentUser?.email || currentUser?.phone || '';
+    
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    let userId = user.uid;
     let snap = await db.collection('notifications')
         .where('recipientId', '==', userId)
         .orderBy('timestamp', 'desc')
@@ -1487,6 +1775,7 @@ function extendMapExpiry(reportId, days) {
     updateDashboardMap();
     initPublicMap();
 }
+
 // ========== الخريطة العامة ==========
 function initPublicMap() {
     setTimeout(() => {
@@ -1497,94 +1786,135 @@ function initPublicMap() {
         publicMap = L.map('publicMap', { zoomControl: false, attributionControl: false }).setView([31.95, 35.9], 7);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(publicMap);
 
-        let bannedUsers = users.filter(u => u.banned).map(u => u.email || u.phone);
-
-        var lostIcon = L.divIcon({
-            className: '',
-            html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #e74c3c;">L</div>',
-            iconSize: [28, 28], popupAnchor: [0, -14]
-        });
-        var foundIcon = L.divIcon({
-            className: '',
-            html: '<div style="background:#27ae60;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #27ae60;">F</div>',
-            iconSize: [28, 28], popupAnchor: [0, -14]
-        });
-        var rewardIcon = L.divIcon({
-            className: '',
-            html: '<div style="background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:20px;animation: pulse 1s infinite;box-shadow: 0 0 14px #f0a500;">$</div>',
-            iconSize: [34, 34], popupAnchor: [0, -17]
-        });
-
-        let allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
-        allItems = allItems.filter(item => {
-            if (!item.lat || !item.lng) return false;
-            if (item.mapExpiry && new Date(item.mapExpiry).getTime() > Date.now()) return true;
-            if (bannedUsers.includes(item.userEmail)) return false;
-            return true;
-        });
-
-        let cityGroups = {};
-        allItems.forEach(item => {
-            let city = item.city || 'Unknown';
-            if (!cityGroups[city]) cityGroups[city] = [];
-            cityGroups[city].push(item);
-        });
-
-        let finalItems = [];
-        Object.keys(cityGroups).forEach(city => {
-            let items = cityGroups[city];
-            items.sort((a, b) => {
-                if (a.reward?.money && !b.reward?.money) return -1;
-                if (!a.reward?.money && b.reward?.money) return 1;
-                return new Date(b.timestamp) - new Date(a.timestamp);
+        // جلب المستخدمين المحظورين من Firestore
+        let bannedUsers = [];
+        db.collection('users').where('banned', '==', true).get().then(function(snap) {
+            snap.forEach(function(doc) {
+                const data = doc.data();
+                bannedUsers.push(data.email || data.phone);
             });
-            finalItems = finalItems.concat(items.slice(0, 5));
+            renderPublicMapItems(bannedUsers);
+        }).catch(function() {
+            renderPublicMapItems([]);
         });
-
-        let usedCoords = {};
-        finalItems.forEach((item) => {
-            let key = item.lat.toFixed(5) + ',' + item.lng.toFixed(5);
-            if (!usedCoords[key]) usedCoords[key] = [];
-            usedCoords[key].push(item);
-        });
-
-        Object.keys(usedCoords).forEach(key => {
-            let items = usedCoords[key];
-            let [baseLat, baseLng] = key.split(',').map(Number);
-            
-            items.forEach((item, i) => {
-                let offsetLat = 0, offsetLng = 0;
-                if (items.length > 1) {
-                    let angle = (i / items.length) * 360 * Math.PI / 180;
-                    let radius = 0.0004;
-                    offsetLat = Math.cos(angle) * radius;
-                    offsetLng = Math.sin(angle) * radius;
-                }
-                
-                let icon = item.reward?.money ? rewardIcon : (item.itemType === 'lost' ? lostIcon : foundIcon);
-                L.marker([baseLat + offsetLat, baseLng + offsetLng], {icon: icon})
-                    .addTo(publicMap)
-                    .bindPopup('<b>' + escapeHtml(item.desc).substring(0, 30) + '...</b><br><small>' + item.city + '</small>' + (item.reward?.money ? '<br>💰 $' + item.reward.moneyAmount : ''));
-            });
-        });
-        
-        publicMap.invalidateSize();
     }, 1000);
 }
 
+function renderPublicMapItems(bannedUsers) {
+    var lostIcon = L.divIcon({
+        className: '',
+        html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #e74c3c;">L</div>',
+        iconSize: [28, 28], popupAnchor: [0, -14]
+    });
+    var foundIcon = L.divIcon({
+        className: '',
+        html: '<div style="background:#27ae60;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #27ae60;">F</div>',
+        iconSize: [28, 28], popupAnchor: [0, -14]
+    });
+    var rewardIcon = L.divIcon({
+        className: '',
+        html: '<div style="background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:20px;animation: pulse 1s infinite;box-shadow: 0 0 14px #f0a500;">$</div>',
+        iconSize: [34, 34], popupAnchor: [0, -17]
+    });
+
+    let allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
+    allItems = allItems.filter(item => {
+        if (!item.lat || !item.lng) return false;
+        if (item.mapExpiry && new Date(item.mapExpiry).getTime() > Date.now()) return true;
+        if (bannedUsers.includes(item.userEmail)) return false;
+        return true;
+    });
+
+    let cityGroups = {};
+    allItems.forEach(item => {
+        let city = item.city || 'Unknown';
+        if (!cityGroups[city]) cityGroups[city] = [];
+        cityGroups[city].push(item);
+    });
+
+    let finalItems = [];
+    Object.keys(cityGroups).forEach(city => {
+        let items = cityGroups[city];
+        items.sort((a, b) => {
+            if (a.reward?.money && !b.reward?.money) return -1;
+            if (!a.reward?.money && b.reward?.money) return 1;
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+        finalItems = finalItems.concat(items.slice(0, 5));
+    });
+
+    let usedCoords = {};
+    finalItems.forEach((item) => {
+        let key = item.lat.toFixed(5) + ',' + item.lng.toFixed(5);
+        if (!usedCoords[key]) usedCoords[key] = [];
+        usedCoords[key].push(item);
+    });
+
+    Object.keys(usedCoords).forEach(key => {
+        let items = usedCoords[key];
+        let [baseLat, baseLng] = key.split(',').map(Number);
+        
+        items.forEach((item, i) => {
+            let offsetLat = 0, offsetLng = 0;
+            if (items.length > 1) {
+                let angle = (i / items.length) * 360 * Math.PI / 180;
+                let radius = 0.0004;
+                offsetLat = Math.cos(angle) * radius;
+                offsetLng = Math.sin(angle) * radius;
+            }
+            
+            let icon = item.reward?.money ? rewardIcon : (item.itemType === 'lost' ? lostIcon : foundIcon);
+            L.marker([baseLat + offsetLat, baseLng + offsetLng], {icon: icon})
+                .addTo(publicMap)
+                .bindPopup('<b>' + escapeHtml(item.desc).substring(0, 30) + '...</b><br><small>' + item.city + '</small>' + (item.reward?.money ? '<br>💰 $' + item.reward.moneyAmount : ''));
+        });
+    });
+    
+    publicMap.invalidateSize();
+}
+
 // ========== الملف الشخصي ==========
-function showProfile() { if (!currentUser) return; document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('profilePage').classList.remove('hidden'); renderProfile(); }
-function renderProfile() {
+function showProfile() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('profilePage').classList.remove('hidden');
+    renderProfile(user);
+}
+
+function renderProfile(user) {
     let container = document.getElementById('profileContent');
-    if (!container || !currentUser) return;
-    let userId = currentUser.id || currentUser.email || currentUser.phone;
-    let points = userPoints[userId] || 0, balance = userBalances[userId] || 0, level = getUserLevel(points);
-    let myLost = lostArray.filter(i => i.userEmail === userId).length;
-    let myFound = foundArray.filter(i => i.userEmail === userId).length;
-    let badges = [];
-    if (points >= 100) badges.push('⭐ Helper'); if (points >= 500) badges.push('🏆 Expert'); if (points >= 1000) badges.push('👑 Investigator');
-    if (myLost + myFound >= 10) badges.push('📝 Active'); if (balance > 0) badges.push('💰 Earner');
-    container.innerHTML = `<div class="profile-card"><div class="profile-avatar">👤</div><div class="profile-name">${currentUser.name || currentUser.email || currentUser.phone}</div><div class="profile-level">${level} • ${points} ${t('points')}</div>${badges.length > 0 ? `<div class="profile-badges">${badges.map(b => `<span class="profile-badge-item">${b}</span>`).join('')}</div>` : ''}<div class="profile-stats"><div class="profile-stat"><div class="profile-stat-num">${myLost}</div><div class="profile-stat-label">📦 ${t('lost')}</div></div><div class="profile-stat"><div class="profile-stat-num">${myFound}</div><div class="profile-stat-label">✅ ${t('found')}</div></div><div class="profile-stat"><div class="profile-stat-num">${points}</div><div class="profile-stat-label">⭐ ${t('points')}</div></div></div>${balance > 0 ? `<div class="balance-card"><div class="balance-amount">$${balance.toFixed(2)}</div><div>${t('earned')}</div></div>` : ''}<p style="font-size:12px;color:var(--text-light);margin-top:10px;">🕐 ${t('joinDate')}: ${new Date(currentUser.timestamp || Date.now()).toLocaleDateString()}</p></div>`;
+    if (!container || !user) return;
+    
+    db.collection('users').doc(user.uid).get().then(function(doc) {
+        let userData = doc.exists ? doc.data() : {};
+        let userId = user.uid;
+        let points = userPoints[userId] || 0;
+        let balance = userBalances[userId] || 0;
+        let level = getUserLevel(points);
+        let myLost = lostArray.filter(i => i.userEmail === user.email || i.userEmail === user.uid).length;
+        let myFound = foundArray.filter(i => i.userEmail === user.email || i.userEmail === user.uid).length;
+        let badges = [];
+        if (points >= 100) badges.push('⭐ Helper');
+        if (points >= 500) badges.push('🏆 Expert');
+        if (points >= 1000) badges.push('👑 Investigator');
+        if (myLost + myFound >= 10) badges.push('📝 Active');
+        if (balance > 0) badges.push('💰 Earner');
+        
+        container.innerHTML = `<div class="profile-card">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-name">${userData.name || user.displayName || user.email}</div>
+            <div class="profile-level">${level} • ${points} ${t('points')}</div>
+            ${badges.length > 0 ? `<div class="profile-badges">${badges.map(b => `<span class="profile-badge-item">${b}</span>`).join('')}</div>` : ''}
+            <div class="profile-stats">
+                <div class="profile-stat"><div class="profile-stat-num">${myLost}</div><div class="profile-stat-label">📦 ${t('lost')}</div></div>
+                <div class="profile-stat"><div class="profile-stat-num">${myFound}</div><div class="profile-stat-label">✅ ${t('found')}</div></div>
+                <div class="profile-stat"><div class="profile-stat-num">${points}</div><div class="profile-stat-label">⭐ ${t('points')}</div></div>
+            </div>
+            ${balance > 0 ? `<div class="balance-card"><div class="balance-amount">$${balance.toFixed(2)}</div><div>${t('earned')}</div></div>` : ''}
+            <p style="font-size:12px;color:var(--text-light);margin-top:10px;">🕐 ${t('joinDate')}: ${new Date(userData.timestamp || Date.now()).toLocaleDateString()}</p>
+        </div>`;
+    }).catch(function() {});
 }
 
 // ========== ربط الأحداث ==========
@@ -1600,14 +1930,15 @@ function attachAppEvents() {
     document.getElementById('lostCurrentLocationBtn')?.addEventListener('click',()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{lostSelectMap.setView([pos.coords.latitude,pos.coords.longitude],13);if(lostMarker)lostSelectMap.removeLayer(lostMarker);lostMarker=L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(lostSelectMap);document.getElementById('lostLat').value=pos.coords.latitude;document.getElementById('lostLng').value=pos.coords.longitude;});else showToast(t('locationNotSupported'),'error');});
     document.getElementById('foundCurrentLocationBtn')?.addEventListener('click',()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{foundSelectMap.setView([pos.coords.latitude,pos.coords.longitude],13);if(foundMarker)foundSelectMap.removeLayer(foundMarker);foundMarker=L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(foundSelectMap);document.getElementById('foundLat').value=pos.coords.latitude;document.getElementById('foundLng').value=pos.coords.longitude;});else showToast(t('locationNotSupported'),'error');});
     document.getElementById('closeAdBar')?.addEventListener('click',()=>{document.getElementById('adBar').style.display='none';});
-    
 }
 
 function checkMapExpiryNotifications() {
-    if (!currentUser) return;
-    let now = new Date(), allItems = [...lostArray, ...foundArray], userId = currentUser.id || currentUser.email || currentUser.phone;
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    let now = new Date(), allItems = [...lostArray, ...foundArray];
+    let userId = user.uid;
     allItems.forEach(item => {
-        if (!item.mapExpiry || item.userEmail !== userId || item.expiryNotified) return;
+        if (!item.mapExpiry || item.userEmail !== user.email || item.expiryNotified) return;
         let expiryTime = new Date(item.mapExpiry), timeLeft = expiryTime - now, fourHours = 4 * 60 * 60 * 1000;
         if (timeLeft > 0 && timeLeft <= fourHours) {
             adminNotifications[userId] = adminNotifications[userId] || [];
@@ -1618,184 +1949,36 @@ function checkMapExpiryNotifications() {
 
 // ========== تفعيل ورفض المنظمات ==========
 async function approveOrganization(orgId) {
-    let org = pendingOrganizations.find(o => o.id == orgId);
-    if (org) {
-        org.approved = true;
-        org.isAdmin = true;
-        org.isOrganization = true;
-        org.subscriptionActive = false;
-        org.trialStart = new Date().toISOString();
-        users.push(org);
-        pendingOrganizations = pendingOrganizations.filter(o => o.id != orgId);
-        const db = firebase.firestore();
-        await db.collection('users').add(org);
+    const db = firebase.firestore();
+    const docRef = db.collection('pendingOrganizations').doc(orgId);
+    const doc = await docRef.get();
+    if (doc.exists) {
+        const data = doc.data();
+        data.approved = true;
+        data.isAdmin = true;
+        data.isOrganization = true;
+        data.subscriptionActive = false;
+        data.trialStart = new Date().toISOString();
+        await db.collection('users').add(data);
+        await docRef.delete();
         refreshAdminPanel();
         showToast("✅ أسبوع تجربة مجاني", 'success');
     }
 }
 
 function rejectOrganization(orgId) {
-    pendingOrganizations = pendingOrganizations.filter(o => o.id != orgId);
-    refreshAdminPanel();
-    showToast("تم رفض المنظمة", 'error');
+    const db = firebase.firestore();
+    db.collection('pendingOrganizations').doc(orgId).delete()
+        .then(() => {
+            refreshAdminPanel();
+            showToast("تم رفض المنظمة", 'error');
+        })
+        .catch(() => {});
 }
+
 // ========== فلتر القريب ==========
 let userCurrentCity = null;
 let nearMeActive = false;
-
-function enableNearMeFilter() {
-    if (!navigator.geolocation) { showToast("📍 موقعك غير مدعوم", 'error'); return; }
-    showToast("📍 جاري تحديد موقعك...", 'info');
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude, lng = position.coords.longitude;
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
-            const data = await response.json();
-            userCurrentCity = data.address?.city || data.address?.town || data.address?.village;
-            if (userCurrentCity) {
-                nearMeActive = true;
-                showToast(`📍 البلاغات القريبة من: ${userCurrentCity}`, 'success');
-                const citySelect = document.getElementById('filterCity');
-                if (citySelect) {
-                    let exists = false;
-                    for (let i = 0; i < citySelect.options.length; i++) {
-                        if (citySelect.options[i].value === userCurrentCity) { citySelect.value = userCurrentCity; exists = true; break; }
-                    }
-                    if (!exists) { const opt = document.createElement('option'); opt.value = userCurrentCity; opt.text = userCurrentCity; citySelect.appendChild(opt); citySelect.value = userCurrentCity; }
-                }
-                renderDashboardData();
-                const btn = document.getElementById('nearMeBtn');
-                if (btn) btn.style.background = '#27ae60';
-            } else { showToast("لم نتمكن من تحديد مدينتك", 'error'); }
-        } catch(e) { showToast("فشل تحديد الموقع", 'error'); }
-    }, () => showToast("الرجاء السماح بتحديد الموقع", 'error'));
-}
-
-function disableNearMeFilter() {
-    nearMeActive = false; userCurrentCity = null;
-    const citySelect = document.getElementById('filterCity');
-    if (citySelect) citySelect.value = '';
-    renderDashboardData();
-    const btn = document.getElementById('nearMeBtn');
-    if (btn) btn.style.background = '';
-    showToast("تم إلغاء فلتر القريب", 'info');
-}
-
-function toggleNearMeFilter() { if (nearMeActive) disableNearMeFilter(); else enableNearMeFilter(); }
-// ========== بدء التشغيل ==========
-window.onload = async () => {
-    await loadSystemData();
-    document.getElementById('loginPage').classList.remove('hidden');
-    document.getElementById('dashboardPage').classList.add('hidden');
-    document.getElementById('mainApp').classList.add('hidden');
-    document.getElementById('adminPanel').classList.add('hidden');
-    document.getElementById('profilePage').classList.add('hidden');
-    document.getElementById('notificationsPage').classList.add('hidden');
-    document.getElementById('adminSettingsPage').classList.add('hidden');
-    document.getElementById('userDetailsPage').classList.add('hidden');
-    let browserLang = navigator.language || navigator.userLanguage;
-    setLang(browserLang.startsWith('ar') ? 'ar' : 'en');
-    translatePage();
-    let langSelect = document.getElementById('langSelect');
-    if(langSelect) langSelect.value = getLang();
-    document.getElementById('loginBtn').onclick = () => loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value, false);
-    document.getElementById('adminLoginBtn').onclick = () => loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value, true);
-    document.getElementById('showRegisterBtn').onclick = (e) => { e.preventDefault(); showRegisterForm(); };
-    document.getElementById('submitRegisterBtn').onclick = submitRegistration;
-    document.getElementById('showOrgRegisterBtn').onclick = (e) => { e.preventDefault(); showOrgRegisterForm(); };
-    document.getElementById('submitOrgRegisterBtn').onclick = submitOrgRegistration;
-    document.getElementById('logoutAdminBtn').onclick = logoutAdmin;
-    document.getElementById('logoutUserBtn').onclick = logoutUser;
-    document.getElementById('dashboardProfileBtn')?.addEventListener('click', showProfile);
-    document.getElementById('profileBackToDashboardBtn')?.addEventListener('click', () => { document.getElementById('profilePage').classList.add('hidden'); document.getElementById('dashboardPage').classList.remove('hidden'); updateDashboardStats(); updateDashboardMap(); populateDashboardFilters(); renderDashboardData(); });
-    document.getElementById('profileLogoutBtn')?.addEventListener('click', logoutUser);
-    document.getElementById('adminSettingsBtn').onclick = showAdminSettings;
-    document.getElementById('adminExportAllBtn')?.addEventListener('click', () => { let data = { lostArray, foundArray, users, pendingUsers, activityLogs }; let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)])); a.download = `full_backup_${new Date().toISOString().slice(0, 19)}.json`; a.click(); showToast(t('backupExported')); });
-    document.getElementById('adminImportDataBtn')?.addEventListener('click', () => { let input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json'; input.onchange = e => { let file = e.target.files[0]; let reader = new FileReader(); reader.onload = ev => { try { let data = JSON.parse(ev.target.result); lostArray = data.lostArray || []; foundArray = data.foundArray || []; users = data.users || []; pendingUsers = data.pendingUsers || []; activityLogs = data.activityLogs || []; updateAllUI(); showAlert(t('success'), t('imported')); refreshAdminPanel(); } catch(ex) { showAlert(t('error'), t('invalidFile'), 'error'); } }; reader.readAsText(file); }; input.click(); });
-    if("Notification" in window && Notification.permission === "default") { Notification.requestPermission(); }
-    initCountries();
-    setupImagePreview('lostImages','lostImagePreview'); setupImagePreview('foundImages','foundImagePreview');
-    initLostMap(); initFoundMap();
-    document.getElementById('saveLostBtn')?.addEventListener('click', saveLost);
-    document.getElementById('saveFoundBtn')?.addEventListener('click', saveFound);
-    document.getElementById('resetLostBtn')?.addEventListener('click', () => { clearLostForm(); showToast(t('formCleared')); });
-    document.getElementById('resetFoundBtn')?.addEventListener('click', () => { clearFoundForm(); showToast(t('formCleared')); });
-    document.getElementById('matchBtn')?.addEventListener('click', matchItems);
-    document.getElementById('shareLostBtn')?.addEventListener('click', () => { let desc = document.getElementById('lostDesc').value.trim(); if(!desc) return showToast(t('enterDescription'),'error'); let text = `🔴 Lost: ${desc} - ${document.getElementById('lostDate').value} - ${document.getElementById('lostCity').value}`; let waLink = `https://wa.me/?text=${encodeURIComponent(text + ' - via Lost & Found Pro')}`; window.open(waLink,'_blank'); });
-    document.getElementById('shareFoundBtn')?.addEventListener('click', () => { let desc = document.getElementById('foundDesc').value.trim(); if(!desc) return showToast(t('enterDescription'),'error'); let text = `🟢 Found: ${desc} - ${document.getElementById('foundDate').value} - ${document.getElementById('foundCity').value}`; let waLink = `https://wa.me/?text=${encodeURIComponent(text + ' - via Lost & Found Pro')}`; window.open(waLink,'_blank'); });
-    document.getElementById('lostCurrentLocationBtn')?.addEventListener('click', () => { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => { lostSelectMap.setView([pos.coords.latitude,pos.coords.longitude],13); if(lostMarker) lostSelectMap.removeLayer(lostMarker); lostMarker = L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(lostSelectMap); document.getElementById('lostLat').value = pos.coords.latitude; document.getElementById('lostLng').value = pos.coords.longitude; }); else showToast(t('locationNotSupported'),'error'); });
-    document.getElementById('foundCurrentLocationBtn')?.addEventListener('click', () => { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => { foundSelectMap.setView([pos.coords.latitude,pos.coords.longitude],13); if(foundMarker) foundSelectMap.removeLayer(foundMarker); foundMarker = L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(foundSelectMap); document.getElementById('foundLat').value = pos.coords.latitude; document.getElementById('foundLng').value = pos.coords.longitude; }); else showToast(t('locationNotSupported'),'error'); });
-    document.querySelectorAll('.chip').forEach(chip => { chip.addEventListener('click', function() { let section = this.closest('.report-section'); section.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); this.classList.add('active'); selectedCategory = this.dataset.cat; }); });
-    
-    document.getElementById('dashboardDarkModeBtn').onclick = toggleDarkMode;
-    document.getElementById('dashboardNotificationsBtn').onclick = showNotifications;
-    document.getElementById('dashboardLogoutBtn').onclick = () => { document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); };
-    document.getElementById('dashboardAddReportBtn').onclick = () => { document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); initCountries(); setupImagePreview('lostImages','lostImagePreview'); setupImagePreview('foundImages','foundImagePreview'); initLostMap(); initFoundMap(); };
-    document.getElementById('dashboardAdminBtn').onclick = () => { if(currentUser?.isAdmin){ document.getElementById('dashboardPage').classList.add('hidden'); document.getElementById('adminPanel').classList.remove('hidden'); refreshAdminPanel(); } else showAlert(t('unauthorized'),t('adminOnly'),'error'); };
-    document.getElementById('dashboardGlobalSearch').oninput = dashboardGlobalSearch;
-    document.getElementById('notificationsBackToDashboardBtn').onclick = () => { document.getElementById('notificationsPage').classList.add('hidden'); document.getElementById('dashboardPage').classList.remove('hidden'); };
-    document.getElementById('backToDashboardBtn').onclick = () => { document.getElementById('mainApp').classList.add('hidden'); document.getElementById('dashboardPage').classList.remove('hidden'); updateDashboardStats(); updateDashboardMap(); populateDashboardFilters(); renderDashboardData(); };
-    document.getElementById('filterCategory').onchange = renderDashboardData;
-    document.getElementById('filterTime').onchange = renderDashboardData;
-    document.getElementById('filterCountry').onchange = () => { updateDashboardCities(); renderDashboardData(); };
-    document.getElementById('filterCity').onchange = renderDashboardData;
-    document.getElementById('resetFiltersBtn').onclick = () => { document.getElementById('filterCategory').value='all'; document.getElementById('filterTime').value='all'; document.getElementById('filterCountry').value=''; document.getElementById('filterCity').innerHTML=`<option value="">${t('allCities')}</option>`; renderDashboardData(); updateDashboardCities(); };
-    document.getElementById('adminBackToDashboardBtn').onclick = () => { document.getElementById('adminPanel').classList.add('hidden'); document.getElementById('dashboardPage').classList.remove('hidden'); updateDashboardStats(); updateDashboardMap(); populateDashboardFilters(); renderDashboardData(); };
-    document.getElementById('adminSettingsBackBtn').onclick = () => { document.getElementById('adminSettingsPage').classList.add('hidden'); document.getElementById('adminPanel').classList.remove('hidden'); };
-    document.getElementById('userDetailsBackBtn').onclick = () => { document.getElementById('userDetailsPage').classList.add('hidden'); document.getElementById('adminPanel').classList.remove('hidden'); };
-    document.getElementById('dashboardBackupBtn').onclick = () => { let data={lostArray,foundArray,users,pendingUsers,activityLogs}; let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)])); a.download=`backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); showToast(t('backupExported')); };
-    document.getElementById('dashboardRestoreBtn').onclick = () => { let input=document.createElement('input'); input.type='file'; input.accept='application/json'; input.onchange=e=>{ let file=e.target.files[0]; let reader=new FileReader(); reader.onload=ev=>{ try{ let data=JSON.parse(ev.target.result); lostArray=data.lostArray||[]; foundArray=data.foundArray||[]; users=data.users||[]; pendingUsers=data.pendingUsers||[]; activityLogs=data.activityLogs||[]; updateAllUI(); showAlert(t('success'),t('restored')); }catch(ex){ showAlert(t('error'),t('invalidFile'),'error'); } }; reader.readAsText(file); }; input.click(); };
-    document.getElementById('promoteReportBtn').onclick = () => {
-    if (!currentUser) return showToast("سجل دخول أولاً", 'error');
-    Swal.fire({
-        title: '⭐ ترويج البلاغ',
-        text: 'سيظهر بلاغك أعلى القائمة لمدة 24 ساعة. للدفع عبر Orange Money أو حوالة، تواصل معنا على الواتساب.',
-        showCancelButton: true,
-        confirmButtonText: '💬 تواصل واتساب',
-        cancelButtonText: 'إلغاء'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.open('https://wa.me/962775388520?text=أريد%20ترويج%20بلاغي', '_blank');
-        }
-    });
-};
-    document.getElementById('filterRewardBtn').onclick = () => {
-        let cat = document.getElementById('filterCategory');
-        if (!cat.querySelector('option[value="reward"]')) {
-            let opt = document.createElement('option');
-            opt.value = 'reward';
-            opt.text = '💰 With Reward';
-            cat.appendChild(opt);
-        }
-        cat.value = 'reward';
-        renderDashboardData();
-    };
-    document.getElementById('nearMeBtn').onclick = toggleNearMeFilter;
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10`)
-                .then(r => r.json())
-                .then(data => {
-                    let city = data.address?.city || data.address?.town || data.address?.village;
-                    if (city) {
-                        let cs = document.getElementById('filterCity');
-                        if (cs) {
-                            let exists = false;
-                            for (let i = 0; i < cs.options.length; i++) {
-                                if (cs.options[i].value === city) { cs.value = city; exists = true; break; }
-                            }
-                            if (!exists) { let opt = document.createElement('option'); opt.value = city; opt.text = city; cs.appendChild(opt); cs.value = city; }
-                            renderDashboardData();
-                        }
-                    }
-                }).catch(() => {});
-        }, () => {});
-    }
-    updateQuickStats();
-    setInterval(checkMapExpiryNotifications, 60000);
-    setTimeout(() => { console.log("✅ Lost & Found Pro v3.1 Ready"); }, 1000);
-};
 
 function enableNearMeFilter() {
     if (!navigator.geolocation) { showToast("📍 موقعك غير مدعوم", 'error'); return; }
@@ -1860,17 +2043,24 @@ function setupCopyLinks() {
 }
 
 function deleteMyAccount() {
-    if (!currentUser) return;
+    const user = firebase.auth().currentUser;
+    if (!user) return;
     Swal.fire({ title: '⚠️ Are you sure?', text: 'Your account and all your reports will be deleted permanently', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, delete my account', cancelButtonText: 'Cancel' }).then((result) => {
         if (result.isConfirmed) {
-            const userId = currentUser.id || currentUser.email || currentUser.phone;
-            lostArray = lostArray.filter(i => i.userEmail !== userId);
-            foundArray = foundArray.filter(i => i.userEmail !== userId);
-            users = users.filter(u => (u.email || u.phone) !== userId);
-            currentUser = null; // لا حاجة لحذف شيء من localStorage
-            updateAllUI();
+            const userId = user.uid;
+            lostArray = lostArray.filter(i => i.userEmail !== user.email && i.userEmail !== userId);
+            foundArray = foundArray.filter(i => i.userEmail !== user.email && i.userEmail !== userId);
+            
+            // حذف المستخدم من Firestore
+            db.collection('users').doc(user.uid).delete().catch(function() {});
+            
+            // حذف حساب Firebase Auth
+            user.delete().catch(function() {});
+            
+            firebase.auth().signOut();
             document.getElementById('dashboardPage').classList.add('hidden');
             document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('loginPage').style.display = 'block';
             showToast('✅ Account deleted', 'info');
         }
     });
