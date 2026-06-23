@@ -1115,32 +1115,33 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
     currentUser = user;
     isAdmin = user.isAdmin || false;
     
-    let hu = document.getElementById('headerUserName'), du = document.getElementById('dashboardUserName'), au = document.getElementById('adminUserName');
-    if (hu) hu.innerText = currentUser.name || currentUser.email || currentUser.phone;
-    if (du) du.innerText = currentUser.name || currentUser.email || currentUser.phone;
-    if (au) au.innerText = currentUser.name || currentUser.email || currentUser.phone;
-    
-    // استخدام style.display مع classList للتأكد
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('loginPage').classList.add('hidden');
+    // إخفاء صفحة الدخول بالإجبار
+    const loginPage = document.getElementById('loginPage');
+    loginPage.style.display = 'none';
+    loginPage.style.visibility = 'hidden';
+    loginPage.style.opacity = '0';
+    loginPage.classList.add('hidden');
     
     if (isAdmin) {
         document.getElementById('dashboardPage').style.display = 'none';
         document.getElementById('dashboardPage').classList.add('hidden');
-        document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('adminPanel').classList.remove('hidden');
+        
+        const adminPanel = document.getElementById('adminPanel');
+        adminPanel.style.display = 'block';
+        adminPanel.style.visibility = 'visible';
+        adminPanel.style.opacity = '1';
+        adminPanel.classList.remove('hidden');
+        
         refreshAdminPanel();
     } else {
         document.getElementById('adminPanel').style.display = 'none';
         document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('dashboardPage').style.display = 'block';
-        document.getElementById('dashboardPage').classList.remove('hidden');
-        initCountries();
-        updateAllUI();
-        updateDashboardStats();
-        updateDashboardMap();
-        populateDashboardFilters();
-        renderDashboardData();
+        
+        const dashboardPage = document.getElementById('dashboardPage');
+        dashboardPage.style.display = 'block';
+        dashboardPage.style.visibility = 'visible';
+        dashboardPage.style.opacity = '1';
+        dashboardPage.classList.remove('hidden');
     }
     
     console.log('✅ دخول ناجح:', user.email, '| Admin:', isAdmin);
