@@ -1090,7 +1090,6 @@ function renderDashboardData() {
     document.querySelectorAll('.printPdfBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); printReportAsPDF(btn.dataset.desc, btn.dataset.city, btn.dataset.date, btn.dataset.name, btn.dataset.phone, btn.dataset.type); }; });
     document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); sendMessageToReporter(parseInt(btn.dataset.id), btn.dataset.type, btn.dataset.name, btn.dataset.email); }; });
 }
-
 async function loginUser(credential, pwd, isAdminLogin = false) {
     let user = null;
     
@@ -1108,10 +1107,10 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
         }
     }
     
-    if (!user) { showAlert(t('error'), t('invalidCredentials'), 'error'); return false; }
-    if (!user.approved && !user.isAdmin) { showAlert(t('accountPending'), t('accountPending'), 'warning'); return false; }
-    if (user.banned) { showAlert('Banned', 'Your account has been banned.', 'error'); return false; }
-    if (isAdminLogin && !user.isAdmin) { showAlert(t('unauthorized'), t('adminOnly'), 'error'); return false; }
+    if (!user) { alert('❌ خطأ في الإيميل أو كلمة المرور'); return false; }
+    if (!user.approved && !user.isAdmin) { alert('⏳ الحساب بانتظار الموافقة'); return false; }
+    if (user.banned) { alert('🚫 تم حظر حسابك'); return false; }
+    if (isAdminLogin && !user.isAdmin) { alert('👑 للأدمن فقط'); return false; }
     
     currentUser = user;
     isAdmin = user.isAdmin || false;
@@ -1120,27 +1119,31 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
     if (hu) hu.innerText = currentUser.name || currentUser.email || currentUser.phone;
     if (du) du.innerText = currentUser.name || currentUser.email || currentUser.phone;
     if (au) au.innerText = currentUser.name || currentUser.email || currentUser.phone;
-    addLog('Login', credential, 'User logged in');
+    
+    // استخدام style.display مع classList للتأكد
+    document.getElementById('loginPage').style.display = 'none';
     document.getElementById('loginPage').classList.add('hidden');
+    
     if (isAdmin) {
+        document.getElementById('dashboardPage').style.display = 'none';
         document.getElementById('dashboardPage').classList.add('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('adminPanel').classList.remove('hidden');
-        loadSystemData(); refreshAdminPanel(); updateDashboardStats(); updateDashboardMap();
+        refreshAdminPanel();
     } else {
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('dashboardPage').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('adminPanel').style.display = 'none';
         document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('dashboardPage').style.display = 'block';
+        document.getElementById('dashboardPage').classList.remove('hidden');
         initCountries();
         updateAllUI();
-        attachAppEvents();
         updateDashboardStats();
         updateDashboardMap();
         populateDashboardFilters();
         renderDashboardData();
-        showNotificationsBadge();
     }
+    
+    console.log('✅ دخول ناجح:', user.email, '| Admin:', isAdmin);
     return true;
 }
 function logoutAdmin() {
