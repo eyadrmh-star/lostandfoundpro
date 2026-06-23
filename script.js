@@ -2083,3 +2083,35 @@ function attachDashboardEvents() {
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(attachDashboardEvents, 500);
 });
+// دالة إظهار لوحة الإدارة
+function showAdminPanelPage() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('dashboardPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('notificationsPage').style.display = 'none';
+    document.getElementById('profilePage').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('adminPanel').classList.remove('hidden');
+    refreshAdminPanel();
+}
+
+// ربط زر Admin Login
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var adminLoginBtn = document.getElementById('adminLoginBtn');
+        if (adminLoginBtn) {
+            adminLoginBtn.addEventListener('click', async function() {
+                var email = document.getElementById('loginEmail').value.trim();
+                var password = document.getElementById('loginPassword').value;
+                if (email && password) {
+                    loginUser(email, password, true);
+                }
+            });
+        }
+        
+        var dashboardAdminBtn = document.getElementById('dashboardAdminBtn');
+        if (dashboardAdminBtn) {
+            dashboardAdminBtn.addEventListener('click', showAdminPanelPage);
+        }
+    }, 1000);
+});
