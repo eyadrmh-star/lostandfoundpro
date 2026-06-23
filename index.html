@@ -319,7 +319,8 @@ auth.onAuthStateChanged(function(user) {
   // لا توجيه تلقائي - المستخدم يتحكم بالتنقل عبر الأزرار
   console.log('👤 حالة المستخدم:', user ? 'مسجل' : 'غير مسجل');
   
-  // تحديث currentUser إذا كان هناك مستخدم مسجل
+  <script>
+// تحديث currentUser إذا كان هناك مستخدم مسجل
   if (user) {
     db.collection('users').doc(user.uid).set({
       name: user.displayName || user.email,
@@ -345,13 +346,7 @@ auth.onAuthStateChanged(function(user) {
 </script>
 
 <script src="script.js"></script>
-<script>
-// if ('serviceWorker' in navigator) {
-//     navigator.serviceWorker.register('service-worker.js').then(reg => {
-//         console.log('Service Worker registered', reg);
-//     }).catch(err => console.log('SW error:', err));
-// }
-</script>
+
 <script>
 // تحميل pendingUsers من Firestore تلقائياً
 setTimeout(function() {
@@ -369,9 +364,7 @@ setTimeout(function() {
 </script>
 
 <script>
-<script>
-<script>
-// إظهار صفحة تسجيل الدخول فقط - استخدام classList
+// إظهار صفحة تسجيل الدخول فقط
 (function() {
     var allPages = ['loginPage', 'dashboardPage', 'mainApp', 'notificationsPage', 'profilePage', 'adminPanel', 'adminSettingsPage', 'userDetailsPage'];
     
