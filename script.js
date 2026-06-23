@@ -1253,37 +1253,114 @@ function submitOrgRegistration() {
 }
 // ========== لوحة الإدارة (Firestore) ==========
 async function refreshAdminPanel() {
-    const db = firebase.firestore(); // تعريف db محلياً
+    const db = firebase.firestore();
     
-    // التحقق من حالة الأدمن من Firebase
+    // التحقق من الأدمن
     const user = firebase.auth().currentUser;
+    if (!user) return;
+    
     let isAdminFlag = false;
-    if (user) {
-        const doc = await db.collection('users').doc(user.uid).get();
-        if (doc.exists && doc.data().isAdmin) {
-            isAdminFlag = true;
-        }
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    if (userDoc.exists && userDoc.data().isAdmin) {
+        isAdminFlag = true;
     }
     if (!isAdminFlag) return;
     
     const container = document.getElementById('adminDynamicContent');
     if (!container) return;
 
-    // جلب pendingOrganizations من Firestore
-    const orgSnap = await db.collection('pendingOrganizations').get();
-    pendingOrganizations = [];
-    orgSnap.forEach(doc => pendingOrganizations.push({ id: doc.id, ...doc.data() }));
+    // جلب البيانات من Firestore
+    const [lostSnap, foundSnap, usersSnap, pendingUsersSnap, pendingReportsSnap, pendingOrgsSnap] = await Promise.all([
+        db.collection('lostItems').get(),
+        db.collection('foundItems').get(),
+        db.collection('users').get(),
+        db.collection('pendingUsers').get(),
+        db.collection('pendingReports').get(),
+        db.collection('pendingOrganizations').get()
+    ]);
 
+    // تجهيز المصفوفات
+    window.lostArray = [];
+    lostSnap.forEach(d => {
+        const data = d.data();
+        window.lostArray.push({
+            id: data.id || d.id,
+            firestoreId: d.id,
+            ...data,
+            desc: data.desc || (data.tell && data.tell.desc) || '',
+            city: data.city || (data.tell && data.tell.city) || '',
+            date: data.date || '',
+            userEmail: data.userEmail || (data.tell && data.tell.email) || ''
+        });
+    });
+
+    window.foundArray = [];
+    foundSnap.forEach(d => {
+        const data = d.data();
+        window.foundArray.push({
+            id: data.id || d.id,
+            firestoreId: d.id,
+            ...data,
+            desc: data.desc || (data.tell && data.tell.desc) || '',
+            city: data.city || (data.tell && data.tell.city) || '',
+            date: data.date || '',
+            userEmail: data.userEmail || (data.tell && data.tell.email) || ''
+        });
+    });
+
+    window.users = [];
+    usersSnap.forEach(d => {
+        const data = d.data();
+        window.users.push({
+            id: data.id || d.id,
+            firestoreId: d.id,
+            ...data,
+            approved: data.approved !== false
+        });
+    });
+
+    window.pendingUsers = [];
+    pendingUsersSnap.forEach(d => {
+        const data = d.data();
+        window.pendingUsers.push({
+            id: data.id || d.id,
+            firestoreId: d.id,
+            ...data
+        });
+    });
+
+    window.pendingReports = [];
+    pendingReportsSnap.forEach(d => {
+        const data = d.data();
+        window.pendingReports.push({
+            id: data.id || d.id,
+            firestoreId: d.id,
+            ...data
+        });
+    });
+
+    window.pendingOrganizations = [];
+    pendingOrgsSnap.forEach(d => {
+        const data = d.data();
+        window.pendingOrganizations.push({
+            id: data.id || d.id,
+            firestoreId: d.id,
+            ...data
+        });
+    });
+
+    // إحصائيات
     let lostDaily = {}, foundDaily = {};
-    lostArray.forEach(i => lostDaily[i.date] = (lostDaily[i.date] || 0) + 1);
-    foundArray.forEach(i => foundDaily[i.date] = (foundDaily[i.date] || 0) + 1);
+    lostArray.forEach(i => { let d = i.date || 'N/A'; lostDaily[d] = (lostDaily[d] || 0) + 1; });
+    foundArray.forEach(i => { let d = i.date || 'N/A'; foundDaily[d] = (foundDaily[d] || 0) + 1; });
     let allDates = [...new Set([...Object.keys(lostDaily), ...Object.keys(foundDaily)])].sort();
     let last7Dates = allDates.slice(-7);
     let lost7 = last7Dates.map(d => lostDaily[d] || 0);
     let found7 = last7Dates.map(d => foundDaily[d] || 0);
+
     let categories = { person: 0, items: 0, money: 0, vehicle: 0, animal: 0, device: 0, other: 0 };
     [...lostArray, ...foundArray].forEach(item => {
-        let text = item.desc.toLowerCase();
+        let text = (item.desc || '').toLowerCase();
         if (text.includes('person')||text.includes('شخص')) categories.person++;
         else if (text.includes('items')||text.includes('اغراض')) categories.items++;
         else if (text.includes('money')||text.includes('نقود')) categories.money++;
@@ -1292,24 +1369,18 @@ async function refreshAdminPanel() {
         else if (text.includes('device')||text.includes('جهاز')) categories.device++;
         else categories.other++;
     });
+
     let countryCount = {};
     [...lostArray, ...foundArray].forEach(item => { if (item.city) countryCount[item.city] = (countryCount[item.city] || 0) + 1; });
-    let topCountry = Object.entries(countryCount).sort((a,b) => b[1] - a[1])[0];
+    let topCountry = Object.entries(countryCount).sort((a, b) => b[1] - a[1])[0];
 
-    const [pendingSnap, approvedSnap] = await Promise.all([
-        db.collection('pendingUsers').get(),
-        db.collection('users').where('approved', '==', true).get()
-    ]);
-
-    pendingUsers = [];
-    pendingSnap.forEach(doc => pendingUsers.push({ id: doc.id, ...doc.data() }));
-    const approvedUsers = [];
-    approvedSnap.forEach(doc => approvedUsers.push({ id: doc.id, ...doc.data() }));
-
-    let totalUsers = approvedUsers.length;
+    let totalUsers = users.filter(u => u.approved && !u.isAdmin).length;
     let pendingUsersCount = pendingUsers.length;
-    let subAdmins = approvedUsers.filter(u => u.isAdmin && !u.isSuperAdmin);
+    let subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
+    let approvedUsers = users.filter(u => u.approved && !u.isAdmin);
+    let allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
 
+    // بناء HTML
     let html = `
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
         <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${lostArray.length}</div><small>📦 ${t('totalLost')}</small></div>
@@ -1321,93 +1392,104 @@ async function refreshAdminPanel() {
     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;">
         <div style="flex:2;min-width:300px;background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);"><h3 style="margin:0 0 15px;color:var(--primary);">📈 Lost vs Found (Last 7 days)</h3><canvas id="trendLineChart" width="400" height="200" style="width:100%;max-height:250px;"></canvas></div>
         <div style="flex:1;min-width:250px;background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);"><h3 style="margin:0 0 15px;color:var(--primary);">🥧 ${t('category')}</h3><canvas id="categoryPieChart" width="200" height="200" style="width:100%;max-height:200px;"></canvas></div>
-        ${topCountry ? `<div style="background:var(--card);border-radius:16px;padding:14px;margin-bottom:20px;text-align:center;border-left:5px solid #8e44ad;font-weight:bold;">🌍 ${t('mostActiveCountry')}: ${topCountry[0]} (${topCountry[1]} ${t('reports')})</div>` : ''}
+    </div>
+    ${topCountry ? `<div style="background:var(--card);border-radius:16px;padding:14px;margin-bottom:20px;text-align:center;border-left:5px solid #8e44ad;font-weight:bold;">🌍 ${t('mostActiveCountry')}: ${topCountry[0]} (${topCountry[1]} ${t('reports')})</div>` : ''}
     <div style="margin-bottom:24px;padding:16px;background:var(--card);border-radius:16px;overflow-x:auto;box-shadow:var(--shadow);"><h3 style="margin:0 0 12px;color:var(--primary);">📅 ${t('dailyReports')}</h3><table style="width:100%;border-collapse:collapse;"><tr style="background:var(--primary);color:white;"><th style="padding:10px;">Date</th><th style="padding:10px;">❌ ${t('lost')}</th><th style="padding:10px;">✅ ${t('found')}</th></tr>${last7Dates.map((d, idx) => `<tr><td style="padding:8px;text-align:center;">${d}</td><td style="color:#e74c3c;text-align:center;">${lost7[idx]}</td><td style="color:#27ae60;text-align:center;">${found7[idx]}</td></tr>`).join('')}</table><div style="text-align:right;margin-top:10px;"><button id="adminExportReportBtn" class="btn-save" style="padding:8px 20px;">📊 ${t('exportReport')}</button></div></div>
-    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">⏳ ${t('userRegRequests')}</h3><div id="pendingUsersList">${pendingUsers.length === 0 ? `<p style="color:var(--text-light);">${t('noPending')}</p>` : pendingUsers.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:var(--bg);border-radius:12px;flex-wrap:wrap;gap:8px;"><div><strong>${u.name}</strong><br><small>${u.email || u.phone}</small></div><div style="display:flex;gap:6px;"><button class="approve-btn btn-sm btn-save" data-id="${u.id}">✅ ${t('approve')}</button><button class="reject-btn btn-sm btn-red" data-id="${u.id}">❌ ${t('reject')}</button></div></div>`).join('')}</div></div>
-    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">👥 ${t('approvedUsers')}</h3><div id="approvedUsersList">${approvedUsers.filter(u => !u.isAdmin).length === 0 ? `<p style="color:var(--text-light);">${t('noItems')}</p>` : approvedUsers.filter(u => !u.isAdmin).map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#e8f5e9;border-radius:12px;"><span>${u.name} (${u.email || u.phone})</span><div style="display:flex;gap:6px;"><button class="view-user-btn btn-sm btn-teal" data-email="${u.email || u.phone}">👁️ ${t('details')}</button><button class="send-msg-btn btn-sm btn-yellow" data-email="${u.email || u.phone}">📨 ${t('sendMessage')}</button><button class="ban-user btn-sm ${u.banned ? 'btn-save' : 'btn-red'}" data-email="${u.email || u.phone}">${u.banned ? '✅ فك الحظر' : '🚫 ' + t('ban')}</button><button class="delete-user-btn btn-sm btn-red" data-email="${u.email || u.phone}">🗑️ Delete</button></div></div>`).join('')}</div></div>
-    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">🏛️ طلبات المنظمات</h3><div id="pendingOrgsList">${pendingOrganizations.length === 0 ? '<p style="color:var(--text-light);">لا توجد طلبات منظمات</p>' : pendingOrganizations.map(o => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:#e8eaf6;border-radius:12px;"><div><strong>🏛️ ${o.name}</strong><br><small>📧 ${o.email || ''} | 📞 ${o.phone || ''} | 🏷️ ${o.type}</small></div><div style="display:flex;gap:6px;"><button class="approve-org-btn btn-sm btn-save" data-id="${o.id}">✅ Approve</button><button class="reject-org-btn btn-sm btn-red" data-id="${o.id}">❌ Reject</button></div></div>`).join('')}</div></div>
-    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">⏳ Pending Reports</h3><div id="pendingReportsList">⏳ جاري تحميل التقارير المعلقة...</div></div>
+    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">⏳ ${t('userRegRequests')}</h3><div id="pendingUsersList">${pendingUsers.length === 0 ? `<p style="color:var(--text-light);">${t('noPending')}</p>` : pendingUsers.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:var(--bg);border-radius:12px;flex-wrap:wrap;gap:8px;"><div><strong>${u.name}</strong><br><small>${u.email || u.phone}</small></div><div style="display:flex;gap:6px;"><button class="approve-btn btn-sm btn-save" data-id="${u.firestoreId}">✅ ${t('approve')}</button><button class="reject-btn btn-sm btn-red" data-id="${u.firestoreId}">❌ ${t('reject')}</button></div></div>`).join('')}</div></div>
+    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">👥 ${t('approvedUsers')}</h3><div id="approvedUsersList">${approvedUsers.length === 0 ? `<p style="color:var(--text-light);">${t('noItems')}</p>` : approvedUsers.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#e8f5e9;border-radius:12px;flex-wrap:wrap;gap:6px;"><span>${u.name} (${u.email || u.phone})</span><div style="display:flex;gap:6px;"><button class="view-user-btn btn-sm btn-teal" data-email="${u.email || u.phone}">👁️ ${t('details')}</button><button class="send-msg-btn btn-sm btn-yellow" data-email="${u.email || u.phone}">📨 ${t('sendMessage')}</button><button class="ban-user btn-sm ${u.banned ? 'btn-save' : 'btn-red'}" data-email="${u.email || u.phone}">${u.banned ? '✅ فك الحظر' : '🚫 ' + t('ban')}</button><button class="delete-user-btn btn-sm btn-red" data-email="${u.email || u.phone}" style="margin-left:4px;">🗑️ Delete</button></div></div>`).join('')}</div></div>
+    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">🏛️ طلبات المنظمات</h3><div id="pendingOrgsList">${pendingOrganizations.length === 0 ? '<p style="color:var(--text-light);">لا توجد طلبات منظمات</p>' : pendingOrganizations.map(o => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:12px;background:#e8eaf6;border-radius:12px;"><div><strong>🏛️ ${o.name}</strong><br><small>📧 ${o.email || ''} | 📞 ${o.phone || ''} | 🏷️ ${o.type || ''}</small></div><div style="display:flex;gap:6px;"><button class="approve-org-btn btn-sm btn-save" data-id="${o.firestoreId}">✅ Approve</button><button class="reject-org-btn btn-sm btn-red" data-id="${o.firestoreId}">❌ Reject</button></div></div>`).join('')}</div></div>
+    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">⏳ Pending Reports</h3><div id="pendingReportsList">${pendingReports.length === 0 ? '<p>لا توجد بلاغات معلقة</p>' : pendingReports.map(report => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:10px;background:#fff3cd;border-radius:12px;"><div><strong>${report.type === 'lost' ? '🔴 Lost' : '🟢 Found'}</strong><br>${escapeHtml(report.desc || '')}<br><small>📍 ${report.city || ''}</small></div><div style="display:flex;gap:6px;"><button class="approve-report-btn btn-sm btn-save" data-id="${report.firestoreId}">✅ Approve</button><button class="reject-report-btn btn-sm btn-red" data-id="${report.firestoreId}">❌ Reject</button></div></div>`).join('')}</div></div>
     <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">👥 ${t('subAdmins')}</h3><div id="subAdminsList">${subAdmins.length === 0 ? `<p style="color:var(--text-light);">${t('noSubAdmins')}</p>` : subAdmins.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;"><span>${u.name} (${u.email || u.phone})</span><button class="remove-subadmin-btn btn-sm btn-red" data-email="${u.email || u.phone}">${t('removeSubAdmin')}</button></div>`).join('')}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><input type="text" id="subAdminName" class="modern-input" placeholder="${t('subAdminName')}" style="flex:1;min-width:120px;"><input type="text" id="subAdminEmail" class="modern-input" placeholder="${t('subAdminEmail')}" style="flex:1;min-width:120px;"><input type="text" id="subAdminPhone" class="modern-input" placeholder="${t('subAdminPhone')}" style="flex:1;min-width:120px;"><input type="password" id="subAdminPassword" class="modern-input" placeholder="${t('subAdminPassword')}" style="flex:1;min-width:120px;"><button id="addSubAdminBtn" class="btn-sm btn-save">${t('addSubAdmin')}</button></div></div>
     <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">📢 ${t('sendToAll')}</h3><div style="display:flex;gap:8px;"><input type="text" id="broadcastMessage" class="modern-input" placeholder="${t('writeMessage')}" style="flex:1;"><button id="broadcastBtn" class="btn-sm btn-purple">${t('send')}</button></div></div>
-    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">📋 ${t('allItems')}</h3><div id="adminItemsList">${(() => { let allItems = [...lostArray.map(i => ({ ...i, itemType: 'lost' })), ...foundArray.map(i => ({ ...i, itemType: 'found' }))]; if (allItems.length === 0) return `<p style="color:var(--text-light);">${t('noItems')}</p>`; return allItems.map(item => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:${item.itemType === 'lost' ? '#ffebee' : '#e8f5e9'};border-radius:12px;flex-wrap:wrap;gap:8px;"><div><strong>${item.itemType === 'lost' ? '🔴' : '🟢'} ${escapeHtml(item.desc)}</strong><br><small>📍 ${item.city} | 📅 ${item.date} | ${item.userEmail}</small></div><button class="admin-delete-item btn-sm btn-red" data-id="${item.id}" data-type="${item.itemType}">🗑️ ${t('delete')}</button></div>`).join(''); })()}</div></div>
-    <div style="background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">📝 ${t('activityLogs')}</h3><div id="activityLogs" style="max-height:300px;overflow-y:auto;">${activityLogs.slice(0, 50).map(log => `<div style="padding:6px;font-size:12px;border-left:3px solid #3498db;margin:4px 0;">${new Date(log.timestamp).toLocaleString()} | ${log.user} | ${log.action}: ${log.details}</div>`).join('')}</div></div>`;
+    <div style="margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">📋 ${t('allItems')}</h3><div id="adminItemsList">${allItems.length === 0 ? `<p style="color:var(--text-light);">${t('noItems')}</p>` : allItems.map(item => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:${item.itemType === 'lost' ? '#ffebee' : '#e8f5e9'};border-radius:12px;flex-wrap:wrap;gap:8px;"><div><strong>${item.itemType === 'lost' ? '🔴' : '🟢'} ${escapeHtml(item.desc || 'No desc')}</strong><br><small>📍 ${item.city || '-- Select City --'} | 📅 ${item.date || ''} | ${item.userEmail || ''}</small></div><button class="admin-delete-item btn-sm btn-red" data-id="${item.firestoreId}" data-type="${item.itemType}">🗑️ ${t('delete')}</button></div>`).join('')}</div></div>
+    <div style="background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);"><h3 style="color:var(--primary);">📝 ${t('activityLogs')}</h3><div id="activityLogs" style="max-height:300px;overflow-y:auto;">${(activityLogs || []).slice(0, 50).map(log => `<div style="padding:6px;font-size:12px;border-left:3px solid #3498db;margin:4px 0;">${new Date(log.timestamp).toLocaleString()} | ${log.user} | ${log.action}: ${log.details}</div>`).join('') || '<p style="color:var(--text-light);">No activity</p>'}</div></div>`;
+    
     container.innerHTML = html;
 
-    // تحميل pendingReports من Firestore
-    db.collection('pendingReports').get().then(snap => {
-        let reps = [];
-        snap.forEach(doc => reps.push({ id: doc.id, ...doc.data() }));
-        pendingReports = reps;
-        let list = document.getElementById('pendingReportsList');
-        if (list) {
-            list.innerHTML = reps.length === 0 ? '<p>لا توجد بلاغات معلقة</p>' : reps.map(report => `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:10px;background:#fff3cd;border-radius:12px;"><div><strong>${report.type === 'lost' ? '🔴 Lost' : '🟢 Found'}</strong><br>${escapeHtml(report.desc)}<br><small>📍 ${report.city}</small></div><div style="display:flex;gap:6px;"><button class="approve-report-btn btn-sm btn-save" data-id="${report.id}">✅ Approve</button><button class="reject-report-btn btn-sm btn-red" data-id="${report.id}">❌ Reject</button></div></div>`).join('');
-            document.querySelectorAll('.approve-report-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    const id = btn.dataset.id;
-                    const snap = await db.collection('pendingReports').doc(id).get();
-                    if (snap.exists) {
-                        const data = snap.data();
-                        if (data.type === 'lost') {
-                            lostArray.push(data);
-                            await db.collection('lostItems').add(data);
-                        } else {
-                            foundArray.push(data);
-                            await db.collection('foundItems').add(data);
-                        }
-                        await db.collection('pendingReports').doc(id).delete();
-                    }
-                    updateAllUI();
-                    updateDashboardMap();
-                    refreshAdminPanel();
-                    showToast('✅ Report approved');
-                };
-            });
-            document.querySelectorAll('.reject-report-btn').forEach(btn => {
-                btn.onclick = async () => {
-                    const id = btn.dataset.id;
-                    await db.collection('pendingReports').doc(id).delete();
-                    refreshAdminPanel();
-                    showToast('❌ Report rejected');
-                };
+    // تفعيل الأزرار
+    setTimeout(() => {
+        // الرسوم البيانية
+        let lc = document.getElementById('trendLineChart');
+        if (lc && typeof Chart !== 'undefined') {
+            let ctx = lc.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last7Dates,
+                    datasets: [
+                        { label: 'Lost', data: lost7, borderColor: '#e74c3c', backgroundColor: '#e74c3c20', fill: true, tension: 0.3 },
+                        { label: 'Found', data: found7, borderColor: '#27ae60', backgroundColor: '#27ae6020', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true }
             });
         }
-    });
 
-    // الرسوم البيانية والأزرار
-    setTimeout(() => {
-        let lc = document.getElementById('trendLineChart')?.getContext('2d'); if (lc) new Chart(lc, { type: 'line', data: { labels: last7Dates, datasets: [{ label: 'Lost', data: lost7, borderColor: '#e74c3c', backgroundColor: '#e74c3c20', fill: true, tension: 0.3 }, { label: 'Found', data: found7, borderColor: '#27ae60', backgroundColor: '#27ae6020', fill: true, tension: 0.3 }] }, options: { responsive: true } });
-        let pc = document.getElementById('categoryPieChart')?.getContext('2d'); if (pc) new Chart(pc, { type: 'pie', data: { labels: ['Person', 'Items', 'Money', 'Vehicle', 'Animal', 'Device', 'Other'], datasets: [{ data: [categories.person, categories.items, categories.money, categories.vehicle, categories.animal, categories.device, categories.other], backgroundColor: ['#e74c3c', '#3498db', '#f0a500', '#27ae60', '#e91e63', '#9c27b0', '#607d8b'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
-        document.getElementById('adminExportReportBtn')?.addEventListener('click', () => { let rows = [["Date","Lost","Found"]]; last7Dates.forEach((d,idx) => rows.push([d,lost7[idx],found7[idx]])); let csv = rows.map(r=>r.join(",")).join("\n"); let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv])); a.download=`report_${new Date().toISOString().slice(0,10)}.csv`; a.click(); showToast(t('backupExported')); });
-        
-        // أزرار Approve/Reject للمستخدمين
+        let pc = document.getElementById('categoryPieChart');
+        if (pc && typeof Chart !== 'undefined') {
+            let ctx2 = pc.getContext('2d');
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: ['Person', 'Items', 'Money', 'Vehicle', 'Animal', 'Device', 'Other'],
+                    datasets: [{
+                        data: [categories.person, categories.items, categories.money, categories.vehicle, categories.animal, categories.device, categories.other],
+                        backgroundColor: ['#e74c3c', '#3498db', '#f0a500', '#27ae60', '#e91e63', '#9c27b0', '#607d8b']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        // تصدير التقرير
+        document.getElementById('adminExportReportBtn')?.addEventListener('click', () => {
+            let rows = [["Date","Lost","Found"]];
+            last7Dates.forEach((d,idx) => rows.push([d, lost7[idx], found7[idx]]));
+            let csv = rows.map(r => r.join(",")).join("\n");
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv]));
+            a.download = `report_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            showToast(t('backupExported'));
+        });
+
+        // موافقة مستخدم
         document.querySelectorAll('.approve-btn').forEach(btn => {
             btn.onclick = async () => {
                 const id = btn.dataset.id;
-                const docRef = db.collection('pendingUsers').doc(id);
-                const doc = await docRef.get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    data.approved = true;
-                    await db.collection('users').add(data);
-                    await docRef.delete();
-                    refreshAdminPanel();
-                    showToast(t('userApproved'));
-                }
+                try {
+                    const docRef = db.collection('pendingUsers').doc(id);
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        data.approved = true;
+                        await db.collection('users').add(data);
+                        await docRef.delete();
+                        refreshAdminPanel();
+                        showToast(t('userApproved'));
+                    }
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
             };
         });
+
+        // رفض مستخدم
         document.querySelectorAll('.reject-btn').forEach(btn => {
             btn.onclick = async () => {
                 const id = btn.dataset.id;
-                await db.collection('pendingUsers').doc(id).delete();
-                refreshAdminPanel();
-                showToast(t('userRejected'), 'error');
+                try {
+                    await db.collection('pendingUsers').doc(id).delete();
+                    refreshAdminPanel();
+                    showToast(t('userRejected'), 'error');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
             };
         });
-        
-        // أزرار Details / Send Message / Ban / Delete
+
+        // تفاصيل مستخدم
         document.querySelectorAll('.view-user-btn').forEach(btn => {
             btn.onclick = () => showUserDetails(btn.dataset.email);
         });
+
+        // إرسال رسالة
         document.querySelectorAll('.send-msg-btn').forEach(btn => {
             btn.onclick = () => {
                 const email = btn.dataset.email;
@@ -1418,123 +1500,187 @@ async function refreshAdminPanel() {
                 }
             };
         });
+
+        // حظر/فك حظر
         document.querySelectorAll('.ban-user').forEach(btn => {
             btn.onclick = async () => {
                 const email = btn.dataset.email;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                if (!snap.empty) {
-                    const doc = snap.docs[0];
-                    const data = doc.data();
-                    data.banned = !data.banned;
-                    await doc.ref.update({ banned: data.banned });
-                    refreshAdminPanel();
-                    showToast(data.banned ? '🚫 تم حظر المستخدم' : '✅ تم فك الحظر');
-                }
+                try {
+                    const snap = await db.collection('users').where('email', '==', email).get();
+                    if (!snap.empty) {
+                        const doc = snap.docs[0];
+                        const data = doc.data();
+                        data.banned = !data.banned;
+                        await doc.ref.update({ banned: data.banned });
+                        refreshAdminPanel();
+                        showToast(data.banned ? '🚫 User banned' : '✅ User unbanned');
+                    }
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
             };
         });
+
+        // حذف مستخدم
         document.querySelectorAll('.delete-user-btn').forEach(btn => {
             btn.onclick = async () => {
                 const email = btn.dataset.email;
                 if (!confirm('⚠️ Delete user and all their reports permanently?')) return;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                for (const doc of snap.docs) {
-                    await doc.ref.delete();
-                }
-                refreshAdminPanel();
-                showToast('✅ User deleted', 'success');
+                try {
+                    const snap = await db.collection('users').where('email', '==', email).get();
+                    for (const doc of snap.docs) {
+                        await doc.ref.delete();
+                    }
+                    // حذف تقارير المستخدم
+                    const lostSnapDel = await db.collection('lostItems').where('userEmail', '==', email).get();
+                    for (const doc of lostSnapDel.docs) await doc.ref.delete();
+                    const foundSnapDel = await db.collection('foundItems').where('userEmail', '==', email).get();
+                    for (const doc of foundSnapDel.docs) await doc.ref.delete();
+                    
+                    refreshAdminPanel();
+                    updateAllUI();
+                    showToast('✅ User and all reports deleted', 'success');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
             };
         });
-        
+
+        // إزالة مشرف فرعي
         document.querySelectorAll('.remove-subadmin-btn').forEach(btn => {
             btn.onclick = async () => {
                 const email = btn.dataset.email;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                for (const doc of snap.docs) {
-                    await doc.ref.update({ isAdmin: false });
-                }
-                refreshAdminPanel();
-                showToast('✅ Sub-admin removed');
+                if (!confirm('Remove this sub admin?')) return;
+                try {
+                    const snap = await db.collection('users').where('email', '==', email).get();
+                    for (const doc of snap.docs) {
+                        await doc.ref.update({ isAdmin: false, isSuperAdmin: false });
+                    }
+                    refreshAdminPanel();
+                    showToast('✅ Sub admin removed');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
             };
         });
-        
+
+        // حذف عنصر
         document.querySelectorAll('.admin-delete-item').forEach(btn => {
             btn.onclick = async () => {
                 const id = btn.dataset.id;
                 const type = btn.dataset.type;
                 if (!confirm('Delete this item?')) return;
-                const coll = type === 'lost' ? 'lostItems' : 'foundItems';
-                const snap = await db.collection(coll).where('id', '==', parseInt(id)).get();
-                for (const doc of snap.docs) {
-                    await doc.ref.delete();
-                }
-                refreshAdminPanel();
-                updateAllUI();
-                showToast('Item deleted');
+                try {
+                    const coll = type === 'lost' ? 'lostItems' : 'foundItems';
+                    await db.collection(coll).doc(id).delete();
+                    refreshAdminPanel();
+                    updateAllUI();
+                    showToast('✅ Item deleted');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
             };
         });
-        
+
+        // موافقة منظمة
+        document.querySelectorAll('.approve-org-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                try {
+                    const docRef = db.collection('pendingOrganizations').doc(id);
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        data.approved = true;
+                        await db.collection('users').add(data);
+                        await docRef.delete();
+                        refreshAdminPanel();
+                        showToast('✅ Organization approved');
+                    }
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            };
+        });
+
+        // رفض منظمة
+        document.querySelectorAll('.reject-org-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                try {
+                    await db.collection('pendingOrganizations').doc(id).delete();
+                    refreshAdminPanel();
+                    showToast('❌ Organization rejected');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            };
+        });
+
+        // موافقة بلاغ
+        document.querySelectorAll('.approve-report-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                try {
+                    const snap = await db.collection('pendingReports').doc(id).get();
+                    if (snap.exists) {
+                        const data = snap.data();
+                        if (data.type === 'lost') {
+                            await db.collection('lostItems').add(data);
+                        } else {
+                            await db.collection('foundItems').add(data);
+                        }
+                        await db.collection('pendingReports').doc(id).delete();
+                    }
+                    refreshAdminPanel();
+                    updateAllUI();
+                    showToast('✅ Report approved');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            };
+        });
+
+        // رفض بلاغ
+        document.querySelectorAll('.reject-report-btn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                try {
+                    await db.collection('pendingReports').doc(id).delete();
+                    refreshAdminPanel();
+                    showToast('❌ Report rejected', 'error');
+                } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            };
+        });
+
+        // إضافة مشرف فرعي
         document.getElementById('addSubAdminBtn')?.addEventListener('click', async () => {
             const name = document.getElementById('subAdminName').value.trim();
             const email = document.getElementById('subAdminEmail').value.trim();
             const phone = document.getElementById('subAdminPhone').value.trim();
             const pwd = document.getElementById('subAdminPassword').value;
             if (!name || !pwd || (!email && !phone)) return showAlert(t('error'), 'Please fill all fields', 'error');
-            await db.collection('users').add({
-                name, email, phone, password: pwd,
-                approved: true, isAdmin: true, isSuperAdmin: false,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            refreshAdminPanel();
-            showToast('✅ Sub-admin added');
+            try {
+                await db.collection('users').add({
+                    name, email, phone, password: pwd,
+                    approved: true, isAdmin: true, isSuperAdmin: false,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                refreshAdminPanel();
+                showToast('✅ Sub admin added');
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
         });
-        
+
+        // إرسال جماعي
         document.getElementById('broadcastBtn')?.addEventListener('click', async () => {
             const msg = document.getElementById('broadcastMessage').value.trim();
-            if (!msg) return showToast('Write a message', 'error');
-            const usersSnap = await db.collection('users').get();
-            for (const doc of usersSnap.docs) {
-                const data = doc.data();
-                if (data.email) {
-                    await db.collection('notifications').add({
-                        recipientId: data.email,
-                        msg: '📢 Broadcast: ' + msg,
-                        timestamp: new Date().toISOString(),
-                        from: 'Admin',
-                        read: false
-                    });
-                }
-            }
-            showToast('✅ Message sent to all users');
-            document.getElementById('broadcastMessage').value = '';
-        });
-        
-        document.querySelectorAll('.approve-org-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const id = btn.dataset.id;
-                const docRef = db.collection('pendingOrganizations').doc(id);
-                const doc = await docRef.get();
-                if (doc.exists) {
+            if (!msg) return;
+            try {
+                const usersSnap = await db.collection('users').get();
+                for (const doc of usersSnap.docs) {
                     const data = doc.data();
-                    data.approved = true;
-                    await db.collection('users').add(data);
-                    await docRef.delete();
-                    refreshAdminPanel();
-                    showToast('✅ Organization approved');
+                    if (data.email) {
+                        await db.collection('notifications').add({
+                            recipientId: data.email,
+                            msg: '📢 Broadcast: ' + msg,
+                            timestamp: new Date().toISOString(),
+                            from: 'Admin',
+                            read: false
+                        });
+                    }
                 }
-            };
-        });
-        
-        document.querySelectorAll('.reject-org-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const id = btn.dataset.id;
-                await db.collection('pendingOrganizations').doc(id).delete();
-                refreshAdminPanel();
-                showToast('❌ Organization rejected');
-            };
+                showToast('✅ Message sent to all users');
+                document.getElementById('broadcastMessage').value = '';
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
         });
     }, 300);
 }
-
 // ========== إعدادات المشرف ==========
 function showAdminSettings() {
     document.getElementById('adminPanel').classList.add('hidden');
