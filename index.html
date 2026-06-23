@@ -319,8 +319,7 @@ auth.onAuthStateChanged(function(user) {
   // لا توجيه تلقائي - المستخدم يتحكم بالتنقل عبر الأزرار
   console.log('👤 حالة المستخدم:', user ? 'مسجل' : 'غير مسجل');
   
-  <script>
-// تحديث currentUser إذا كان هناك مستخدم مسجل
+  // تحديث currentUser إذا كان هناك مستخدم مسجل
   if (user) {
     db.collection('users').doc(user.uid).set({
       name: user.displayName || user.email,
