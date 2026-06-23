@@ -2367,3 +2367,74 @@ refreshAdminPanel = async function() {
         });
     }, 100);
 };
+// ========== ربط أزرار الداش بورد ==========
+function attachDashboardEvents() {
+    // Logout
+    const logoutBtns = document.querySelectorAll('#dashboardLogoutBtn, #logoutUserBtn, #profileLogoutBtn');
+    logoutBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            firebase.auth().signOut();
+            location.reload();
+        });
+    });
+    
+    // Add Report
+    const addBtn = document.getElementById('dashboardAddReportBtn');
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            if (typeof attachAppEvents === 'function') attachAppEvents();
+        });
+    }
+    
+    // Notifications
+    const notifBtn = document.getElementById('dashboardNotificationsBtn');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', function() {
+            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('notificationsPage').classList.remove('hidden');
+        });
+    }
+    
+    // Profile
+    const profileBtn = document.getElementById('dashboardProfileBtn');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', function() {
+            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('profilePage').classList.remove('hidden');
+        });
+    }
+    
+    // Dark Mode
+    const darkBtn = document.getElementById('dashboardDarkModeBtn');
+    if (darkBtn) {
+        if (localStorage.getItem('darkMode') === '1') {
+            document.body.classList.add('dark-mode');
+        }
+        darkBtn.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? '1' : '0');
+        });
+    }
+    
+    // Back buttons
+    const backBtns = ['notificationsBackToDashboardBtn', 'profileBackToDashboardBtn', 'backToDashboardBtn'];
+    backBtns.forEach(function(id) {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('notificationsPage').classList.add('hidden');
+                document.getElementById('profilePage').classList.add('hidden');
+                document.getElementById('dashboardPage').classList.remove('hidden');
+            });
+        }
+    });
+}
+
+// تشغيل عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(attachDashboardEvents, 500);
+});
