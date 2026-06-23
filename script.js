@@ -1689,6 +1689,24 @@ async function refreshAdminPanel() {
         });
     }, 300);
 }
+// ربط أزرار الأدمن عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const dashboardBtn = document.getElementById('dashboardAdminBtn');
+    if (dashboardBtn) {
+        dashboardBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showAdminPanelPage();
+        });
+    }
+    
+    const loginBtn = document.getElementById('adminLoginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showAdminPanelPage();
+        });
+    }
+});
 // دالة إظهار لوحة الإدارة
 function showAdminPanelPage() {
     document.getElementById('loginPage').style.display = 'none';
