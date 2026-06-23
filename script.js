@@ -1147,6 +1147,23 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
     console.log('✅ دخول ناجح:', user.email, '| Admin:', isAdmin);
     return true;
 }
+// ربط أزرار تسجيل الدخول
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', function() {
+                const email = document.getElementById('loginEmail')?.value?.trim();
+                const password = document.getElementById('loginPassword')?.value;
+                if (email && password) {
+                    loginUser(email, password);
+                } else {
+                    alert('أدخل الإيميل وكلمة المرور');
+                }
+            });
+        }
+    }, 500);
+});
 function logoutAdmin() {
     firebase.auth().signOut().then(function() {
         isAdmin = false;
