@@ -369,23 +369,30 @@ setTimeout(function() {
 </script>
 
 <script>
-// إظهار صفحة تسجيل الدخول فقط عند تحميل الصفحة
-document.getElementById('loginPage').style.display = 'block';
-document.getElementById('dashboardPage').style.display = 'none';
-document.getElementById('mainApp').style.display = 'none';
-document.getElementById('notificationsPage').style.display = 'none';
-document.getElementById('profilePage').style.display = 'none';
-document.getElementById('adminPanel').style.display = 'none';
-document.getElementById('adminSettingsPage').style.display = 'none';
-document.getElementById('userDetailsPage').style.display = 'none';
+<script>
+<script>
+// إظهار صفحة تسجيل الدخول فقط - استخدام classList
+(function() {
+    var allPages = ['loginPage', 'dashboardPage', 'mainApp', 'notificationsPage', 'profilePage', 'adminPanel', 'adminSettingsPage', 'userDetailsPage'];
+    
+    allPages.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.style.display = '';
+            el.classList.add('hidden');
+        }
+    });
+    
+    var loginPage = document.getElementById('loginPage');
+    if (loginPage) loginPage.classList.remove('hidden');
+})();
 </script>
 
 </body>
-</html>
+
 <!-- مكان إعلان Google AdSense (سيتفعل بعد ربط الدومين) -->
 <div id="adBanner" style="max-width:728px;height:90px;margin:10px auto;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;text-align:center;padding:10px;">
     📢 Your Ad Here - Contact us
 </div>
 
-<!-- تم حذف السطر الذي كان يحذف كل الصفحات -->
 </html>
