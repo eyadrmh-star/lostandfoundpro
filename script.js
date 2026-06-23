@@ -1255,14 +1255,22 @@ function submitOrgRegistration() {
 async function refreshAdminPanel() {
     const db = firebase.firestore();
     
-    // التحقق من الأدمن
+       // التحقق من الأدمن
     const user = firebase.auth().currentUser;
     if (!user) return;
     
     let isAdminFlag = false;
+    // الطريقة 1: doc.id = user.uid
     const userDoc = await db.collection('users').doc(user.uid).get();
     if (userDoc.exists && userDoc.data().isAdmin) {
         isAdminFlag = true;
+    }
+    // الطريقة 2: البحث بالإيميل
+    if (!isAdminFlag) {
+        const emailSnap = await db.collection('users').where('email', '==', user.email).get();
+        emailSnap.forEach(doc => {
+            if (doc.data().isAdmin) isAdminFlag = true;
+        });
     }
     if (!isAdminFlag) return;
     
