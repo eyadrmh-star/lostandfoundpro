@@ -1689,6 +1689,24 @@ async function refreshAdminPanel() {
         });
     }, 300);
 }
+// دالة إظهار لوحة الإدارة
+function showAdminPanelPage() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('dashboardPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('notificationsPage').style.display = 'none';
+    document.getElementById('profilePage').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('adminSettingsPage').style.display = 'none';
+    document.getElementById('userDetailsPage').style.display = 'none';
+    
+    // إزالة كلاس hidden إذا موجود
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) adminPanel.classList.remove('hidden');
+    
+    // تنفيذ لوحة الإدارة
+    refreshAdminPanel();
+}
 // ========== إعدادات المشرف ==========
 function showAdminSettings() {
     document.getElementById('adminPanel').classList.add('hidden');
