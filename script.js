@@ -2279,3 +2279,10 @@ document.getElementById('adminImportDataBtn').onclick = function() {
     };
     input.click();
 };
+// ربط زر Back to Dashboard
+document.getElementById('adminBackToDashboardBtn').onclick = function() {
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('dashboardPage').style.display = 'block';
+    document.getElementById('dashboardPage').classList.remove('hidden');
+};
