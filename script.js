@@ -2286,3 +2286,12 @@ document.getElementById('adminBackToDashboardBtn').onclick = function() {
     document.getElementById('dashboardPage').style.display = 'block';
     document.getElementById('dashboardPage').classList.remove('hidden');
 };
+// ربط زر Dark Mode
+var darkBtn = document.getElementById('dashboardDarkModeBtn');
+if (darkBtn) {
+    darkBtn.onclick = function() {
+        document.body.classList.toggle('dark-mode');
+        var isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDark ? '1' : '0');
+    };
+}
