@@ -2144,3 +2144,62 @@ document.getElementById('logoutAdminBtn').onclick = function() {
         location.reload();
     });
 };
+// ========== صفحة إعدادات الأدمن الجديدة ==========
+window.showAdminSettingsPage = function() {
+    var container = document.getElementById('adminDynamicContent');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="max-width:600px;margin:0 auto;background:white;border-radius:20px;padding:30px;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
+            <h2 style="color:#1a237e;text-align:center;margin-bottom:20px;">⚙️ Admin Settings</h2>
+            <div style="margin-bottom:20px;padding:15px;background:#f5f5f5;border-radius:12px;">
+                <h4 style="margin-bottom:10px;">Change Name</h4>
+                <input type="text" id="adminNewName" placeholder="Super Admin" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;">
+                <button id="changeNameBtn" style="padding:10px 20px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;">Change Name</button>
+            </div>
+            <div style="margin-bottom:20px;padding:15px;background:#f5f5f5;border-radius:12px;">
+                <h4 style="margin-bottom:10px;">Change Password</h4>
+                <input type="password" id="adminCurrentPwd" placeholder="Current Password" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;">
+                <input type="password" id="adminNewPwd" placeholder="New Password" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;">
+                <button id="changePasswordBtn" style="padding:10px 20px;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;">Change Password</button>
+            </div>
+            <button id="backToDashboardBtn" style="width:100%;padding:12px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;">← Back to Dashboard</button>
+        </div>
+    `;
+    
+    document.getElementById('changeNameBtn').onclick = function() {
+        var nn = document.getElementById('adminNewName').value.trim();
+        if (!nn) return alert('Enter name');
+        var user = firebase.auth().currentUser;
+        if (user) {
+            firebase.firestore().collection('users').where('email','==',user.email).get().then(function(snap) {
+                snap.forEach(function(doc) { doc.ref.update({name: nn}); });
+                alert('✅ Name updated');
+            });
+        }
+    };
+    
+    document.getElementById('changePasswordBtn').onclick = function() {
+        var cp = document.getElementById('adminCurrentPwd').value;
+        var np = document.getElementById('adminNewPwd').value;
+        if (!cp || !np) return alert('Fill all fields');
+        var user = firebase.auth().currentUser;
+        var cred = firebase.auth.EmailAuthProvider.credential(user.email, cp);
+        user.reauthenticateWithCredential(cred).then(function() {
+            return user.updatePassword(np);
+        }).then(function() {
+            alert('✅ Password updated');
+        }).catch(function(e) {
+            alert('❌ ' + e.message);
+        });
+    };
+    
+    document.getElementById('backToDashboardBtn').onclick = function() {
+        refreshAdminPanel();
+    };
+};
+
+// ربط زر Settings
+document.getElementById('adminSettingsBtn').onclick = function() {
+    showAdminSettingsPage();
+};
