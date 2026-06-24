@@ -2326,3 +2326,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
+// تحميل خريطة الداشبورد
+(function() {
+    setTimeout(function() {
+        var mapEl = document.getElementById('dashboardMap');
+        if (mapEl && typeof updateDashboardMap === 'function') {
+            mapEl.style.display = 'block';
+            mapEl.style.height = '300px';
+            mapEl.style.width = '100%';
+            updateDashboardMap();
+            console.log('✅ Dashboard map loaded');
+        }
+    }, 1500);
+})();
