@@ -2138,3 +2138,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000);
 });
+// ربط زر Logout
+document.getElementById('logoutAdminBtn').onclick = function() {
+    firebase.auth().signOut().then(function() {
+        location.reload();
+    });
+};
