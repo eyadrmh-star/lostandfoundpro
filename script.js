@@ -1272,22 +1272,16 @@ function submitOrgRegistration() {
             showAlert(t('error'), 'Organization registration failed.', 'error');
         });
 }
-// ========== لوحة الإدارة (Firestore) ==========
-async function refreshAdminPanel() {
+// ==========================================
+// 1. حذف أي تعريفات قديمة
+// ==========================================
+delete window.refreshAdminPanel;
+
+// ==========================================
+// 2. تعريف دالة لوحة الإدارة الكاملة
+// ==========================================
+window.refreshAdminPanel = async function() {
     const db = firebase.firestore();
-    
-    // التحقق من الأدمن
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-    
-    let isAdminFlag = false;
-    const emailSnap = await db.collection('users').where('email', '==', user.email).get();
-    emailSnap.forEach(doc => { if (doc.data().isAdmin) isAdminFlag = true; });
-    if (!isAdminFlag) return;
-    
-    const container = document.getElementById('adminDynamicContent');
-    if (!container) return;
-    
     const [lostSnap, foundSnap, usersSnap, pendingSnap, reportsSnap, orgsSnap] = await Promise.all([
         db.collection('lostItems').get(),
         db.collection('foundItems').get(),
@@ -1296,20 +1290,20 @@ async function refreshAdminPanel() {
         db.collection('pendingReports').get(),
         db.collection('pendingOrganizations').get()
     ]);
-    
+
     const lostArray = [], foundArray = [], users = [], pendingUsers = [], pendingReports = [], pendingOrganizations = [];
-    
+
     lostSnap.forEach(d => { const data = d.data(); lostArray.push({ id: d.id, desc: data.desc || data.tell?.desc || '', city: data.city || data.tell?.city || '', date: data.date || '', userEmail: data.userEmail || data.tell?.email || '' }); });
     foundSnap.forEach(d => { const data = d.data(); foundArray.push({ id: d.id, desc: data.desc || data.tell?.desc || '', city: data.city || data.tell?.city || '', date: data.date || '', userEmail: data.userEmail || data.tell?.email || '' }); });
     usersSnap.forEach(d => { const data = d.data(); users.push({ id: d.id, ...data, approved: data.approved !== false }); });
     pendingSnap.forEach(d => { const data = d.data(); pendingUsers.push({ id: d.id, ...data }); });
     reportsSnap.forEach(d => { const data = d.data(); pendingReports.push({ id: d.id, ...data }); });
     orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
-    
+
     const approvedUsers = users.filter(u => u.approved !== false && !u.isAdmin);
     const subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
     const allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
-    
+
     let lostDaily = {}, foundDaily = {};
     lostArray.forEach(i => { let d = i.date || 'N/A'; lostDaily[d] = (lostDaily[d] || 0) + 1; });
     foundArray.forEach(i => { let d = i.date || 'N/A'; foundDaily[d] = (foundDaily[d] || 0) + 1; });
@@ -1317,7 +1311,10 @@ async function refreshAdminPanel() {
     let last7Dates = allDates.slice(-7);
     let lost7 = last7Dates.map(d => lostDaily[d] || 0);
     let found7 = last7Dates.map(d => foundDaily[d] || 0);
-    
+
+    const container = document.getElementById('adminDynamicContent');
+    if (!container) return;
+
     container.innerHTML = `
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
         <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:16px;padding:18px;text-align:center;color:white;"><div style="font-size:32px;font-weight:800;">${lostArray.length}</div><small>📦 Total Lost</small></div>
@@ -1384,13 +1381,39 @@ async function refreshAdminPanel() {
         <span style="color:#e74c3c;cursor:pointer;margin:0 8px;">donate</span>
         <span style="color:#999;cursor:pointer;margin:0 8px;">closeAd</span>
     </div>`;
-    
+
     window.approveUser = async (id) => { const db=firebase.firestore(); const docRef=db.collection('pendingUsers').doc(id); const doc=await docRef.get(); if(doc.exists){ const data=doc.data(); data.approved=true; await db.collection('users').add(data); await docRef.delete(); alert('✅ Approved'); location.reload(); } };
     window.rejectUser = async (id) => { const db=firebase.firestore(); await db.collection('pendingUsers').doc(id).delete(); alert('❌ Rejected'); location.reload(); };
     window.banUserFirestore = async (email) => { const db=firebase.firestore(); const snap=await db.collection('users').where('email','==',email).get(); if(!snap.empty){ const doc=snap.docs[0]; const data=doc.data(); await doc.ref.update({banned:!data.banned}); alert(data.banned?'✅ Unbanned':'🚫 Banned'); location.reload(); } };
     window.deleteUserFirestore = async (email) => { if(!confirm('Delete '+email+'?'))return; const db=firebase.firestore(); const snap=await db.collection('users').where('email','==',email).get(); for(const doc of snap.docs) await doc.ref.delete(); alert('✅ Deleted'); location.reload(); };
     window.deleteItemFirestore = async (id,type) => { if(!confirm('Delete?'))return; const db=firebase.firestore(); const coll=type==='lost'?'lostItems':'foundItems'; await db.collection(coll).doc(id).delete(); alert('✅ Deleted'); location.reload(); };
-}
+
+    console.log('✅ Full admin panel ready');
+};
+
+// ==========================================
+// 3. تشغيل لوحة الإدارة و ربط الزر
+// ==========================================
+(async function initAdmin() {
+    await refreshAdminPanel();
+    setTimeout(() => {
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        if (adminLoginBtn) {
+            adminLoginBtn.onclick = async function() {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                if (email && password) {
+                    loginUser(email, password, true);
+                } else {
+                    alert('أدخل الإيميل وكلمة المرور');
+                }
+            };
+            console.log('✅ Admin Login button linked');
+        } else {
+            console.warn('⚠️ Admin Login button not found');
+        }
+    }, 500);
+})();
 // ========== إعدادات المشرف ==========
 function showAdminSettings() {
     document.getElementById('adminPanel').classList.add('hidden');
