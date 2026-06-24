@@ -2203,3 +2203,9 @@ window.showAdminSettingsPage = function() {
 document.getElementById('adminSettingsBtn').onclick = function() {
     showAdminSettingsPage();
 };
+// ربط زر Back to Dashboard في صفحة الإعدادات
+document.getElementById('adminDynamicContent').addEventListener('click', function(e) {
+    if (e.target.id === 'backToDashboardBtn') {
+        refreshAdminPanel();
+    }
+});
