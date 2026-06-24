@@ -2295,3 +2295,16 @@ if (darkBtn) {
         localStorage.setItem('darkMode', isDark ? '1' : '0');
     };
 }
+// تحميل الخريطة العامة تلقائياً
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var el = document.getElementById('publicMap');
+        if (el && typeof initPublicMap === 'function') {
+            el.style.display = 'block';
+            el.style.height = '300px';
+            el.style.width = '100%';
+            initPublicMap();
+            console.log('✅ Public map loaded');
+        }
+    }, 1500);
+});
