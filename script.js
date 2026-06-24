@@ -2291,8 +2291,6 @@ var darkBtn = document.getElementById('dashboardDarkModeBtn');
 if (darkBtn) {
     darkBtn.onclick = function() {
         document.body.classList.toggle('dark-mode');
-        var isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', isDark ? '1' : '0');
     };
 }
 // تحميل الخريطة العامة تلقائياً
