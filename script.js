@@ -2306,3 +2306,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1500);
 });
+// إخفاء زر Admin Panel عن غير الأدمن
+(function() {
+    var adminBtn = document.getElementById('dashboardAdminBtn');
+    if (adminBtn) {
+        adminBtn.style.display = 'none';
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                firebase.firestore().collection('users').where('email', '==', user.email).get().then(function(snap) {
+                    var isAdmin = false;
+                    snap.forEach(function(doc) {
+                        if (doc.data().isAdmin) isAdmin = true;
+                    });
+                    if (isAdmin) {
+                        adminBtn.style.display = 'block';
+                    }
+                });
+            }
+        });
+    }
+})();
