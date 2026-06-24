@@ -2209,3 +2209,73 @@ document.getElementById('adminDynamicContent').addEventListener('click', functio
         refreshAdminPanel();
     }
 });
+// ربط زر Export All Data
+document.getElementById('adminExportAllBtn').onclick = async function() {
+    var db = firebase.firestore();
+    var data = {};
+    
+    var lostSnap = await db.collection('lostItems').get();
+    data.lostItems = [];
+    lostSnap.forEach(d => data.lostItems.push(d.data()));
+    
+    var foundSnap = await db.collection('foundItems').get();
+    data.foundItems = [];
+    foundSnap.forEach(d => data.foundItems.push(d.data()));
+    
+    var usersSnap = await db.collection('users').get();
+    data.users = [];
+    usersSnap.forEach(d => data.users.push(d.data()));
+    
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'lost_found_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ Data exported');
+};
+// ربط زر Import Data
+document.getElementById('adminImportDataBtn').onclick = function() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var text = await file.text();
+        try {
+            var data = JSON.parse(text);
+            if (!confirm('⚠️ This will overwrite all data. Continue?')) return;
+            var db = firebase.firestore();
+            var batch = db.batch();
+            
+            if (data.lostItems) {
+                data.lostItems.forEach(function(item) {
+                    var ref = db.collection('lostItems').doc();
+                    batch.set(ref, item);
+                });
+            }
+            if (data.foundItems) {
+                data.foundItems.forEach(function(item) {
+                    var ref = db.collection('foundItems').doc();
+                    batch.set(ref, item);
+                });
+            }
+            if (data.users) {
+                data.users.forEach(function(item) {
+                    var ref = db.collection('users').doc();
+                    batch.set(ref, item);
+                });
+            }
+            
+            await batch.commit();
+            alert('✅ Data imported successfully');
+            location.reload();
+        } catch (err) {
+            alert('❌ Invalid JSON file');
+        }
+    };
+    input.click();
+};
