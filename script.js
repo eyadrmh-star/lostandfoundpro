@@ -2339,3 +2339,82 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1500);
 })();
+// ========== إصلاح القوائم والموقع ==========
+
+// 1. تعبئة الدول
+(function fillAllCountries() {
+    var lostC = document.getElementById('lostCountry');
+    var foundC = document.getElementById('foundCountry');
+    
+    if (lostC && lostC.options.length === 0) {
+        geoData.forEach(function(country) {
+            var opt1 = document.createElement('option');
+            opt1.value = country.name;
+            opt1.textContent = country.name;
+            lostC.appendChild(opt1);
+            
+            var opt2 = document.createElement('option');
+            opt2.value = country.name;
+            opt2.textContent = country.name;
+            foundC.appendChild(opt2);
+        });
+        console.log('✅ All countries loaded');
+    }
+})();
+
+// 2. تحديث المدن والرمز
+function updateCitiesAndCode(type) {
+    var countrySelect = document.getElementById(type + 'Country');
+    var citySelect = document.getElementById(type + 'City');
+    var codeSelect = document.getElementById(type + 'PhoneCode');
+    var codeSelect2 = document.getElementById(type + 'PhoneCode2');
+    var selected = countrySelect.value;
+    
+    citySelect.innerHTML = '<option value="">-- Select City --</option>';
+    
+    var country = geoData.find(function(c) { return c.name === selected; });
+    
+    if (country) {
+        country.cities.forEach(function(city) {
+            var opt = document.createElement('option');
+            opt.value = city;
+            opt.textContent = city;
+            citySelect.appendChild(opt);
+        });
+        
+        if (codeSelect) codeSelect.value = country.code;
+        if (codeSelect2) codeSelect2.value = country.code;
+    }
+}
+
+// 3. ربط الأحداث
+document.getElementById('lostCountry').onchange = function() { updateCitiesAndCode('lost'); };
+document.getElementById('foundCountry').onchange = function() { updateCitiesAndCode('found'); };
+
+// 4. زر تحديد الموقع بصورة أوضح
+['lost', 'found'].forEach(function(type) {
+    var locBtn = document.querySelector('#' + type + 'LocationBtn, button[onclick*="' + type + 'Location"]');
+    if (locBtn) {
+        locBtn.innerHTML = '📍';
+        locBtn.title = 'Get Current Location';
+        locBtn.style.fontSize = '24px';
+    }
+});
+
+// 5. تفريغ النموذج بعد الحفظ
+var originalSave = window.saveReport;
+window.saveReport = function(type) {
+    if (originalSave) originalSave(type);
+    setTimeout(function() {
+        document.getElementById(type + 'Description').value = '';
+        document.getElementById(type + 'Country').value = '';
+        document.getElementById(type + 'City').innerHTML = '<option value="">-- Select City --</option>';
+        document.getElementById(type + 'PhoneCode').value = '';
+        document.getElementById(type + 'PhoneCode2').value = '';
+        document.getElementById(type + 'Phone1').value = '';
+        document.getElementById(type + 'Phone2').value = '';
+        console.log('✅ Form cleared after save');
+    }, 1000);
+};
+
+console.log('✅ All fixes applied');
