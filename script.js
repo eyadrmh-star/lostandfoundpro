@@ -2494,13 +2494,13 @@ firebase.auth().onAuthStateChanged(function(user) {
 
     // 4. إصلاح لون مربع الرسالة
     function fixMessageInput() {
-        var msgInput = document.getElementById('userMessageInput');
-        if (msgInput && !msgInput.dataset.colorFixed) {
-            msgInput.dataset.colorFixed = '1';
-            msgInput.style.color = 'black';
-            msgInput.style.backgroundColor = 'white';
-        }
+    var msgInput = document.getElementById('userMessageInput');
+    if (msgInput && !msgInput.dataset.colorFixed) {
+        msgInput.dataset.colorFixed = '1';
+        msgInput.style.setProperty('color', '#000000', 'important');
+        msgInput.style.setProperty('background-color', '#ffffff', 'important');
     }
+}
 
     // تشغيل كل شي
     setInterval(function() {
