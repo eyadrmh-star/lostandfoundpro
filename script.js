@@ -2391,9 +2391,9 @@ function updateCitiesAndCode(type) {
     }
 }
 
-// 3. ربط الأحداث
-document.getElementById('lostCountry').onchange = function() { updateCitiesAndCode('lost'); };
-document.getElementById('foundCountry').onchange = function() { updateCitiesAndCode('found'); };
+// 3. ربط الأحداث بـ addEventListener
+document.getElementById('lostCountry').addEventListener('change', function() { updateCitiesAndCode('lost'); });
+document.getElementById('foundCountry').addEventListener('change', function() { updateCitiesAndCode('found'); });
 
 // 4. زر تحديد الموقع بصورة أوضح
 ['lost', 'found'].forEach(function(type) {
