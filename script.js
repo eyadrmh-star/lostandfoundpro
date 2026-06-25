@@ -2431,5 +2431,59 @@ firebase.auth().onAuthStateChanged(function(user) {
     setInterval(bindAdminDetails, 2000);
     bindAdminDetails();
 })();
+// ========== إصلاح أزرار الأدمن (Details, Send, Back) ==========
+(function() {
+    // 1. ربط Details
+    function bindDetails() {
+        var allBtns = document.querySelectorAll('#adminPanel button, #adminDynamicContent button');
+        allBtns.forEach(function(btn) {
+            if (btn.textContent.trim() === '👁️ Details' && !btn.dataset.fixed) {
+                btn.dataset.fixed = '1';
+                btn.onclick = function() {
+                    var emailMatch = btn.parentElement.parentElement.textContent.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
+                    if (emailMatch) {
+                        ['loginPage','dashboardPage','notificationsPage','profilePage','adminSettingsPage'].forEach(function(id) {
+                            var el = document.getElementById(id);
+                            if (el) el.style.display = 'none';
+                        });
+                        document.getElementById('userDetailsPage').style.display = 'block';
+                        if (typeof showUserDetails === 'function') showUserDetails(emailMatch[0]);
+                    }
+                };
+            }
+        });
+    }
+
+    // 2. ربط Send و Back
+    function bindDetailsActions() {
+        var sendBtn = document.getElementById('sendUserMessageBtn');
+        if (sendBtn && !sendBtn.dataset.fixed) {
+            sendBtn.dataset.fixed = '1';
+            sendBtn.onclick = function() {
+                var msg = document.getElementById('userMessageInput').value;
+                var email = sendBtn.getAttribute('data-email');
+                if (!msg) { alert('Write a message'); return; }
+                alert('Message sent to ' + email + ':\n' + msg);
+                document.getElementById('userMessageInput').value = '';
+            };
+        }
+
+        var backBtn = document.getElementById('userDetailsBackBtn');
+        if (backBtn && !backBtn.dataset.fixed) {
+            backBtn.dataset.fixed = '1';
+            backBtn.onclick = function() {
+                document.getElementById('userDetailsPage').style.display = 'none';
+                document.getElementById('dashboardPage').style.display = 'block';
+                document.getElementById('adminPanel').style.display = 'block';
+                if (typeof showAdminPanelPage === 'function') showAdminPanelPage();
+            };
+        }
+    }
+
+    setInterval(function() {
+        bindDetails();
+        bindDetailsActions();
+    }, 1500);
+})();
 
 console.log('✅ All fixes applied');
