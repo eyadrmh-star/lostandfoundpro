@@ -2402,5 +2402,34 @@ firebase.auth().onAuthStateChanged(function(user) {
         });
     }
 });
+// ========== إصلاح أزرار Details في الأدمن ==========
+(function() {
+    function bindAdminDetails() {
+        var allBtns = document.querySelectorAll('#adminPanel button, #adminDynamicContent button');
+        allBtns.forEach(function(btn) {
+            if (btn.textContent.trim() === '👁️ Details' && !btn.dataset.fixed) {
+                btn.dataset.fixed = '1';
+                btn.onclick = function() {
+                    var parentDiv = btn.parentElement.parentElement;
+                    var emailMatch = parentDiv.textContent.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
+                    if (emailMatch) {
+                        ['loginPage','dashboardPage','notificationsPage','profilePage','adminSettingsPage'].forEach(function(id) {
+                            var el = document.getElementById(id);
+                            if (el) el.style.display = 'none';
+                        });
+                        document.getElementById('userDetailsPage').style.display = 'block';
+                        if (typeof showUserDetails === 'function') {
+                            showUserDetails(emailMatch[0]);
+                        }
+                    }
+                };
+            }
+        });
+    }
+    
+    // شغل كل 2 ثانية
+    setInterval(bindAdminDetails, 2000);
+    bindAdminDetails();
+})();
 
 console.log('✅ All fixes applied');
