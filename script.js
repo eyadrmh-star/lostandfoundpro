@@ -2397,23 +2397,28 @@ document.getElementById('foundCountry').onchange = function() { updateCitiesAndC
 
 // 4. زر تحديد الموقع بصورة أوضح
 ['lost', 'found'].forEach(function(type) {
-    var locBtn = document.querySelector('[onclick*="Location"], [onclick*="location"]');
-    if (locBtn && locBtn.textContent.includes('Location')) {
+    var locBtn = document.querySelector('#' + type + 'LocationBtn, button[onclick*="' + type + 'Location"]');
+    if (locBtn) {
         locBtn.innerHTML = '📍';
         locBtn.title = 'Get Current Location';
+        locBtn.style.fontSize = '24px';
     }
 });
 
-// 5. عرض اسم المستخدم في الناف بار
-firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-        firebase.firestore().collection('users').where('email', '==', user.email).get().then(function(snap) {
-            var name = user.displayName || user.email;
-            snap.forEach(function(doc) {
-                name = doc.data().name || doc.data().username || name;
-            });
-            var userEl = document.getElementById('dashboardUserName');
-            if (userEl) userEl.textContent = name;
-        });
-    }
-});
+// 5. تفريغ النموذج بعد الحفظ
+var originalSave = window.saveReport;
+window.saveReport = function(type) {
+    if (originalSave) originalSave(type);
+    setTimeout(function() {
+        document.getElementById(type + 'Description').value = '';
+        document.getElementById(type + 'Country').value = '';
+        document.getElementById(type + 'City').innerHTML = '<option value="">-- Select City --</option>';
+        document.getElementById(type + 'PhoneCode').innerHTML = '';
+        document.getElementById(type + 'PhoneCode2').innerHTML = '';
+        document.getElementById(type + 'Phone1').value = '';
+        document.getElementById(type + 'Phone2').value = '';
+        console.log('✅ Form cleared after save');
+    }, 1000);
+};
+
+console.log('✅ All fixes applied');
