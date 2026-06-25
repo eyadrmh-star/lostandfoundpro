@@ -2431,14 +2431,14 @@ firebase.auth().onAuthStateChanged(function(user) {
     setInterval(bindAdminDetails, 2000);
     bindAdminDetails();
 })();
-// ========== إصلاح أزرار الأدمن (Details, Send, Back) ==========
+// ========== إصلاح أزرار الأدمن (Details, Send, Back) + إصلاح مربع الرسالة ==========
 (function() {
     // 1. ربط Details
     function bindDetails() {
         var allBtns = document.querySelectorAll('#adminPanel button, #adminDynamicContent button');
         allBtns.forEach(function(btn) {
-            if (btn.textContent.trim() === '👁️ Details' && !btn.dataset.fixed) {
-                btn.dataset.fixed = '1';
+            if (btn.textContent.trim() === '👁️ Details' && !btn.dataset.detailFixed) {
+                btn.dataset.detailFixed = '1';
                 btn.onclick = function() {
                     var emailMatch = btn.parentElement.parentElement.textContent.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
                     if (emailMatch) {
@@ -2454,23 +2454,11 @@ firebase.auth().onAuthStateChanged(function(user) {
         });
     }
 
-    // 2. ربط Send و Back
-    function bindDetailsActions() {
-        var sendBtn = document.getElementById('sendUserMessageBtn');
-        if (sendBtn && !sendBtn.dataset.fixed) {
-            sendBtn.dataset.fixed = '1';
-            sendBtn.onclick = function() {
-                var msg = document.getElementById('userMessageInput').value;
-                var email = sendBtn.getAttribute('data-email');
-                if (!msg) { alert('Write a message'); return; }
-                alert('Message sent to ' + email + ':\n' + msg);
-                document.getElementById('userMessageInput').value = '';
-            };
-        }
-
+    // 2. ربط Back
+    function bindBackButton() {
         var backBtn = document.getElementById('userDetailsBackBtn');
-        if (backBtn && !backBtn.dataset.fixed) {
-            backBtn.dataset.fixed = '1';
+        if (backBtn && !backBtn.dataset.backFixed) {
+            backBtn.dataset.backFixed = '1';
             backBtn.onclick = function() {
                 document.getElementById('userDetailsPage').style.display = 'none';
                 document.getElementById('dashboardPage').style.display = 'block';
@@ -2480,22 +2468,47 @@ firebase.auth().onAuthStateChanged(function(user) {
         }
     }
 
-    setInterval(function() {
-        bindDetails();
-        bindDetailsActions();
-    }, 1500);
-})();
-// إصلاح لون مربع الرسالة في صفحة التفاصيل
-(function() {
-    setInterval(function() {
+    // 3. ربط Send - يقرأ من أي input
+    function bindSendButton() {
+        var sendBtn = document.getElementById('sendUserMessageBtn');
+        if (sendBtn && !sendBtn.dataset.sendFixed) {
+            sendBtn.dataset.sendFixed = '1';
+            var newBtn = sendBtn.cloneNode(true);
+            sendBtn.parentNode.replaceChild(newBtn, sendBtn);
+            
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var msg = '';
+                var allInputs = document.querySelectorAll('input[type="text"], textarea');
+                allInputs.forEach(function(inp) {
+                    if (inp.value.trim() !== '') msg = inp.value.trim();
+                });
+                var email = newBtn.getAttribute('data-email');
+                if (!msg) { alert('Please write a message first'); return; }
+                alert('✅ Message sent to ' + email + ': ' + msg);
+                var input = document.getElementById('userMessageInput');
+                if (input) input.value = '';
+            });
+        }
+    }
+
+    // 4. إصلاح لون مربع الرسالة
+    function fixMessageInput() {
         var msgInput = document.getElementById('userMessageInput');
-        if (msgInput && !msgInput.dataset.styled) {
-            msgInput.dataset.styled = '1';
+        if (msgInput && !msgInput.dataset.colorFixed) {
+            msgInput.dataset.colorFixed = '1';
             msgInput.style.color = 'black';
             msgInput.style.backgroundColor = 'white';
-            msgInput.placeholder = 'Write your message here...';
         }
-    }, 1500);
+    }
+
+    // تشغيل كل شي
+    setInterval(function() {
+        bindDetails();
+        bindBackButton();
+        bindSendButton();
+        fixMessageInput();
+    }, 1000);
 })();
 
 console.log('✅ All fixes applied');
