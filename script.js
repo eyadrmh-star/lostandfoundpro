@@ -2485,5 +2485,17 @@ firebase.auth().onAuthStateChanged(function(user) {
         bindDetailsActions();
     }, 1500);
 })();
+// إصلاح لون مربع الرسالة في صفحة التفاصيل
+(function() {
+    setInterval(function() {
+        var msgInput = document.getElementById('userMessageInput');
+        if (msgInput && !msgInput.dataset.styled) {
+            msgInput.dataset.styled = '1';
+            msgInput.style.color = 'black';
+            msgInput.style.backgroundColor = 'white';
+            msgInput.placeholder = 'Write your message here...';
+        }
+    }, 1500);
+})();
 
 console.log('✅ All fixes applied');
