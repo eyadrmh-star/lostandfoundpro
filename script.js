@@ -2391,38 +2391,20 @@ function updateCitiesAndCode(type) {
     }
 }
 
-// 3. ربط الأحداث بـ addEventListener
-document.getElementById('lostCountry').addEventListener('change', function() { updateCitiesAndCode('lost'); });
-document.getElementById('foundCountry').addEventListener('change', function() { updateCitiesAndCode('found'); });
+// 3. ربط الأحداث
+document.getElementById('lostCountry').onchange = function() { updateCitiesAndCode('lost'); };
+document.getElementById('foundCountry').onchange = function() { updateCitiesAndCode('found'); };
 
 // 4. زر تحديد الموقع بصورة أوضح
 ['lost', 'found'].forEach(function(type) {
-    var locBtn = document.querySelector('#' + type + 'LocationBtn, button[onclick*="' + type + 'Location"]');
-    if (locBtn) {
+    var locBtn = document.querySelector('[onclick*="Location"], [onclick*="location"]');
+    if (locBtn && locBtn.textContent.includes('Location')) {
         locBtn.innerHTML = '📍';
         locBtn.title = 'Get Current Location';
-        locBtn.style.fontSize = '24px';
     }
 });
 
-// 5. تفريغ النموذج بعد الحفظ
-var originalSave = window.saveReport;
-window.saveReport = function(type) {
-    if (originalSave) originalSave(type);
-    setTimeout(function() {
-        document.getElementById(type + 'Description').value = '';
-        document.getElementById(type + 'Country').value = '';
-        document.getElementById(type + 'City').innerHTML = '<option value="">-- Select City --</option>';
-        document.getElementById(type + 'PhoneCode').innerHTML = '';
-        document.getElementById(type + 'PhoneCode2').innerHTML = '';
-        document.getElementById(type + 'Phone1').value = '';
-        document.getElementById(type + 'Phone2').value = '';
-        console.log('✅ Form cleared after save');
-    }, 1000);
-};
-
-console.log('✅ All fixes applied');
-// عرض اسم المستخدم في الناف بار
+// 5. عرض اسم المستخدم في الناف بار
 firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
         firebase.firestore().collection('users').where('email', '==', user.email).get().then(function(snap) {
