@@ -2422,3 +2422,16 @@ window.saveReport = function(type) {
 };
 
 console.log('✅ All fixes applied');
+// عرض اسم المستخدم في الناف بار
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        firebase.firestore().collection('users').where('email', '==', user.email).get().then(function(snap) {
+            var name = user.displayName || user.email;
+            snap.forEach(function(doc) {
+                name = doc.data().name || doc.data().username || name;
+            });
+            var userEl = document.getElementById('dashboardUserName');
+            if (userEl) userEl.textContent = name;
+        });
+    }
+});
