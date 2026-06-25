@@ -2354,7 +2354,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 
-// 2. تحديث المدن فقط (بدون تغيير الرمز الدولي)
+// 2. تحديث المدن فقط
 function updateCitiesAndCode(type) {
     var countrySelect = document.getElementById(type + 'Country');
     var citySelect = document.getElementById(type + 'City');
@@ -2371,10 +2371,24 @@ function updateCitiesAndCode(type) {
     }
 }
 
+// 2.5 تعبئة الرموز الدولية مرة واحدة
+(function fillPhoneCodes() {
+    ['lost', 'found'].forEach(function(type) {
+        ['PhoneCode', 'PhoneCode2'].forEach(function(id) {
+            var el = document.getElementById(type + id);
+            if (el) {
+                el.innerHTML = '<option value="">-- Select Code --</option>';
+                geoData.forEach(function(c) {
+                    el.appendChild(new Option(c.name + ' (' + c.code + ')', c.code));
+                });
+            }
+        });
+    });
+})();
+
 // 3. ربط الأحداث
 document.getElementById('lostCountry').onchange = function() { updateCitiesAndCode('lost'); };
 document.getElementById('foundCountry').onchange = function() { updateCitiesAndCode('found'); };
-
 // 4. عرض اسم المستخدم في الناف بار
 firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
