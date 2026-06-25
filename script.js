@@ -2431,7 +2431,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     setInterval(bindAdminDetails, 2000);
     bindAdminDetails();
 })();
-// ========== إصلاح أزرار الأدمن (Details, Send, Back) + إصلاح مربع الرسالة ==========
+// ========== إصلاح أزرار الأدمن (Details, Back) + مربع الرسالة و Send ==========
 (function() {
     // 1. ربط Details
     function bindDetails() {
@@ -2468,46 +2468,41 @@ firebase.auth().onAuthStateChanged(function(user) {
         }
     }
 
-    // 3. ربط Send - يقرأ من أي input
-    function bindSendButton() {
-        var sendBtn = document.getElementById('sendUserMessageBtn');
-        if (sendBtn && !sendBtn.dataset.sendFixed) {
-            sendBtn.dataset.sendFixed = '1';
-            var newBtn = sendBtn.cloneNode(true);
-            sendBtn.parentNode.replaceChild(newBtn, sendBtn);
+    // 3. استبدال مربع الرسالة وربط Send
+    function replaceInputAndBindSend() {
+        var oldInput = document.getElementById('userMessageInput');
+        if (oldInput && oldInput.tagName === 'INPUT' && !oldInput.dataset.newInput) {
+            oldInput.dataset.newInput = '1';
             
-            newBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                var msg = '';
-                var allInputs = document.querySelectorAll('input[type="text"], textarea');
-                allInputs.forEach(function(inp) {
-                    if (inp.value.trim() !== '') msg = inp.value.trim();
-                });
-                var email = newBtn.getAttribute('data-email');
-                if (!msg) { alert('Please write a message first'); return; }
-                alert('✅ Message sent to ' + email + ': ' + msg);
-                var input = document.getElementById('userMessageInput');
-                if (input) input.value = '';
-            });
+            var newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.id = 'userMessageInput';
+            newInput.placeholder = 'Write your message here...';
+            newInput.style.cssText = 'flex:1; padding:12px; font-size:18px; color:#000000 !important; background:#ffffff !important; border:2px solid #1a237e; border-radius:8px; -webkit-text-fill-color:#000000 !important;';
+            
+            oldInput.replaceWith(newInput);
+            
+            setTimeout(function() {
+                var sendBtn = document.getElementById('sendUserMessageBtn');
+                if (sendBtn && !sendBtn.dataset.newSend) {
+                    sendBtn.dataset.newSend = '1';
+                    sendBtn.onclick = function() {
+                        var msg = document.getElementById('userMessageInput').value.trim();
+                        var email = sendBtn.getAttribute('data-email');
+                        if (!msg) { alert('Please write a message'); return; }
+                        alert('✅ Message sent to ' + email + ': ' + msg);
+                        document.getElementById('userMessageInput').value = '';
+                    };
+                }
+            }, 500);
         }
     }
 
-    // 4. إصلاح لون مربع الرسالة
-    function fixMessageInput() {
-    var msgInput = document.getElementById('userMessageInput');
-    if (msgInput && !msgInput.dataset.colorFixed) {
-        msgInput.dataset.colorFixed = '1';
-        msgInput.style.setProperty('color', '#000000', 'important');
-        msgInput.style.setProperty('background-color', '#ffffff', 'important');
-    }
-}
-
-    // تشغيل كل شي
+    // 4. تشغيل كل شيء
     setInterval(function() {
         bindDetails();
         bindBackButton();
-        bindSendButton();
-        fixMessageInput();
+        replaceInputAndBindSend();
     }, 1000);
 })();
 
