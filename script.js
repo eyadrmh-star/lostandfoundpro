@@ -2348,17 +2348,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (lostC && lostC.options.length === 0) {
         geoData.forEach(function(country) {
-            var opt1 = document.createElement('option');
-            opt1.value = country.name;
-            opt1.textContent = country.name;
-            lostC.appendChild(opt1);
-            
-            var opt2 = document.createElement('option');
-            opt2.value = country.name;
-            opt2.textContent = country.name;
-            foundC.appendChild(opt2);
+            lostC.appendChild(new Option(country.name, country.name));
+            foundC.appendChild(new Option(country.name, country.name));
         });
-        console.log('✅ All countries loaded');
     }
 })();
 
@@ -2376,10 +2368,7 @@ function updateCitiesAndCode(type) {
     
     if (country) {
         country.cities.forEach(function(city) {
-            var opt = document.createElement('option');
-            opt.value = city;
-            opt.textContent = city;
-            citySelect.appendChild(opt);
+            citySelect.appendChild(new Option(city, city));
         });
         
         if (codeSelect && codeSelect.tagName === 'SELECT') {
@@ -2395,30 +2384,18 @@ function updateCitiesAndCode(type) {
 document.getElementById('lostCountry').onchange = function() { updateCitiesAndCode('lost'); };
 document.getElementById('foundCountry').onchange = function() { updateCitiesAndCode('found'); };
 
-// 4. زر تحديد الموقع بصورة أوضح
-['lost', 'found'].forEach(function(type) {
-    var locBtn = document.querySelector('#' + type + 'LocationBtn, button[onclick*="' + type + 'Location"]');
-    if (locBtn) {
-        locBtn.innerHTML = '📍';
-        locBtn.title = 'Get Current Location';
-        locBtn.style.fontSize = '24px';
+// 4. عرض اسم المستخدم في الناف بار
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        firebase.firestore().collection('users').where('email', '==', user.email).get().then(function(snap) {
+            var name = user.displayName || user.email;
+            snap.forEach(function(doc) {
+                name = doc.data().name || doc.data().username || name;
+            });
+            var userEl = document.getElementById('dashboardUserName');
+            if (userEl) userEl.textContent = name;
+        });
     }
 });
-
-// 5. تفريغ النموذج بعد الحفظ
-var originalSave = window.saveReport;
-window.saveReport = function(type) {
-    if (originalSave) originalSave(type);
-    setTimeout(function() {
-        document.getElementById(type + 'Description').value = '';
-        document.getElementById(type + 'Country').value = '';
-        document.getElementById(type + 'City').innerHTML = '<option value="">-- Select City --</option>';
-        document.getElementById(type + 'PhoneCode').innerHTML = '';
-        document.getElementById(type + 'PhoneCode2').innerHTML = '';
-        document.getElementById(type + 'Phone1').value = '';
-        document.getElementById(type + 'Phone2').value = '';
-        console.log('✅ Form cleared after save');
-    }, 1000);
-};
 
 console.log('✅ All fixes applied');
