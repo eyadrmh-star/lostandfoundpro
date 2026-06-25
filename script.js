@@ -2382,8 +2382,12 @@ function updateCitiesAndCode(type) {
             citySelect.appendChild(opt);
         });
         
-        if (codeSelect) codeSelect.value = country.code;
-        if (codeSelect2) codeSelect2.value = country.code;
+        if (codeSelect && codeSelect.tagName === 'SELECT') {
+            codeSelect.innerHTML = '<option value="' + country.code + '">' + country.code + '</option>';
+        }
+        if (codeSelect2 && codeSelect2.tagName === 'SELECT') {
+            codeSelect2.innerHTML = '<option value="' + country.code + '">' + country.code + '</option>';
+        }
     }
 }
 
@@ -2409,8 +2413,8 @@ window.saveReport = function(type) {
         document.getElementById(type + 'Description').value = '';
         document.getElementById(type + 'Country').value = '';
         document.getElementById(type + 'City').innerHTML = '<option value="">-- Select City --</option>';
-        document.getElementById(type + 'PhoneCode').value = '';
-        document.getElementById(type + 'PhoneCode2').value = '';
+        document.getElementById(type + 'PhoneCode').innerHTML = '';
+        document.getElementById(type + 'PhoneCode2').innerHTML = '';
         document.getElementById(type + 'Phone1').value = '';
         document.getElementById(type + 'Phone2').value = '';
         console.log('✅ Form cleared after save');
