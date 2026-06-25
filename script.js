@@ -2354,12 +2354,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 
-// 2. تحديث المدن والرمز
+// 2. تحديث المدن فقط (بدون تغيير الرمز الدولي)
 function updateCitiesAndCode(type) {
     var countrySelect = document.getElementById(type + 'Country');
     var citySelect = document.getElementById(type + 'City');
-    var codeSelect = document.getElementById(type + 'PhoneCode');
-    var codeSelect2 = document.getElementById(type + 'PhoneCode2');
     var selected = countrySelect.value;
     
     citySelect.innerHTML = '<option value="">-- Select City --</option>';
@@ -2370,13 +2368,6 @@ function updateCitiesAndCode(type) {
         country.cities.forEach(function(city) {
             citySelect.appendChild(new Option(city, city));
         });
-        
-        if (codeSelect && codeSelect.tagName === 'SELECT') {
-            codeSelect.innerHTML = '<option value="' + country.code + '">' + country.code + '</option>';
-        }
-        if (codeSelect2 && codeSelect2.tagName === 'SELECT') {
-            codeSelect2.innerHTML = '<option value="' + country.code + '">' + country.code + '</option>';
-        }
     }
 }
 
