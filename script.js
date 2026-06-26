@@ -2601,5 +2601,32 @@ setInterval(function() {
         });
     });
 }, 3000);
+// ========== إصلاح الخرائط ==========
+setTimeout(function() {
+    if (document.getElementById('lostSelectMap') && typeof L !== 'undefined' && !lostSelectMap) {
+        lostSelectMap = L.map('lostSelectMap').setView([31.95, 35.91], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(lostSelectMap);
+    }
+    if (document.getElementById('foundSelectMap') && typeof L !== 'undefined' && !foundSelectMap) {
+        foundSelectMap = L.map('foundSelectMap').setView([31.95, 35.91], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(foundSelectMap);
+    }
+    if (document.getElementById('publicMap') && typeof L !== 'undefined' && !publicMap) {
+        publicMap = L.map('publicMap').setView([31.95, 35.91], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(publicMap);
+    }
+    if (document.getElementById('dashboardMap') && typeof L !== 'undefined' && !dashboardMap) {
+        dashboardMap = L.map('dashboardMap').setView([31.95, 35.91], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(dashboardMap);
+    }
+}, 2000);
 
 console.log('✅ All fixes applied');
