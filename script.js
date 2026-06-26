@@ -2917,5 +2917,60 @@ console.log('✅ All dashboard modifications applied');
     // إعادة تطبيق عند الحاجة
     setInterval(applyDashboardMods, 3000);
 })();
+// ========== صفحة البروفايل ==========
+function openProfile() {
+    var u = firebase.auth().currentUser;
+    if (!u) return;
+    var page = document.getElementById('profilePage');
+    var dash = document.getElementById('dashboardPage');
+    
+    firebase.firestore().collection('users').where('email', '==', u.email).get().then(function(snap) {
+        var data = snap.empty ? {} : snap.docs[0].data();
+        var name = data.name || u.displayName || u.email;
+        var points = data.points || 0;
+        var level = points < 10 ? '🟢 Beginner' : points < 50 ? '🔵 Intermediate' : points < 100 ? '🟣 Advanced' : '👑 Pro';
+        
+        page.innerHTML = '<div class="top-nav"><div class="nav-brand">👤 Profile</div><div class="nav-actions"><button id="profBackBtn">← Back</button></div></div>' +
+        '<div style="text-align:center;padding:20px;">' +
+        '<div style="font-size:60px;">👤</div>' +
+        '<h2>' + name + '</h2>' +
+        '<p>📧 ' + u.email + '</p>' +
+        '<p style="font-size:20px;">' + level + '</p>' +
+        '<p style="font-size:36px;font-weight:bold;color:#1a237e;">⭐ ' + points + ' Points</p>' +
+        '<button onclick="firebase.auth().signOut()" style="padding:12px 24px;background:#e74c3c;color:white;border:none;border-radius:8px;margin:5px;">🚪 Logout</button>' +
+        '<button onclick="requestDeleteAccount()" style="padding:12px 24px;background:#999;color:white;border:none;border-radius:8px;margin:5px;">🗑️ Request Delete</button>' +
+        '</div>';
+        
+        page.style.display = 'block';
+        dash.style.display = 'none';
+        document.getElementById('profBackBtn').onclick = function() {
+            page.style.display = 'none';
+            dash.style.display = 'block';
+        };
+    });
+}
+
+window.requestDeleteAccount = function() {
+    if (confirm('Request account deletion? Admin will review.')) {
+        var u = firebase.auth().currentUser;
+        if (u) {
+            firebase.firestore().collection('deleteRequests').add({
+                email: u.email,
+                requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(function() {
+                alert('✅ Request sent to admin');
+            });
+        }
+    }
+};
+
+// ربط زر البروفايل
+setInterval(function() {
+    var btn = document.getElementById('dashboardProfileBtn');
+    if (btn && !btn.dataset.profLinked) {
+        btn.dataset.profLinked = '1';
+        btn.onclick = openProfile;
+    }
+}, 1000);
 
 console.log('✅ All fixes applied');
