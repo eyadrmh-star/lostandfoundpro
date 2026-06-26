@@ -2628,5 +2628,70 @@ setTimeout(function() {
         }).addTo(dashboardMap);
     }
 }, 2000);
+// ========== تحميل Lost & Found من Firestore للداشبورد ==========
+function loadDashboardItems() {
+    var db = firebase.firestore();
+    
+    // تحميل Lost Items
+    db.collection('lostItems').get().then(function(s) {
+        lostArray = [];
+        s.forEach(function(d) {
+            var data = d.data();
+            data.images = data.image ? [data.image] : [];
+            data.type = 'lost';
+            lostArray.push({ id: d.id, ...data });
+        });
+        if (typeof renderDashboardData === 'function') renderDashboardData();
+    });
+    
+    // تحميل Found Items
+    db.collection('foundItems').get().then(function(s) {
+        foundArray = [];
+        s.forEach(function(d) {
+            var data = d.data();
+            data.images = data.image ? [data.image] : [];
+            data.type = 'found';
+            foundArray.push({ id: d.id, ...data });
+        });
+        if (typeof renderDashboardData === 'function') renderDashboardData();
+    });
+}
+
+// تحميل عند الدخول
+loadDashboardItems();
+
+// تحديث كل دقيقة
+setInterval(loadDashboardItems, 60000);
+window.approveReport = function(id) {
+    if (!confirm('Approve this report and move to dashboard?')) return;
+    
+    var db = firebase.firestore();
+    db.collection('pendingReports').doc(id).get().then(function(doc) {
+        var data = doc.data();
+        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
+        
+        // نجيب اسم المستخدم من users
+        if (data.userEmail) {
+            db.collection('users').where('email', '==', data.userEmail).get().then(function(usnap) {
+                if (!usnap.empty) {
+                    data.name = usnap.docs[0].data().name || data.userEmail;
+                }
+                saveToCollection();
+            });
+        } else {
+            saveToCollection();
+        }
+        
+        function saveToCollection() {
+            db.collection(collection).add(data).then(function() {
+                doc.ref.delete().then(function() {
+                    alert('✅ Approved and moved to ' + collection);
+                    loadDashboardItems();
+                    if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
+                });
+            });
+        }
+    });
+};
 
 console.log('✅ All fixes applied');
