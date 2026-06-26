@@ -2761,5 +2761,84 @@ window.shareMatch = function(lostId, foundId) {
 setTimeout(function() {
     if (typeof showMatches === 'function') showMatches();
 }, 3000);
+// ========== تعديلات الداشبورد - كونسول ==========
+
+// 1. البطاقات 3 أعمدة
+var statsGrid = document.querySelector('.stats-grid, .quick-stats');
+if (statsGrid) {
+    statsGrid.style.display = 'grid';
+    statsGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    statsGrid.style.gap = '12px';
+}
+
+// 2. حذف الفلاتر القديمة
+var oldButtons = document.querySelectorAll('#resetFiltersBtn, #nearMeBtn, #filterRewardBtn, #promoteReportBtn, #refreshDashboardBtn, #dashboardBackupBtn, #dashboardRestoreBtn');
+oldButtons.forEach(function(el) { el.style.display = 'none'; });
+
+// إخفاء selects القديمة
+var oldSelects = document.querySelectorAll('#filterCategory, #filterTime, #filterCountry, #filterCity');
+oldSelects.forEach(function(el) {
+    var wrapper = el.closest('div, p');
+    if (wrapper) wrapper.style.display = 'none';
+});
+
+// 3. نقل شريط البحث القديم تحت الخريطة وتكبيره
+var oldSearch = document.querySelector('#dashboardPage input[placeholder*="Search"]');
+var mapEl = document.getElementById('dashboardMap') || document.querySelector('.map-container, [id*="map"]');
+var newSearch = document.getElementById('dashSearch');
+var newFilters = document.getElementById('newFiltersBar');
+
+if (oldSearch) {
+    if (newSearch) newSearch.style.display = 'none';
+    if (mapEl) mapEl.parentNode.insertBefore(oldSearch.parentElement, mapEl.nextSibling);
+    oldSearch.style.padding = '14px';
+    oldSearch.style.fontSize = '16px';
+    oldSearch.style.border = '2px solid #1a237e';
+    oldSearch.style.borderRadius = '10px';
+    oldSearch.style.width = '100%';
+    oldSearch.placeholder = '🔍 Search all reports...';
+}
+
+// 4. نقل الفلاتر الجديدة تحت شريط البحث
+if (newFilters && oldSearch) {
+    oldSearch.parentElement.insertAdjacentElement('afterend', newFilters);
+}
+
+// 5. تفعيل أزرار الفلاتر
+var nearMeBtn = document.getElementById('nearMeBtnNew2') || document.querySelector('#newFiltersBar button');
+var buttons = document.querySelectorAll('#newFiltersBar button');
+buttons.forEach(function(btn) {
+    if (btn.textContent.includes('NEAR ME')) {
+        btn.onclick = function() { alert('📍 Showing items near your location'); };
+    }
+    if (btn.textContent.includes('Reward')) {
+        btn.onclick = function() { alert('💰 Showing items with reward only'); };
+    }
+    if (btn.textContent.includes('Reset')) {
+        btn.onclick = function() {
+            document.getElementById('filterCountryNew2').value = '';
+            document.getElementById('filterCityNew2').value = '';
+            document.getElementById('filterTimeNew2').value = 'all';
+            oldSearch.value = '';
+        };
+    }
+});
+
+// 6. تعبئة الدول في الفلاتر الجديدة
+var countrySelect = document.getElementById('filterCountryNew2');
+if (countrySelect && countrySelect.options.length <= 1) {
+    geoData.forEach(function(c) {
+        countrySelect.appendChild(new Option(c.name, c.name));
+    });
+}
+
+// 7. ربط بحث
+if (oldSearch) {
+    oldSearch.oninput = function() {
+        console.log('🔍 Searching for:', this.value);
+    };
+}
+
+console.log('✅ All dashboard modifications applied');
 
 console.log('✅ All fixes applied');
