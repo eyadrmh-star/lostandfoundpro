@@ -2761,5 +2761,106 @@ window.shareMatch = function(lostId, foundId) {
 setTimeout(function() {
     if (typeof showMatches === 'function') showMatches();
 }, 3000);
+// ========== الداشبورد الجديد ==========
+function renderNewDashboard() {
+    var dp = document.getElementById('dashboardPage');
+    if (!dp) return;
+    
+    dp.innerHTML = `
+    <div class="top-nav">
+        <div class="nav-brand">📊 Dashboard</div>
+        <div class="nav-actions">
+            <span class="nav-user" id="dashboardUserName">User</span>
+            <button id="dashboardNotificationsBtn" class="btn-icon">🔔</button>
+            <button id="dashboardProfileBtn" class="btn-icon">👤</button>
+            <button id="dashboardDarkModeBtn" class="btn-icon">🌙</button>
+            <button id="dashboardAddReportBtn" class="btn-sm btn-purple">➕ Add New Report</button>
+            <button id="dashboardAdminBtn" class="btn-sm btn-yellow" style="display:none;">👑 Admin Panel</button>
+            <button id="dashboardLogoutBtn" class="btn-sm btn-red">🚪 Logout</button>
+        </div>
+    </div>
+    <div style="padding:16px; max-width:1200px; margin:0 auto;">
+        <div style="margin-bottom:16px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:20px;">🔍</span>
+                <input type="text" id="dashSearch" placeholder="Search lost items..." style="flex:1; padding:14px; font-size:18px; border:2px solid #1a237e; border-radius:12px; outline:none;">
+            </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <button class="dash-tab active" data-tab="lost" style="flex:1; padding:12px; background:#1a237e; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer;">📦 Lost (<span id="lostCount">0</span>)</button>
+            <button class="dash-tab" data-tab="found" style="flex:1; padding:12px; background:#e0e0e0; color:#333; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer;">✅ Found (<span id="foundCount">0</span>)</button>
+            <button class="dash-tab" data-tab="matches" style="flex:1; padding:12px; background:#e0e0e0; color:#333; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer;">🎯 Matches (<span id="matchCount">0</span>)</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+            <select id="filterCountryNew" style="padding:10px; border-radius:8px; border:1px solid #ccc; flex:1; min-width:130px;"><option value="">🌍 All Countries</option></select>
+            <select id="filterCityNew" style="padding:10px; border-radius:8px; border:1px solid #ccc; flex:1; min-width:130px;"><option value="">🏙 All Cities</option></select>
+            <select id="filterTimeNew" style="padding:10px; border-radius:8px; border:1px solid #ccc; flex:1; min-width:100px;"><option value="all">📅 All Time</option><option value="today">Today</option><option value="week">This Week</option></select>
+            <button id="nearMeBtnNew" style="padding:10px 16px; background:#e74c3c; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📍 NEAR ME</button>
+            <button id="rewardBtnNew" style="padding:10px 16px; background:#f39c12; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">💰 Reward</button>
+            <button id="resetBtnNew" style="padding:10px 16px; background:#999; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Reset</button>
+        </div>
+        <div id="resultsInfo" style="margin-bottom:12px; color:#666; font-size:14px;">Showing 0 results</div>
+        <div id="dashboardMap" style="width:100%; height:250px; border-radius:12px; margin-bottom:16px; background:#eee;"></div>
+        <div id="dashItemsContainer" style="display:flex; flex-direction:column; gap:10px;"><p style="color:#999; text-align:center;">No items to show</p></div>
+    </div>`;
+
+    // إعادة ربط الخريطة
+    setTimeout(function() {
+        var mapEl = document.getElementById('dashboardMap');
+        if (mapEl && typeof L !== 'undefined') {
+            dashboardMap = L.map('dashboardMap').setView([31.95, 35.91], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(dashboardMap);
+        }
+    }, 500);
+
+    // تعبئة الفلاتر
+    ['filterCountryNew', 'filterCityNew'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.options.length <= 1) {
+            geoData.forEach(function(c) { el.appendChild(new Option(c.name, c.name)); });
+        }
+    });
+
+    // ربط Tabs
+    document.querySelectorAll('.dash-tab').forEach(function(tab) {
+        tab.onclick = function() {
+            document.querySelectorAll('.dash-tab').forEach(function(t) { t.style.background = '#e0e0e0'; t.style.color = '#333'; });
+            tab.style.background = '#1a237e';
+            tab.style.color = 'white';
+            filterItems(tab.dataset.tab);
+        };
+    });
+
+    // دالة عرض
+    function filterItems(tab) {
+        var items = tab === 'lost' ? lostArray : tab === 'found' ? foundArray : [];
+        var container = document.getElementById('dashItemsContainer');
+        document.getElementById('lostCount').textContent = lostArray.length;
+        document.getElementById('foundCount').textContent = foundArray.length;
+        document.getElementById('resultsInfo').textContent = 'Showing ' + items.length + ' ' + tab + ' items';
+        
+        if (items.length === 0) {
+            container.innerHTML = '<p style="color:#999; text-align:center;">No items to show</p>';
+        } else {
+            container.innerHTML = items.map(function(i) {
+                return `<div style="background:white; padding:14px; border-radius:12px; border-left:4px solid ${tab==='lost'?'#e74c3c':'#27ae60'}; box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+                    <strong>${tab==='lost'?'🔴':'✅'} ${i.desc}</strong><br>
+                    <small>👤 ${i.name||i.userEmail||''} | 📍 ${i.city||''} | 📅 ${i.date||''}</small>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // عرض أولي
+    filterItems('lost');
+    document.getElementById('lostCount').textContent = lostArray.length;
+    document.getElementById('foundCount').textContent = foundArray.length;
+    document.getElementById('resultsInfo').textContent = 'Showing ' + lostArray.length + ' lost items';
+
+    console.log('✅ New dashboard rendered');
+}
+
+// استدعاء
+renderNewDashboard();
 
 console.log('✅ All fixes applied');
