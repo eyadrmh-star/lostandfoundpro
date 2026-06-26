@@ -2571,5 +2571,35 @@ setInterval(function() {
         };
     }
 }, 2000);
+// إصلاح Activity Logs - قراءة من Firestore
+setInterval(function() {
+    firebase.firestore().collection('activityLogs').orderBy('timestamp', 'desc').limit(10).get().then(function(snap) {
+        var h3s = document.querySelectorAll('h3');
+        h3s.forEach(function(h3) {
+            if (h3.textContent.includes('Activity Logs') && !h3.dataset.activityFixed) {
+                h3.dataset.activityFixed = '1';
+                var parent = h3.parentElement;
+                var next = h3.nextElementSibling;
+                while(next) {
+                    var temp = next.nextElementSibling;
+                    next.remove();
+                    next = temp;
+                }
+                
+                if (snap.empty) {
+                    parent.appendChild(Object.assign(document.createElement('p'), {style: 'color:#999;', textContent: 'No activity'}));
+                } else {
+                    snap.forEach(function(doc) {
+                        var d = doc.data();
+                        var div = document.createElement('div');
+                        div.style.cssText = 'padding:8px;margin:3px 0;background:#f5f5f5;border-radius:8px;';
+                        div.innerHTML = '<strong>' + (d.action || '') + '</strong> - <small>' + (d.user || '') + ' | ' + (d.timestamp ? d.timestamp.toDate().toLocaleString() : '') + '</small>';
+                        parent.appendChild(div);
+                    });
+                }
+            }
+        });
+    });
+}, 3000);
 
 console.log('✅ All fixes applied');
