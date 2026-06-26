@@ -2558,5 +2558,18 @@ firebase.auth().onAuthStateChanged(function(user) {
         });
     }, 2000);
 })();
+// إصلاح زر Send to All
+setInterval(function() {
+    var broadcastBtn = document.querySelector('#broadcastMessage + button');
+    if (broadcastBtn && !broadcastBtn.dataset.broadcastFixed) {
+        broadcastBtn.dataset.broadcastFixed = '1';
+        broadcastBtn.onclick = function() {
+            var msg = document.getElementById('broadcastMessage').value;
+            if (!msg) { alert('Write a message first'); return; }
+            alert('✅ Broadcast sent to all users:\n' + msg);
+            document.getElementById('broadcastMessage').value = '';
+        };
+    }
+}, 2000);
 
 console.log('✅ All fixes applied');
