@@ -2757,4 +2757,9 @@ window.shareMatch = function(lostId, foundId) {
     alert('📤 Match shared!');
 };
 
+// تحميل Matches تلقائياً بعد تحميل البيانات
+setTimeout(function() {
+    if (typeof showMatches === 'function') showMatches();
+}, 3000);
+
 console.log('✅ All fixes applied');
