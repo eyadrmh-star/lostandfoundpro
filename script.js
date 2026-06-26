@@ -2840,5 +2840,82 @@ if (oldSearch) {
 }
 
 console.log('✅ All dashboard modifications applied');
+// ========== تحسينات الداشبورد - الفلاتر، البحث، التنسيق ==========
+(function() {
+    function applyDashboardMods() {
+        // 1. البطاقات 3 أعمدة
+        var statsGrid = document.querySelector('.stats-grid, .quick-stats');
+        if (statsGrid) {
+            statsGrid.style.display = 'grid';
+            statsGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            statsGrid.style.gap = '12px';
+        }
+
+        // 2. إخفاء الفلاتر القديمة
+        document.querySelectorAll('#filterCategory, #filterTime, #filterCountry, #filterCity').forEach(function(el) {
+            var parent = el.parentElement;
+            if (parent) parent.style.display = 'none';
+        });
+        document.querySelectorAll('#resetFiltersBtn, #nearMeBtn, #filterRewardBtn, #promoteReportBtn, #refreshDashboardBtn, #dashboardBackupBtn, #dashboardRestoreBtn').forEach(function(el) {
+            el.style.display = 'none';
+        });
+
+        // 3. نقل شريط البحث تحت الخريطة وتكبيره
+        var searchInput = document.querySelector('#dashboardPage input[placeholder*="Search"]');
+        var mapEl = document.getElementById('dashboardMap') || document.querySelector('.map-container, [id*="map"]');
+        if (searchInput && mapEl) {
+            var searchWrapper = searchInput.parentElement;
+            mapEl.parentNode.insertBefore(searchWrapper, mapEl.nextSibling);
+            searchInput.style.padding = '14px';
+            searchInput.style.fontSize = '16px';
+            searchInput.style.border = '2px solid #1a237e';
+            searchInput.style.borderRadius = '10px';
+            searchInput.style.width = '100%';
+            searchInput.placeholder = '🔍 Search all reports...';
+        }
+
+        // 4. إضافة الفلاتر الجديدة
+        if (mapEl && !document.getElementById('newFiltersBar')) {
+            var filtersDiv = document.createElement('div');
+            filtersDiv.id = 'newFiltersBar';
+            filtersDiv.style.cssText = 'margin:12px 0; display:flex; gap:8px; flex-wrap:wrap;';
+            filtersDiv.innerHTML = `
+                <select id="filterCountryNew2" style="padding:8px; border-radius:6px; border:1px solid #ccc; flex:1; min-width:100px;"><option value="">🌍 All Countries</option></select>
+                <select id="filterCityNew2" style="padding:8px; border-radius:6px; border:1px solid #ccc; flex:1; min-width:100px;"><option value="">🏙 All Cities</option></select>
+                <select id="filterTimeNew2" style="padding:8px; border-radius:6px; border:1px solid #ccc; flex:1; min-width:80px;"><option value="all">📅 All</option><option value="today">Today</option><option value="week">Week</option></select>
+                <button id="nearMeNewBtn" style="padding:8px 14px; background:#e74c3c; color:white; border:none; border-radius:6px; cursor:pointer;">📍 NEAR ME</button>
+                <button id="rewardNewBtn" style="padding:8px 14px; background:#f39c12; color:white; border:none; border-radius:6px; cursor:pointer;">💰 Reward</button>
+                <button id="promoteNewBtn" style="padding:8px 14px; background:linear-gradient(135deg,#f0a500,#d68910); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">⭐ Promote</button>
+                <button id="resetNewBtn" style="padding:8px 14px; background:#999; color:white; border:none; border-radius:6px; cursor:pointer;">🔄 Reset</button>
+            `;
+            mapEl.parentNode.insertBefore(filtersDiv, mapEl.nextSibling);
+
+            // تعبئة الدول
+            var countrySelect = document.getElementById('filterCountryNew2');
+            if (countrySelect && typeof geoData !== 'undefined') {
+                geoData.forEach(function(c) {
+                    countrySelect.appendChild(new Option(c.name, c.name));
+                });
+            }
+
+            // تفعيل الأزرار
+            document.getElementById('nearMeNewBtn').onclick = function() { alert('📍 Near Me - coming soon'); };
+            document.getElementById('rewardNewBtn').onclick = function() { alert('💰 Reward filter - coming soon'); };
+            document.getElementById('promoteNewBtn').onclick = function() { alert('⭐ Premium Promotion - coming soon'); };
+            document.getElementById('resetNewBtn').onclick = function() {
+                document.getElementById('filterCountryNew2').value = '';
+                document.getElementById('filterCityNew2').value = '';
+                document.getElementById('filterTimeNew2').value = 'all';
+                if (searchInput) searchInput.value = '';
+            };
+        }
+    }
+
+    // تطبيق عند التحميل
+    applyDashboardMods();
+
+    // إعادة تطبيق عند الحاجة
+    setInterval(applyDashboardMods, 3000);
+})();
 
 console.log('✅ All fixes applied');
