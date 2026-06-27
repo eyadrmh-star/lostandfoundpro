@@ -2972,5 +2972,127 @@ setInterval(function() {
         btn.onclick = openProfile;
     }
 }, 1000);
+// ============================================
+// SEND MESSAGE TO INDIVIDUAL USER
+// ============================================
+function sendMessageToUser(userEmail, userName) {
+    var message = prompt('Enter message to send to ' + userName + ' (' + userEmail + '):');
+    if (!message || !message.trim()) return;
+    
+    firebase.firestore().collection('messages').add({
+        to: userEmail,
+        toName: userName,
+        message: message.trim(),
+        from: 'admin',
+        fromName: 'Admin',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+    }).then(function() {
+        alert('✅ Message sent to ' + userName);
+    }).catch(function(error) {
+        alert('❌ Error: ' + error.message);
+    });
+}
+
+// ============================================
+// LINK SEND MESSAGE BUTTONS IN APPROVED USERS
+// ============================================
+function linkSendMessageButtons() {
+    var allSendBtns = document.querySelectorAll('button');
+    var linked = 0;
+    allSendBtns.forEach(function(btn) {
+        if (btn.textContent.includes('Send Message')) {
+            var parent = btn.closest('div');
+            var parentHTML = parent ? parent.innerHTML : '';
+            
+            var emailMatch = parentHTML.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            var email = emailMatch ? emailMatch[0] : '';
+            
+            var fullText = parent.textContent || '';
+            var namePart = fullText.split('Details')[0].trim();
+            var userName = namePart.replace(email, '').trim();
+            
+            btn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessageToUser(email, userName);
+            };
+            linked++;
+        }
+    });
+    console.log('✅ Linked ' + linked + ' Send Message buttons');
+}
+
+// ============================================
+// ADD SEND TO ALL BUTTON
+// ============================================
+function addSendToAllButton() {
+    var allH3s = document.querySelectorAll('h3');
+    var targetH3 = null;
+    allH3s.forEach(function(h3) {
+        if (h3.textContent.includes('طلبات المنظمات') || h3.textContent.includes('Organization')) {
+            targetH3 = h3;
+        }
+    });
+
+    if (targetH3) {
+        var sendAllBtn = document.createElement('button');
+        sendAllBtn.textContent = '📨 Send to All';
+        sendAllBtn.style.cssText = 'padding:12px 24px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;margin:10px 0;width:100%;';
+        
+        sendAllBtn.onclick = function() {
+            var message = prompt('Enter message to send to ALL approved users:');
+            if (!message || !message.trim()) return;
+            
+            firebase.firestore().collection('users').where('approved', '==', true).get().then(function(snapshot) {
+                if (snapshot.empty) {
+                    alert('No approved users found.');
+                    return;
+                }
+                var count = 0;
+                snapshot.forEach(function(doc) {
+                    var data = doc.data();
+                    firebase.firestore().collection('messages').add({
+                        to: data.email,
+                        toName: data.name || data.email,
+                        message: message.trim(),
+                        from: 'admin',
+                        fromName: 'Admin',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false
+                    });
+                    count++;
+                });
+                alert('✅ Message sent to ' + count + ' approved users.');
+            }).catch(function(error) {
+                alert('❌ Error: ' + error.message);
+            });
+        };
+        
+        targetH3.parentNode.insertBefore(sendAllBtn, targetH3);
+        console.log('✅ Send to All button added');
+    } else {
+        console.log('❌ Organization requests section not found');
+    }
+}
+
+// ============================================
+// INITIALIZE EVERYTHING WHEN ADMIN PANEL LOADS
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for admin panel to render
+    setTimeout(function() {
+        linkSendMessageButtons();
+        addSendToAllButton();
+    }, 1500);
+});
+
+// Also run if admin panel is already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(function() {
+        linkSendMessageButtons();
+        addSendToAllButton();
+    }, 1000);
+}
 
 console.log('✅ All fixes applied');
