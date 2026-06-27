@@ -2516,7 +2516,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         replaceInputAndBindSend();
     }, 1000);
 })();
-// ========== إصلاح Pending Reports - إضافة أزرار Approve/Delete ==========
+// ========== إصلاح Pending Reports ==========
 (function() {
     window.approveReport = function(id) {
         if (confirm('Approve this report?')) {
@@ -2535,39 +2535,43 @@ firebase.auth().onAuthStateChanged(function(user) {
         }
     };
 
-    setInterval(function() {
-        var adc = document.getElementById('adminDynamicContent');
-        if (!adc) return;
-        var h3s = adc.querySelectorAll('h3');
-        h3s.forEach(function(h3) {
-            if (h3.textContent.includes('Pending Reports')) {
-                var parent = h3.closest('div');
-                var firstDiv = h3.nextElementSibling;
-                if (firstDiv && firstDiv.tagName === 'P') return;
-                if (parent.querySelector('button')) return;
-
-                firebase.firestore().collection('pendingReports').get().then(function(snap) {
-                    var next = h3.nextElementSibling;
-                    while(next) {
-                        var temp = next.nextElementSibling;
-                        if (next.tagName === 'DIV' && !next.querySelector('button')) next.remove();
-                        next = temp;
-                    }
-                    snap.forEach(function(doc) {
-                        var r = doc.data();
-                        var div = document.createElement('div');
-                        div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;';
-                        div.innerHTML = '<span><strong>' + (r.desc || 'No desc') + '</strong></span>' +
-                            '<div style="display:flex;gap:6px;">' +
-                            '<button style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="approveReport(\'' + doc.id + '\')">✅ Approve</button>' +
-                            '<button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="deleteReport(\'' + doc.id + '\')">🗑️ Delete</button>' +
-                            '</div>';
-                        parent.appendChild(div);
-                    });
-                });
-            }
+    function fixPendingReports() {
+        var h3 = Array.from(document.querySelectorAll('#adminDynamicContent h3')).find(function(h) {
+            return h.textContent.includes('Pending Reports');
         });
-    }, 2000);
+        if (!h3) return;
+        
+        var parent = h3.closest('div');
+        if (parent.querySelector('button[onclick*="approveReport"]')) return;
+        
+        // حذف div القديمة
+        var next = h3.nextElementSibling;
+        while(next) {
+            var temp = next.nextElementSibling;
+            if (next.tagName === 'DIV' && next.querySelector('button') && next.querySelector('button').onclick) {
+                // زر موجود مسبقاً، لا تحذف
+            } else if (next.tagName === 'DIV') {
+                next.remove();
+            }
+            next = temp;
+        }
+        
+        firebase.firestore().collection('pendingReports').get().then(function(snap) {
+            snap.forEach(function(doc) {
+                var r = doc.data();
+                var div = document.createElement('div');
+                div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;';
+                div.innerHTML = '<span><strong>' + (r.desc || 'No desc') + '</strong></span>' +
+                    '<div style="display:flex;gap:6px;">' +
+                    '<button style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="approveReport(\'' + doc.id + '\')">✅ Approve</button>' +
+                    '<button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="deleteReport(\'' + doc.id + '\')">🗑️ Delete</button>' +
+                    '</div>';
+                parent.appendChild(div);
+            });
+        });
+    }
+
+    setInterval(fixPendingReports, 2000);
 })();
 // إصلاح زر Send to All
 setInterval(function() {
