@@ -3032,6 +3032,13 @@ function linkSendMessageButtons() {
 // ADD SEND TO ALL BUTTON
 // ============================================
 function addSendToAllButton() {
+    // Check if already added - prevent duplicates
+    var existingBtn = document.querySelector('button[data-send-all]');
+    if (existingBtn) {
+        console.log('ℹ️ Send to All button already exists');
+        return;
+    }
+    
     var allH3s = document.querySelectorAll('h3');
     var targetH3 = null;
     allH3s.forEach(function(h3) {
@@ -3043,6 +3050,7 @@ function addSendToAllButton() {
     if (targetH3) {
         var sendAllBtn = document.createElement('button');
         sendAllBtn.textContent = '📨 Send to All';
+        sendAllBtn.setAttribute('data-send-all', 'true');
         sendAllBtn.style.cssText = 'padding:12px 24px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;margin:10px 0;width:100%;';
         
         sendAllBtn.onclick = function() {
