@@ -2995,7 +2995,7 @@ function sendMessageToUser(userEmail, userName) {
 }
 
 // ============================================
-// LINK SEND MESSAGE BUTTONS IN APPROVED USERS
+// LINK SEND MESSAGE BUTTONS
 // ============================================
 function linkSendMessageButtons() {
     var allSendBtns = document.querySelectorAll('button');
@@ -3026,15 +3026,24 @@ function linkSendMessageButtons() {
         }
     });
     console.log('✅ Linked ' + linked + ' Send Message buttons');
+    return linked;
 }
 
 // ============================================
-// RUN AFTER ADMIN PANEL RENDERS
+// ATTACH TO ADMIN PANEL BUTTON
 // ============================================
 setTimeout(function() {
-    linkSendMessageButtons();
-    // Retry after more time if buttons not fully loaded
-    setTimeout(linkSendMessageButtons, 3000);
+    var allBtns = document.querySelectorAll('button');
+    allBtns.forEach(function(btn) {
+        if (btn.textContent.includes('Admin Panel') && btn.textContent.includes('👑')) {
+            btn.addEventListener('click', function() {
+                setTimeout(function() {
+                    linkSendMessageButtons();
+                }, 3000);
+            });
+            console.log('✅ Send Message system attached to Admin Panel button');
+        }
+    });
 }, 2000);
 
 console.log('✅ All fixes applied');
