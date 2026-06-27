@@ -2541,7 +2541,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         var h3s = adc.querySelectorAll('h3');
         h3s.forEach(function(h3) {
             if (h3.textContent.includes('Pending Reports')) {
-                var parent = h3.parentElement;
+                var parent = h3.closest('div');
                 var firstDiv = h3.nextElementSibling;
                 if (firstDiv && firstDiv.tagName === 'P') return;
                 if (parent.querySelector('button')) return;
@@ -2589,7 +2589,7 @@ setInterval(function() {
         h3s.forEach(function(h3) {
             if (h3.textContent.includes('Activity Logs') && !h3.dataset.activityFixed) {
                 h3.dataset.activityFixed = '1';
-                var parent = h3.parentElement;
+                var parent = h3.closest('div');
                 var next = h3.nextElementSibling;
                 while(next) {
                     var temp = next.nextElementSibling;
