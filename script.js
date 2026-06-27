@@ -3084,7 +3084,11 @@ function addSendToAllButton() {
 // ============================================
 // RUN AFTER ADMIN PANEL RENDERS
 // ============================================
+var messageSystemInitialized = false;
+
 function initMessageSystem() {
+    if (messageSystemInitialized) return; // Prevent re-run
+    messageSystemInitialized = true;
     linkSendMessageButtons();
     addSendToAllButton();
 }
@@ -3092,12 +3096,25 @@ function initMessageSystem() {
 // Initial run with delay for admin panel to render
 setTimeout(initMessageSystem, 2000);
 
-// Also watch for admin panel opening and re-run
-var adminObserver = new MutationObserver(function() {
-    setTimeout(initMessageSystem, 500);
-});
+// Watch for admin panel opening - run only once
 var adminPanel = document.getElementById('adminPanel') || document.getElementById('adminPage');
 if (adminPanel) {
+    var adminObserver = new MutationObserver(function(mutations) {
+        // Check if buttons exist but not linked yet
+        var sendBtns = document.querySelectorAll('button');
+        var hasUnlinked = false;
+        sendBtns.forEach(function(btn) {
+            if (btn.textContent.includes('Send Message') && !btn.onclick) {
+                hasUnlinked = true;
+            }
+        });
+        if (hasUnlinked) {
+            setTimeout(function() {
+                linkSendMessageButtons();
+                addSendToAllButton();
+            }, 500);
+        }
+    });
     adminObserver.observe(adminPanel, { childList: true, subtree: true });
 }
 
