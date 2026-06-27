@@ -1873,7 +1873,7 @@ function enableNearMeFilter() {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
             const data = await response.json();
-            userCurrentCity = data.address?.city || data.address?.town || data.address?.village;
+            userCurrentCity = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state;
             if (userCurrentCity) {
                 nearMeActive = true;
                 showToast(`📍 البلاغات القريبة من: ${userCurrentCity}`, 'success');
