@@ -2875,6 +2875,27 @@ document.getElementById('promoteNewBtn').onclick = function() {
     applyDashboardMods();
 
     // إعادة تطبيق عند الحاجة
+        // حماية شريط البحث من إعادة البناء
+    var searchInput = document.querySelector('#dashboardPage input[placeholder*="Search"]');
+    if (searchInput && !searchInput.dataset.searchFixed) {
+        searchInput.dataset.searchFixed = '1';
+        var newInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newInput, searchInput);
+        
+        newInput.addEventListener('input', function(e) {
+            e.stopPropagation();
+            var keyword = this.value.trim().toLowerCase();
+            var allCards = document.querySelectorAll('#dashboardPage .card, #dashboardPage [class*="item"], #dashboardPage [class*="report"]');
+            var found = 0;
+            allCards.forEach(function(card) {
+                var text = (card.innerText || card.textContent || '').toLowerCase();
+                card.style.display = (!keyword || text.includes(keyword)) ? '' : 'none';
+                if (!keyword || text.includes(keyword)) found++;
+            });
+            console.log('🔍 "' + keyword + '" → Found: ' + found);
+        });
+    }
+
     setInterval(applyDashboardMods, 3000);
 })();
 // ========== صفحة البروفايل ==========
