@@ -1877,7 +1877,7 @@ function enableNearMeFilter() {
             if (userCurrentCity) {
                 nearMeActive = true;
                 showToast(`📍 البلاغات القريبة من: ${userCurrentCity}`, 'success');
-                const citySelect = document.getElementById('filterCity');
+                const citySelect = document.getElementById('filterCityNew2');
                 if (citySelect) {
                     let exists = false;
                     for (let i = 0; i < citySelect.options.length; i++) {
