@@ -3002,20 +3002,25 @@ function linkSendMessageButtons() {
     var linked = 0;
     allSendBtns.forEach(function(btn) {
         if (btn.textContent.includes('Send Message')) {
-            var parent = btn.closest('div');
-            var parentHTML = parent ? parent.innerHTML : '';
+            var level1 = btn.parentElement.parentElement;
+            var level1Text = level1 ? (level1.innerText || level1.textContent || '') : '';
             
-            var emailMatch = parentHTML.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            var emailMatch = level1Text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
             var email = emailMatch ? emailMatch[0] : '';
             
-            var fullText = parent.textContent || '';
-            var namePart = fullText.split('Details')[0].trim();
-            var userName = namePart.replace(email, '').trim();
+            var name = '';
+            if (email && level1Text.includes(email)) {
+                name = level1Text.split(email)[0].trim();
+                name = name.replace(/[()]/g, '').trim();
+            }
+            
+            if (!name || name.length === 0) name = email.split('@')[0];
+            if (!email) email = 'unknown@email.com';
             
             btn.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                sendMessageToUser(email, userName);
+                sendMessageToUser(email, name);
             };
             linked++;
         }
@@ -3077,22 +3082,23 @@ function addSendToAllButton() {
 }
 
 // ============================================
-// INITIALIZE EVERYTHING WHEN ADMIN PANEL LOADS
+// RUN AFTER ADMIN PANEL RENDERS
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for admin panel to render
-    setTimeout(function() {
-        linkSendMessageButtons();
-        addSendToAllButton();
-    }, 1500);
-});
+function initMessageSystem() {
+    linkSendMessageButtons();
+    addSendToAllButton();
+}
 
-// Also run if admin panel is already loaded
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(function() {
-        linkSendMessageButtons();
-        addSendToAllButton();
-    }, 1000);
+// Initial run with delay for admin panel to render
+setTimeout(initMessageSystem, 2000);
+
+// Also watch for admin panel opening and re-run
+var adminObserver = new MutationObserver(function() {
+    setTimeout(initMessageSystem, 500);
+});
+var adminPanel = document.getElementById('adminPanel') || document.getElementById('adminPage');
+if (adminPanel) {
+    adminObserver.observe(adminPanel, { childList: true, subtree: true });
 }
 
 console.log('✅ All fixes applied');
