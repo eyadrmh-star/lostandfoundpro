@@ -2910,7 +2910,10 @@ console.log('✅ All dashboard modifications applied');
             }
 
             // تفعيل الأزرار
-            document.getElementById('nearMeNewBtn').onclick = function() { alert('📍 Near Me - coming soon'); };
+            document.getElementById('nearMeNewBtn').onclick = function() {
+    toggleNearMeFilter();
+    setTimeout(updateNearMeButton, 1000);
+};
             document.getElementById('rewardNewBtn').onclick = function() { alert('💰 Reward filter - coming soon'); };
             document.getElementById('promoteNewBtn').onclick = function() { alert('⭐ Premium Promotion - coming soon'); };
             document.getElementById('resetNewBtn').onclick = function() {
