@@ -2892,11 +2892,9 @@ document.getElementById('promoteNewBtn').onclick = function() {
                 card.style.display = (!keyword || text.includes(keyword)) ? '' : 'none';
                 if (!keyword || text.includes(keyword)) found++;
             });
-            console.log('🔍 "' + keyword + '" → Found: ' + found);
+                        console.log('🔍 "' + keyword + '" → Found: ' + found);
         });
     }
-
-    setInterval(applyDashboardMods, 3000);
 })();
 // ========== صفحة البروفايل ==========
 function openProfile() {
