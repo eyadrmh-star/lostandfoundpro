@@ -2973,77 +2973,40 @@ setInterval(function() {
     }
 }, 1000);
 // ============================================
-// SEND MESSAGE TO INDIVIDUAL USER
+// SEND MESSAGE SYSTEM
 // ============================================
-function sendMessageToUser(userEmail, userName) {
-    var message = prompt('Enter message to send to ' + userName + ' (' + userEmail + '):');
-    if (!message || !message.trim()) return;
-    
-    firebase.firestore().collection('messages').add({
-        to: userEmail,
-        toName: userName,
-        message: message.trim(),
-        from: 'admin',
-        fromName: 'Admin',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        read: false
-    }).then(function() {
-        alert('✅ Message sent to ' + userName);
-    }).catch(function(error) {
-        alert('❌ Error: ' + error.message);
-    });
-}
+(function() {
+    function sendMessageToUser(userEmail, userName) {
+        var message = prompt('Enter message to send to ' + userName + ' (' + userEmail + '):');
+        if (!message || !message.trim()) return;
+        firebase.firestore().collection('messages').add({
+            to: userEmail, toName: userName, message: message.trim(),
+            from: 'admin', fromName: 'Admin',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false
+        }).then(function() {
+            alert('✅ Message sent to ' + userName);
+        }).catch(function(error) {
+            alert('❌ Error: ' + error.message);
+        });
+    }
 
-// ============================================
-// LINK SEND MESSAGE BUTTONS
-// ============================================
-function linkSendMessageButtons() {
-    var allSendBtns = document.querySelectorAll('button');
-    var linked = 0;
-    allSendBtns.forEach(function(btn) {
-        if (btn.textContent.includes('Send Message')) {
-            var level1 = btn.parentElement.parentElement;
-            var level1Text = level1 ? (level1.innerText || level1.textContent || '') : '';
-            
-            var emailMatch = level1Text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-            var email = emailMatch ? emailMatch[0] : '';
-            
-            var name = '';
-            if (email && level1Text.includes(email)) {
-                name = level1Text.split(email)[0].trim();
-                name = name.replace(/[()]/g, '').trim();
+    function linkSendMessageButtons() {
+        document.querySelectorAll('button').forEach(function(btn) {
+            if (btn.textContent.includes('Send Message') && !btn.dataset.msgLinked) {
+                btn.dataset.msgLinked = '1';
+                var p = btn.parentElement.parentElement;
+                var txt = p ? p.innerText : '';
+                var em = txt.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                var email = em ? em[0] : '';
+                var name = email ? txt.split(email)[0].replace(/[()]/g,'').trim() : '';
+                if(!name) name = email.split('@')[0];
+                btn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); sendMessageToUser(email, name); };
+                console.log('🔗 ' + name + ' (' + email + ')');
             }
-            
-            if (!name || name.length === 0) name = email.split('@')[0];
-            if (!email) email = 'unknown@email.com';
-            
-            btn.onclick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                sendMessageToUser(email, name);
-            };
-            linked++;
-        }
-    });
-    console.log('✅ Linked ' + linked + ' Send Message buttons');
-    return linked;
-}
+        });
+    }
 
-// ============================================
-// ATTACH TO ADMIN PANEL BUTTON
-// ============================================
-setTimeout(function() {
-    var allBtns = document.querySelectorAll('button');
-    allBtns.forEach(function(btn) {
-        if (btn.textContent.includes('Admin Panel') && btn.textContent.includes('👑')) {
-            btn.addEventListener('click', function() {
-                setTimeout(function() {
-                    linkSendMessageButtons();
-                }, 3000);
-            });
-            console.log('✅ Send Message system attached to Admin Panel button');
-        }
-    });
-}, 2000);
-
+    setInterval(linkSendMessageButtons, 1500);
+    console.log('⏳ Send Message system started');
+})();
 console.log('✅ All fixes applied');
