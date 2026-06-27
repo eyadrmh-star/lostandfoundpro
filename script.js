@@ -1297,7 +1297,7 @@ window.refreshAdminPanel = async function() {
     foundSnap.forEach(d => { const data = d.data(); foundArray.push({ id: d.id, desc: data.desc || data.tell?.desc || '', city: data.city || data.tell?.city || '', date: data.date || '', userEmail: data.userEmail || data.tell?.email || '' }); });
     usersSnap.forEach(d => { const data = d.data(); users.push({ id: d.id, ...data, approved: data.approved !== false }); });
         reportsSnap.forEach(d => { const data = d.data(); pendingReports.push({ id: d.id, ...data }); });
-    orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
+        orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
     orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }
 
     const approvedUsers = users.filter(u => u.approved !== false && !u.isAdmin);
