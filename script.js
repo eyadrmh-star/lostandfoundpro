@@ -3031,6 +3031,10 @@ function linkSendMessageButtons() {
 // ============================================
 // RUN AFTER ADMIN PANEL RENDERS
 // ============================================
-setTimeout(linkSendMessageButtons, 2000);
+setTimeout(function() {
+    linkSendMessageButtons();
+    // Retry after more time if buttons not fully loaded
+    setTimeout(linkSendMessageButtons, 3000);
+}, 2000);
 
 console.log('✅ All fixes applied');
