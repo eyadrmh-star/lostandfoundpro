@@ -1865,6 +1865,19 @@ function rejectOrganization(orgId) {
 let userCurrentCity = null;
 let nearMeActive = false;
 
+function updateNearMeButton() {
+    var btn = document.getElementById('nearMeNewBtn');
+    if (btn) {
+        if (nearMeActive) {
+            btn.innerHTML = '✅ 📍 NEAR ME';
+            btn.style.background = '#27ae60';
+        } else {
+            btn.innerHTML = '📍 NEAR ME';
+            btn.style.background = '#e74c3c';
+        }
+    }
+}
+
 function enableNearMeFilter() {
     if (!navigator.geolocation) { showToast("📍 موقعك غير مدعوم", 'error'); return; }
     showToast("📍 جاري تحديد موقعك...", 'info');
@@ -1886,8 +1899,7 @@ function enableNearMeFilter() {
                     if (!exists) { const opt = document.createElement('option'); opt.value = userCurrentCity; opt.text = userCurrentCity; citySelect.appendChild(opt); citySelect.value = userCurrentCity; }
                 }
                 renderDashboardData();
-                const btn = document.getElementById('nearMeBtn');
-                if (btn) btn.style.background = '#27ae60';
+                updateNearMeButton();
             } else { showToast("لم نتمكن من تحديد مدينتك", 'error'); }
         } catch(e) { showToast("فشل تحديد الموقع", 'error'); }
     }, () => showToast("الرجاء السماح بتحديد الموقع", 'error'));
@@ -1895,11 +1907,10 @@ function enableNearMeFilter() {
 
 function disableNearMeFilter() {
     nearMeActive = false; userCurrentCity = null;
-    const citySelect = document.getElementById('filterCity');
+    const citySelect = document.getElementById('filterCityNew2');
     if (citySelect) citySelect.value = '';
     renderDashboardData();
-    const btn = document.getElementById('nearMeBtn');
-    if (btn) btn.style.background = '';
+    updateNearMeButton();
     showToast("تم إلغاء فلتر القريب", 'info');
 }
 
