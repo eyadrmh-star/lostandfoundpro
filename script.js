@@ -2914,8 +2914,33 @@ console.log('✅ All dashboard modifications applied');
     toggleNearMeFilter();
     setTimeout(updateNearMeButton, 1000);
 };
-            document.getElementById('rewardNewBtn').onclick = function() { alert('💰 Reward filter - coming soon'); };
-            document.getElementById('promoteNewBtn').onclick = function() { alert('⭐ Premium Promotion - coming soon'); };
+            let showRewardOnly = false;
+let showPromoteOnly = false;
+
+function updateFilterButtons() {
+    var rBtn = document.getElementById('rewardNewBtn');
+    var pBtn = document.getElementById('promoteNewBtn');
+    if (rBtn) {
+        rBtn.innerHTML = showRewardOnly ? '✅ 💰 Reward' : '💰 Reward';
+        rBtn.style.background = showRewardOnly ? '#f39c12' : '';
+    }
+    if (pBtn) {
+        pBtn.innerHTML = showPromoteOnly ? '✅ ⭐ Promote' : '⭐ Promote';
+        pBtn.style.background = showPromoteOnly ? '#f39c12' : '';
+    }
+}
+
+document.getElementById('rewardNewBtn').onclick = function() {
+    showRewardOnly = !showRewardOnly;
+    if (showRewardOnly) showPromoteOnly = false;
+    updateFilterButtons();
+};
+
+document.getElementById('promoteNewBtn').onclick = function() {
+    showPromoteOnly = !showPromoteOnly;
+    if (showPromoteOnly) showRewardOnly = false;
+    updateFilterButtons();
+};
             document.getElementById('resetNewBtn').onclick = function() {
                 document.getElementById('filterCountryNew2').value = '';
                 document.getElementById('filterCityNew2').value = '';
