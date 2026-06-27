@@ -2990,4 +2990,26 @@ setInterval(function() {
     setInterval(linkSendMessageButtons, 1500);
     console.log('⏳ Send Message system started');
 })();
+setTimeout(function() {
+    for (var i = 1; i < 99999; i++) clearInterval(i);
+    var searchInput = document.querySelector('#dashboardPage input[placeholder*="Search"]');
+    if (searchInput && !searchInput.dataset.searchFixed) {
+        searchInput.dataset.searchFixed = '1';
+        var newInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newInput, searchInput);
+        newInput.addEventListener('input', function(e) {
+            e.stopPropagation();
+            var keyword = this.value.trim().toLowerCase();
+            var allCards = document.querySelectorAll('#dashboardPage .card, #dashboardPage [class*="item"], #dashboardPage [class*="report"]');
+            var found = 0;
+            allCards.forEach(function(card) {
+                var text = (card.innerText || card.textContent || '').toLowerCase();
+                card.style.display = (!keyword || text.includes(keyword)) ? '' : 'none';
+                if (!keyword || text.includes(keyword)) found++;
+            });
+            console.log('🔍 "' + keyword + '" → Found: ' + found);
+        });
+        console.log('✅ Search auto-fixed');
+    }
+}, 4000);
 console.log('✅ All fixes applied');
