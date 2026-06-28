@@ -1298,7 +1298,6 @@ window.refreshAdminPanel = async function() {
     usersSnap.forEach(d => { const data = d.data(); users.push({ id: d.id, ...data, approved: data.approved !== false }); });
         reportsSnap.forEach(d => { const data = d.data(); pendingReports.push({ id: d.id, ...data }); });
         orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
-    orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
     const approvedUsers = users.filter(u => u.approved !== false && !u.isAdmin);
     const subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
     const allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
@@ -2008,50 +2007,7 @@ function saveToLocalStorage() {
 function loadFromLocalStorage() {
     // Firestore هو المصدر الآن
 }
-// ========== ربط أزرار المستخدمين والتقارير ==========
-const originalRefreshAdminPanel2 = refreshAdminPanel;
-refreshAdminPanel = async function() {
-    await originalRefreshAdminPanel2();
-    setTimeout(() => {
-        const db = firebase.firestore();
-        document.querySelectorAll('.view-user-btn').forEach(btn => {
-            btn.onclick = () => showUserDetails(btn.dataset.email);
-        });
-        document.querySelectorAll('.send-msg-btn').forEach(btn => {
-            btn.onclick = () => {
-                const email = btn.dataset.email;
-                const msg = prompt(t('writeMessage'));
-                if (msg) { sendMessageToUser(email, msg); showToast(t('messageSent')); }
-            };
-        });
-        document.querySelectorAll('.ban-user').forEach(btn => {
-            btn.onclick = async () => {
-                const email = btn.dataset.email;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                if (!snap.empty) {
-                    const doc = snap.docs[0];
-                    const data = doc.data();
-                    data.banned = !data.banned;
-                    await doc.ref.update({ banned: data.banned });
-                    refreshAdminPanel();
-                    showToast(data.banned ? '🚫 تم حظر المستخدم' : '✅ تم فك الحظر');
-                }
-            };
-        });
-        document.querySelectorAll('.delete-user-btn').forEach(btn => {
-            btn.onclick = async () => {
-                const email = btn.dataset.email;
-                if (!confirm('⚠️ Delete user permanently?')) return;
-                const snap = await db.collection('users').where('email', '==', email).get();
-                for (const doc of snap.docs) {
-                    await doc.ref.delete();
-                }
-                refreshAdminPanel();
-                showToast('✅ User deleted', 'success');
-            };
-        });
-    }, 100);
-};
+
 // ========== ربط أزرار الداش بورد ==========
 function attachDashboardEvents() {
     // Logout
