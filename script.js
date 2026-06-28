@@ -2950,8 +2950,8 @@ window._approvePendingReport = function(id) {
                 db.collection(collection).add(data).then(function() {
                     doc.ref.delete().then(function() {
                         alert('✅ Approved and moved to ' + collection);
+                        refreshAdminPanel();
                         loadDashboardItems();
-                        if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
                     });
                 });
             });
@@ -2959,8 +2959,8 @@ window._approvePendingReport = function(id) {
             db.collection(collection).add(data).then(function() {
                 doc.ref.delete().then(function() {
                     alert('✅ Approved and moved to ' + collection);
+                    refreshAdminPanel();
                     loadDashboardItems();
-                    if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
                 });
             });
         }
@@ -2971,7 +2971,7 @@ window._deletePendingReport = function(id) {
     if (!confirm('Delete this report permanently?')) return;
     firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
         alert('🗑️ Deleted');
-        if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
+        refreshAdminPanel();
     });
 };
 console.log('✅ All fixes applied');
