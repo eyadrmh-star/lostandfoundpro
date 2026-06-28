@@ -1298,8 +1298,7 @@ window.refreshAdminPanel = async function() {
     usersSnap.forEach(d => { const data = d.data(); users.push({ id: d.id, ...data, approved: data.approved !== false }); });
         reportsSnap.forEach(d => { const data = d.data(); pendingReports.push({ id: d.id, ...data }); });
         orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
-    orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }
-
+    orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
     const approvedUsers = users.filter(u => u.approved !== false && !u.isAdmin);
     const subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
     const allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
