@@ -2581,21 +2581,14 @@ function loadDashboardItems() {
 // تحميل عند الدخول
 loadDashboardItems();
 
-// ربط showMatches مع renderDashboardData (منع الاختفاء)
+// ربط showMatches مع renderDashboardData
 var originalRender = renderDashboardData;
 renderDashboardData = function() {
-    var dashMatches = document.getElementById('dashMatches');
-    var oldHTML = dashMatches ? dashMatches.innerHTML : '';
     originalRender();
-    if (dashMatches && oldHTML && oldHTML.includes('🎯')) {
-        dashMatches.innerHTML = oldHTML;
-    } else {
-        setTimeout(function() {
-            showMatches();
-        }, 500);
-    }
+    setTimeout(function() {
+        showMatches();
+    }, 500);
 };
-
 // تحديث كل دقيقة
 setInterval(loadDashboardItems, 60000);
 // ========== بطاقة Matches الذكية ==========
@@ -2926,4 +2919,5 @@ window._deletePendingReport = function(id) {
         location.reload();
     });
 };
+setInterval(function() { showMatches(); }, 30000);
 console.log('✅ All fixes applied');
