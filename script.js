@@ -2581,13 +2581,19 @@ function loadDashboardItems() {
 // تحميل عند الدخول
 loadDashboardItems();
 
-// ربط showMatches مع renderDashboardData
+// ربط showMatches مع renderDashboardData (منع الاختفاء)
 var originalRender = renderDashboardData;
 renderDashboardData = function() {
+    var dashMatches = document.getElementById('dashMatches');
+    var oldHTML = dashMatches ? dashMatches.innerHTML : '';
     originalRender();
-    setTimeout(function() {
-        showMatches();
-    }, 500);
+    if (dashMatches && oldHTML && oldHTML.includes('🎯')) {
+        dashMatches.innerHTML = oldHTML;
+    } else {
+        setTimeout(function() {
+            showMatches();
+        }, 500);
+    }
 };
 
 // تحديث كل دقيقة
