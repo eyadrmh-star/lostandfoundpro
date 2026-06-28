@@ -2581,6 +2581,15 @@ function loadDashboardItems() {
 // تحميل عند الدخول
 loadDashboardItems();
 
+// ربط showMatches مع renderDashboardData
+var originalRender = renderDashboardData;
+renderDashboardData = function() {
+    originalRender();
+    setTimeout(function() {
+        showMatches();
+    }, 500);
+};
+
 // تحديث كل دقيقة
 setInterval(loadDashboardItems, 60000);
 // ========== بطاقة Matches الذكية ==========
