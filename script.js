@@ -1345,9 +1345,16 @@ window.refreshAdminPanel = async function() {
         <h3 style="color:#1a237e;">🏛️ طلبات المنظمات</h3>
         ${pendingOrganizations.length===0?'<p style="color:#999;">لا توجد طلبات منظمات</p>':pendingOrganizations.map(o => `<div>${o.name}</div>`).join('')}
     </div>
-    <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+        <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
-        ${pendingReports.length===0?'<p>لا توجد بلاغات معلقة</p>':pendingReports.map(r => `<div>${r.desc}</div>`).join('')}
+        ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
+            <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
+            <div style="display:flex;gap:6px;">
+                <button onclick="window._approvePendingReport('${r.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
+                <button onclick="window._deletePendingReport('${r.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
+            </div>
+        </div>`).join('')}
     </div>
     <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">👥 Sub Admins</h3>
@@ -2515,64 +2522,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         replaceInputAndBindSend();
     }, 1000);
 })();
-// ========== إصلاح Pending Reports ==========
-(function() {
-    window.approveReport = function(id) {
-        if (confirm('Approve this report?')) {
-            firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
-                alert('✅ Approved');
-                if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
-            });
-        }
-    };
-    window.deleteReport = function(id) {
-        if (confirm('Delete this report permanently?')) {
-            firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
-                alert('🗑️ Deleted');
-                if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
-            });
-        }
-    };
 
-    function fixPendingReports() {
-        var h3 = Array.from(document.querySelectorAll('#adminDynamicContent h3')).find(function(h) {
-            return h.textContent.includes('Pending Reports');
-        });
-        if (!h3) return;
-        
-        var parent = h3.closest('div');
-        
-        // حذف div القديمة بدون أزرار
-        var toRemove = [];
-        var el = h3.nextElementSibling;
-        while(el) {
-            if (el.tagName === 'DIV' && !el.querySelector('button')) {
-                toRemove.push(el);
-            }
-            el = el.nextElementSibling;
-        }
-        toRemove.forEach(function(el) { el.remove(); });
-        
-        // إذا الأزرار موجودة، لا تعيد إضافتها
-        if (parent.querySelector('button[onclick*="approveReport"]')) return;
-        
-        firebase.firestore().collection('pendingReports').get().then(function(snap) {
-            snap.forEach(function(doc) {
-                var r = doc.data();
-                var div = document.createElement('div');
-                div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;';
-                div.innerHTML = '<span><strong>' + (r.desc || 'No desc') + '</strong></span>' +
-                    '<div style="display:flex;gap:6px;">' +
-                    '<button style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="approveReport(\'' + doc.id + '\')">✅ Approve</button>' +
-                    '<button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="deleteReport(\'' + doc.id + '\')">🗑️ Delete</button>' +
-                    '</div>';
-                parent.appendChild(div);
-            });
-        });
-    }
-
-    setInterval(fixPendingReports, 2000);
-})();
 // إصلاح زر Send to All
 setInterval(function() {
     var broadcastBtn = document.querySelector('#broadcastMessage + button');
@@ -2677,37 +2627,6 @@ loadDashboardItems();
 
 // تحديث كل دقيقة
 setInterval(loadDashboardItems, 60000);
-window.approveReport = function(id) {
-    if (!confirm('Approve this report and move to dashboard?')) return;
-    
-    var db = firebase.firestore();
-    db.collection('pendingReports').doc(id).get().then(function(doc) {
-        var data = doc.data();
-        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
-        
-        // نجيب اسم المستخدم من users
-        if (data.userEmail) {
-            db.collection('users').where('email', '==', data.userEmail).get().then(function(usnap) {
-                if (!usnap.empty) {
-                    data.name = usnap.docs[0].data().name || data.userEmail;
-                }
-                saveToCollection();
-            });
-        } else {
-            saveToCollection();
-        }
-        
-        function saveToCollection() {
-            db.collection(collection).add(data).then(function() {
-                doc.ref.delete().then(function() {
-                    alert('✅ Approved and moved to ' + collection);
-                    loadDashboardItems();
-                    if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
-                });
-            });
-        }
-    });
-};
 // ========== بطاقة Matches الذكية ==========
 function showMatches() {
     var matches = [];
@@ -3014,4 +2933,45 @@ setTimeout(function() {
         console.log('✅ Search auto-fixed');
     }
 }, 4000);
+// ========== دوال Pending Reports الموحدة ==========
+window._approvePendingReport = function(id) {
+    if (!confirm('Approve this report and move to dashboard?')) return;
+    var db = firebase.firestore();
+    db.collection('pendingReports').doc(id).get().then(function(doc) {
+        if (!doc.exists) return;
+        var data = doc.data();
+        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
+        
+        if (data.userEmail) {
+            db.collection('users').where('email', '==', data.userEmail).get().then(function(usnap) {
+                if (!usnap.empty) {
+                    data.name = usnap.docs[0].data().name || data.userEmail;
+                }
+                db.collection(collection).add(data).then(function() {
+                    doc.ref.delete().then(function() {
+                        alert('✅ Approved and moved to ' + collection);
+                        loadDashboardItems();
+                        if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
+                    });
+                });
+            });
+        } else {
+            db.collection(collection).add(data).then(function() {
+                doc.ref.delete().then(function() {
+                    alert('✅ Approved and moved to ' + collection);
+                    loadDashboardItems();
+                    if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
+                });
+            });
+        }
+    });
+};
+
+window._deletePendingReport = function(id) {
+    if (!confirm('Delete this report permanently?')) return;
+    firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
+        alert('🗑️ Deleted');
+        if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
+    });
+};
 console.log('✅ All fixes applied');
