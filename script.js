@@ -2941,37 +2941,18 @@ window._approvePendingReport = function(id) {
         if (!doc.exists) return;
         var data = doc.data();
         var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
-        
-        if (data.userEmail) {
-            db.collection('users').where('email', '==', data.userEmail).get().then(function(usnap) {
-                if (!usnap.empty) {
-                    data.name = usnap.docs[0].data().name || data.userEmail;
-                }
-                db.collection(collection).add(data).then(function() {
-                    doc.ref.delete().then(function() {
-                        alert('✅ Approved and moved to ' + collection);
-                        refreshAdminPanel();
-                        loadDashboardItems();
-                    });
-                });
+        db.collection(collection).add(data).then(function() {
+            doc.ref.delete().then(function() {
+                location.reload();
             });
-        } else {
-            db.collection(collection).add(data).then(function() {
-                doc.ref.delete().then(function() {
-                    alert('✅ Approved and moved to ' + collection);
-                    refreshAdminPanel();
-                    loadDashboardItems();
-                });
-            });
-        }
+        });
     });
 };
 
 window._deletePendingReport = function(id) {
     if (!confirm('Delete this report permanently?')) return;
     firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
-        alert('🗑️ Deleted');
-        refreshAdminPanel();
+        location.reload();
     });
 };
 console.log('✅ All fixes applied');
