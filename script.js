@@ -1773,38 +1773,18 @@ function showProfile() {
 }
 function renderProfile(user) {
     var u = user || currentUser;
-    let container = document.getElementById('profileContent');
+    var container = document.getElementById('profileContent');
     if (!container || !u) return;
     
-    db.collection('users').doc(u.uid || u.id).get().then(function(doc) {
-        let userData = doc.exists ? doc.data() : {};
-        let userId = u.uid || u.id;
-        let points = userPoints[userId] || 0;
-        let balance = userBalances[userId] || 0;
-        let level = getUserLevel(points);
-        let myLost = lostArray.filter(i => i.userEmail === u.email || i.userEmail === (u.uid || u.id)).length;
-        let myFound = foundArray.filter(i => i.userEmail === u.email || i.userEmail === (u.uid || u.id)).length;
-        let badges = [];
-        if (points >= 100) badges.push('⭐ Helper');
-        if (points >= 500) badges.push('🏆 Expert');
-        if (points >= 1000) badges.push('👑 Investigator');
-        if (myLost + myFound >= 10) badges.push('📝 Active');
-        if (balance > 0) badges.push('💰 Earner');
-        
-        container.innerHTML = `<div class="profile-card">
-            <div class="profile-avatar">👤</div>
-            <div class="profile-name">${userData.name || u.displayName || u.email}</div>
-            <div class="profile-level">${level} • ${points} ${t('points')}</div>
-            ${badges.length > 0 ? `<div class="profile-badges">${badges.map(b => `<span class="profile-badge-item">${b}</span>`).join('')}</div>` : ''}
-            <div class="profile-stats">
-                <div class="profile-stat"><div class="profile-stat-num">${myLost}</div><div class="profile-stat-label">📦 ${t('lost')}</div></div>
-                <div class="profile-stat"><div class="profile-stat-num">${myFound}</div><div class="profile-stat-label">✅ ${t('found')}</div></div>
-                <div class="profile-stat"><div class="profile-stat-num">${points}</div><div class="profile-stat-label">⭐ ${t('points')}</div></div>
-            </div>
-            ${balance > 0 ? `<div class="balance-card"><div class="balance-amount">$${balance.toFixed(2)}</div><div>${t('earned')}</div></div>` : ''}
-            <p style="font-size:12px;color:var(--text-light);margin-top:10px;">🕐 ${t('joinDate')}: ${new Date(userData.timestamp || Date.now()).toLocaleDateString()}</p>
-        </div>`;
-    }).catch(function() {});
+    container.innerHTML = '<div class="profile-card">' +
+        '<div class="profile-avatar">👤</div>' +
+        '<div class="profile-name">' + (u.name || u.email || '') + '</div>' +
+        '<div class="profile-level">🟢 Beginner • 0 Points</div>' +
+        '<div class="profile-stats">' +
+        '<div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">📦 Lost</div></div>' +
+        '<div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">✅ Found</div></div>' +
+        '<div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">⭐ Points</div></div>' +
+        '</div></div>';
 }
 // ========== ربط الأحداث ==========
 function attachAppEvents() {
