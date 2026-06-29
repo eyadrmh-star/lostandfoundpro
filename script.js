@@ -2900,4 +2900,12 @@ window._deletePendingReport = function(id) {
     });
 };
 setInterval(function() { showMatches(); }, 30000);
+document.getElementById('dashboardProfileBtn').addEventListener('click', function() {
+    var u = currentUser;
+    if (!u) return;
+    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('profilePage').classList.remove('hidden');
+    var c = document.getElementById('profileContent');
+    c.innerHTML = '<div class="profile-card"><div class="profile-avatar">👤</div><div class="profile-name">' + (u.name || u.email) + '</div><div class="profile-level">🟢 Beginner</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">📦 Lost</div></div><div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">✅ Found</div></div><div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">⭐ Points</div></div></div></div>';
+});
 console.log('✅ All fixes applied');
