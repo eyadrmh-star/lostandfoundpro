@@ -1773,17 +1773,18 @@ function showProfile() {
 }
 
 function renderProfile(user) {
+    var u = user || currentUser;
     let container = document.getElementById('profileContent');
-    if (!container || !user) return;
+    if (!container || !u) return;
     
-    db.collection('users').doc(user.uid).get().then(function(doc) {
+    db.collection('users').doc(u.uid).get().then(function(doc) {
         let userData = doc.exists ? doc.data() : {};
-        let userId = user.uid;
+        let userId = u.uid;
         let points = userPoints[userId] || 0;
         let balance = userBalances[userId] || 0;
         let level = getUserLevel(points);
-        let myLost = lostArray.filter(i => i.userEmail === user.email || i.userEmail === user.uid).length;
-        let myFound = foundArray.filter(i => i.userEmail === user.email || i.userEmail === user.uid).length;
+        let myLost = lostArray.filter(i => i.userEmail === u.email || i.userEmail === u.uid).length;
+        let myFound = foundArray.filter(i => i.userEmail === u.email || i.userEmail === u.uid).length;
         let badges = [];
         if (points >= 100) badges.push('⭐ Helper');
         if (points >= 500) badges.push('🏆 Expert');
@@ -1793,7 +1794,7 @@ function renderProfile(user) {
         
         container.innerHTML = `<div class="profile-card">
             <div class="profile-avatar">👤</div>
-            <div class="profile-name">${userData.name || user.displayName || user.email}</div>
+            <div class="profile-name">${userData.name || u.displayName || u.email}</div>
             <div class="profile-level">${level} • ${points} ${t('points')}</div>
             ${badges.length > 0 ? `<div class="profile-badges">${badges.map(b => `<span class="profile-badge-item">${b}</span>`).join('')}</div>` : ''}
             <div class="profile-stats">
@@ -1806,7 +1807,6 @@ function renderProfile(user) {
         </div>`;
     }).catch(function() {});
 }
-
 // ========== ربط الأحداث ==========
 function attachAppEvents() {
     document.querySelectorAll('.chip').forEach(chip=>{chip.addEventListener('click',function(){let section=this.closest('.report-section');section.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');selectedCategory=this.dataset.cat;});});
