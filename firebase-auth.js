@@ -1,6 +1,7 @@
 // firebase-auth.js
 // تسجيل الدخول والخروج - Lost & Found Pro
-
+// تثبيت الجلسة
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
 // تسجيل دخول
 async function firebaseLogin(email, password) {
   try {
