@@ -2909,4 +2909,33 @@ document.getElementById('dashboardProfileBtn').addEventListener('click', functio
     var c = document.getElementById('profileContent');
     c.innerHTML = '<div class="profile-card"><div class="profile-avatar">👤</div><div class="profile-name">' + (u.name || u.email) + '</div><div class="profile-level">🟢 Beginner</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">📦 Lost</div></div><div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">✅ Found</div></div><div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">⭐ Points</div></div></div></div>';
 });
+document.getElementById('showRegisterBtn').onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('orgRegisterForm').style.display = 'none';
+};
+
+document.getElementById('submitRegisterBtn').onclick = function() {
+    var name = document.getElementById('regName').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var pwd = document.getElementById('regPwd').value;
+    
+    if (!name || !email || !pwd) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    firebase.firestore().collection('pendingUsers').add({
+        name: name,
+        email: email,
+        password: pwd,
+        approved: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+        alert('✅ Registration submitted! Wait for admin approval.');
+        document.getElementById('registerForm').style.display = 'none';
+    }).catch(function(error) {
+        alert('❌ Error: ' + error.message);
+    });
+};
 console.log('✅ All fixes applied');
