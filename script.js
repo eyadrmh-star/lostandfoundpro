@@ -1765,13 +1765,12 @@ function renderPublicMapItems(bannedUsers) {
 
 // ========== الملف الشخصي ==========
 function showProfile() {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
+    var u = currentUser || firebase.auth().currentUser;
+    if (!u) return;
     document.getElementById('dashboardPage').classList.add('hidden');
     document.getElementById('profilePage').classList.remove('hidden');
-    renderProfile(user);
+    renderProfile(u);
 }
-
 function renderProfile(user) {
     var u = user || currentUser;
     let container = document.getElementById('profileContent');
