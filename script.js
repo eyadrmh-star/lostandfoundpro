@@ -2938,4 +2938,39 @@ document.getElementById('submitRegisterBtn').onclick = function() {
         alert('❌ Error: ' + error.message);
     });
 };
+document.getElementById('showOrgRegisterBtn').onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('orgRegisterForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+};
+
+document.getElementById('submitOrgRegisterBtn').onclick = function() {
+    var name = document.getElementById('orgName').value.trim();
+    var type = document.getElementById('orgType').value;
+    var email = document.getElementById('orgEmail').value.trim();
+    var phone = document.getElementById('orgPhone').value.trim();
+    var pwd = document.getElementById('orgPassword').value;
+    
+    if (!name || !pwd || (!email && !phone)) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    firebase.firestore().collection('pendingOrganizations').add({
+        name: name,
+        type: type,
+        email: email,
+        phone: phone,
+        password: pwd,
+        approved: false,
+        isAdmin: false,
+        isOrganization: true,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+        alert('✅ Organization registration submitted!');
+        document.getElementById('orgRegisterForm').style.display = 'none';
+    }).catch(function(error) {
+        alert('❌ Error: ' + error.message);
+    });
+};
 console.log('✅ All fixes applied');
