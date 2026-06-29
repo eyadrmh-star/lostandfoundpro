@@ -1777,14 +1777,14 @@ function renderProfile(user) {
     let container = document.getElementById('profileContent');
     if (!container || !u) return;
     
-    db.collection('users').doc(u.uid).get().then(function(doc) {
+    db.collection('users').doc(u.uid || u.id).get().then(function(doc) {
         let userData = doc.exists ? doc.data() : {};
-        let userId = u.uid;
+        let userId = u.uid || u.id;
         let points = userPoints[userId] || 0;
         let balance = userBalances[userId] || 0;
         let level = getUserLevel(points);
-        let myLost = lostArray.filter(i => i.userEmail === u.email || i.userEmail === u.uid).length;
-        let myFound = foundArray.filter(i => i.userEmail === u.email || i.userEmail === u.uid).length;
+        let myLost = lostArray.filter(i => i.userEmail === u.email || i.userEmail === (u.uid || u.id)).length;
+        let myFound = foundArray.filter(i => i.userEmail === u.email || i.userEmail === (u.uid || u.id)).length;
         let badges = [];
         if (points >= 100) badges.push('⭐ Helper');
         if (points >= 500) badges.push('🏆 Expert');
