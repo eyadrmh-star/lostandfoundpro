@@ -1291,13 +1291,15 @@ window.refreshAdminPanel = async function() {
         db.collection('pendingOrganizations').get()
     ]);
 
-    const lostArray = [], foundArray = [], users = [], pendingUsers = [], pendingReports = [], pendingOrganizations = [];
+        const lostArray = [], foundArray = [], users = [], pendingUsers = [], pendingReports = [], pendingOrganizations = [];
 
     lostSnap.forEach(d => { const data = d.data(); lostArray.push({ id: d.id, desc: data.desc || data.tell?.desc || '', city: data.city || data.tell?.city || '', date: data.date || '', userEmail: data.userEmail || data.tell?.email || '' }); });
     foundSnap.forEach(d => { const data = d.data(); foundArray.push({ id: d.id, desc: data.desc || data.tell?.desc || '', city: data.city || data.tell?.city || '', date: data.date || '', userEmail: data.userEmail || data.tell?.email || '' }); });
     usersSnap.forEach(d => { const data = d.data(); users.push({ id: d.id, ...data, approved: data.approved !== false }); });
-        reportsSnap.forEach(d => { const data = d.data(); pendingReports.push({ id: d.id, ...data }); });
-        orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
+    pendingSnap.forEach(d => { const data = d.data(); pendingUsers.push({ id: d.id, ...data }); });
+    reportsSnap.forEach(d => { const data = d.data(); pendingReports.push({ id: d.id, ...data }); });
+    orgsSnap.forEach(d => { const data = d.data(); pendingOrganizations.push({ id: d.id, ...data }); });
+    
     const approvedUsers = users.filter(u => u.approved !== false && !u.isAdmin);
     const subAdmins = users.filter(u => u.isAdmin && !u.isSuperAdmin);
     const allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
@@ -1309,7 +1311,6 @@ window.refreshAdminPanel = async function() {
     let last7Dates = allDates.slice(-7);
     let lost7 = last7Dates.map(d => lostDaily[d] || 0);
     let found7 = last7Dates.map(d => foundDaily[d] || 0);
-
     const container = document.getElementById('adminDynamicContent');
     if (!container) return;
 
