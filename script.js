@@ -3003,4 +3003,34 @@ window._rejectOrg = function(orgId) {
         refreshAdminPanel();
     });
 };
+// ========== دوال Pending Reports ==========
+window._approvePendingReport = function(id) {
+    if (!confirm('Approve this report and move to dashboard?')) return;
+    var db = firebase.firestore();
+    db.collection('pendingReports').doc(id).get().then(function(doc) {
+        if (!doc.exists) return;
+        var data = doc.data();
+        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
+        db.collection(collection).add(data).then(function() {
+            doc.ref.delete().then(function() {
+                var el = document.querySelector('[onclick*="' + id + '"]');
+                if (el) {
+                    el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
+                }
+            });
+        });
+    });
+};
+
+window._deletePendingReport = function(id) {
+    if (!confirm('Delete this report permanently?')) return;
+    firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
+        var el = document.querySelector('[onclick*="' + id + '"]');
+        if (el) {
+            el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
+        }
+    });
+};
+
+console.log('✅ All fixes applied');
 console.log('✅ All fixes applied');
