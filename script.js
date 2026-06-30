@@ -1343,7 +1343,14 @@ window.refreshAdminPanel = async function() {
     </div>
     <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">🏛️ طلبات المنظمات</h3>
-        ${pendingOrganizations.length===0?'<p style="color:#999;">لا توجد طلبات منظمات</p>':pendingOrganizations.map(o => `<div>${o.name}</div>`).join('')}
+                ${pendingOrganizations.length===0?'<p style="color:#999;">No organization requests / لا توجد طلبات منظمات</p>':pendingOrganizations.map(o => `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
+            <span><strong>${o.name||'No name'}</strong><br><small>📧 ${o.email||''} | 📞 ${o.phone||''} | 🏢 ${o.type||''}</small></span>
+            <div style="display:flex;gap:6px;">
+                <button onclick="window._approveOrg('${o.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
+                <button onclick="window._rejectOrg('${o.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
+            </div>
+        </div>`).join('')}
     </div>
         <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
@@ -2971,6 +2978,29 @@ document.getElementById('submitOrgRegisterBtn').onclick = function() {
         document.getElementById('orgRegisterForm').style.display = 'none';
     }).catch(function(error) {
         alert('❌ Error: ' + error.message);
+    });
+};
+window._approveOrg = async function(orgId) {
+    const db = firebase.firestore();
+    const docRef = db.collection('pendingOrganizations').doc(orgId);
+    const doc = await docRef.get();
+    if (doc.exists) {
+        const data = doc.data();
+        data.approved = true;
+        data.isOrganization = true;
+        data.role = 'organization';
+        await db.collection('users').add(data);
+        await docRef.delete();
+        alert('✅ Organization approved!');
+        refreshAdminPanel();
+    }
+};
+
+window._rejectOrg = function(orgId) {
+    if (!confirm('Delete this organization request?')) return;
+    firebase.firestore().collection('pendingOrganizations').doc(orgId).delete().then(function() {
+        alert('🗑️ Organization deleted!');
+        refreshAdminPanel();
     });
 };
 console.log('✅ All fixes applied');
