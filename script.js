@@ -3098,4 +3098,3 @@ window._deletePendingReport = function(id) {
 })();
 
 console.log('✅ All fixes applied');
-console.log('✅ All fixes applied');
