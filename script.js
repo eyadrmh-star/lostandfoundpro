@@ -3048,40 +3048,49 @@ window._deletePendingReport = function(id) {
         
         document.body.style.cssText = 'margin:0;padding:0;';
         
-        // 3. الخريطة - بدون مسح المحتوى
-        var hero = document.querySelector('.login-hero');
-        hero.style.cssText = 'flex:1;position:relative;overflow:hidden;';
-        hero.style.backgroundImage = 'none';
-        hero.style.backgroundColor = '#1a237e';
-        
-        var mapEl = document.getElementById('publicMap');
-        if (!hero.contains(mapEl)) {
-            hero.appendChild(mapEl);
-        }
-        mapEl.style.cssText = 'width:100%;height:100%;border-radius:12px;z-index:1;';
-        
-        // 4. أزرار التكبير [+][-] تحت يسار
-        var oldBtns = document.getElementById('zoomInBtn');
-        if (!oldBtns) {
-            var zoomControls = document.createElement('div');
-            zoomControls.style.cssText = 'position:absolute;bottom:50px;left:10px;z-index:1000;display:flex;gap:5px;';
-            zoomControls.innerHTML = '<button id="zoomInBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">+</button><button id="zoomOutBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">−</button>';
-            hero.appendChild(zoomControls);
+        // 3. الخريطة - نأخر التنفيذ شوي
+        setTimeout(function() {
+            var hero = document.querySelector('.login-hero');
+            hero.style.cssText = 'flex:1;position:relative;overflow:hidden;';
+            hero.style.backgroundImage = 'none';
+            hero.style.backgroundColor = '#1a237e';
             
-            var currentZoom = 1;
-            document.getElementById('zoomInBtn').onclick = function() {
-                currentZoom += 0.1;
-                mapEl.style.transform = 'scale(' + currentZoom + ')';
-                mapEl.style.transformOrigin = 'center center';
-            };
-            document.getElementById('zoomOutBtn').onclick = function() {
-                if (currentZoom > 0.5) {
-                    currentZoom -= 0.1;
+            var mapEl = document.getElementById('publicMap');
+            if (!hero.contains(mapEl)) {
+                hero.appendChild(mapEl);
+            }
+            mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
+            
+            // تحديث الخريطة بعد شوي
+            setTimeout(function() {
+                if (mapEl._leaflet_map) {
+                    mapEl._leaflet_map.invalidateSize();
+                }
+            }, 300);
+            
+            // 4. أزرار التكبير [+][-] تحت يسار
+            var oldBtns = document.getElementById('zoomInBtn');
+            if (!oldBtns) {
+                var zoomControls = document.createElement('div');
+                zoomControls.style.cssText = 'position:absolute;bottom:50px;left:10px;z-index:1000;display:flex;gap:5px;';
+                zoomControls.innerHTML = '<button id="zoomInBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">+</button><button id="zoomOutBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">−</button>';
+                hero.appendChild(zoomControls);
+                
+                var currentZoom = 1;
+                document.getElementById('zoomInBtn').onclick = function() {
+                    currentZoom += 0.1;
                     mapEl.style.transform = 'scale(' + currentZoom + ')';
                     mapEl.style.transformOrigin = 'center center';
-                }
-            };
-        }
+                };
+                document.getElementById('zoomOutBtn').onclick = function() {
+                    if (currentZoom > 0.5) {
+                        currentZoom -= 0.1;
+                        mapEl.style.transform = 'scale(' + currentZoom + ')';
+                        mapEl.style.transformOrigin = 'center center';
+                    }
+                };
+            }
+        }, 200);
         
         // 5. صورة الشخصين تحت tagline
         var existingImg = loginCard.querySelector('div[style*="postimg"]');
@@ -3095,11 +3104,6 @@ window._deletePendingReport = function(id) {
             tagline.parentNode.insertBefore(personImg, tagline.nextSibling);
         } else if (tagline) {
             tagline.parentNode.appendChild(personImg);
-        }
-        
-        // 6. تحديث الخريطة
-        if (mapEl._leaflet_map) {
-            mapEl._leaflet_map.invalidateSize();
         }
         
         console.log('✅ Login page layout applied');
