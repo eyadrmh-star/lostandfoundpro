@@ -3036,50 +3036,54 @@ window._deletePendingReport = function(id) {
 // ========================================
 (function() {
     if (document.getElementById('loginPage')) {
-        // 1. عكس الاتجاه - الفورم يمين، الخريطة يسار
+        // 1. عكس الاتجاه
         document.getElementById('loginPage').style.cssText = 'display:flex;flex-direction:row-reverse;align-items:stretch;height:100vh;overflow:hidden;';
         
-        // 2. تعديل الـ login-container
+        // 2. الفورم - خلفية بيضا متجانس
         var loginContainer = document.querySelector('.login-container');
         loginContainer.style.cssText = 'flex:1;overflow-y:auto;background:white;display:flex;justify-content:center;align-items:flex-start;padding:0;';
         
-        // 3. تعديل الـ login-card
         var loginCard = document.querySelector('.login-card');
         loginCard.style.cssText = 'width:100%;max-width:100%;margin:0;border-radius:0;box-shadow:none;padding:20px;box-sizing:border-box;';
         
-        // 4. إزالة margins
         document.body.style.cssText = 'margin:0;padding:0;';
         
-        // 5. الخريطة
+        // 3. الخريطة - بدون مسح المحتوى
         var hero = document.querySelector('.login-hero');
-        hero.style.cssText = 'flex:1;position:relative;overflow:hidden;background-image:none;background-color:#1a237e;';
-        hero.innerHTML = '';
+        hero.style.cssText = 'flex:1;position:relative;overflow:hidden;';
+        hero.style.backgroundImage = 'none';
+        hero.style.backgroundColor = '#1a237e';
         
         var mapEl = document.getElementById('publicMap');
-        mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
-        hero.appendChild(mapEl);
+        if (!hero.contains(mapEl)) {
+            hero.appendChild(mapEl);
+        }
+        mapEl.style.cssText = 'width:100%;height:100%;border-radius:12px;z-index:1;';
         
-        // 6. أزرار التكبير
-        var zoomControls = document.createElement('div');
-        zoomControls.style.cssText = 'position:absolute;bottom:50px;left:10px;z-index:1000;display:flex;gap:5px;';
-        zoomControls.innerHTML = '<button id="zoomInBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">+</button><button id="zoomOutBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">−</button>';
-        hero.appendChild(zoomControls);
-        
-        var currentZoom = 1;
-        document.getElementById('zoomInBtn').onclick = function() {
-            currentZoom += 0.1;
-            mapEl.style.transform = 'scale(' + currentZoom + ')';
-            mapEl.style.transformOrigin = 'center center';
-        };
-        document.getElementById('zoomOutBtn').onclick = function() {
-            if (currentZoom > 0.5) {
-                currentZoom -= 0.1;
+        // 4. أزرار التكبير [+][-] تحت يسار
+        var oldBtns = document.getElementById('zoomInBtn');
+        if (!oldBtns) {
+            var zoomControls = document.createElement('div');
+            zoomControls.style.cssText = 'position:absolute;bottom:50px;left:10px;z-index:1000;display:flex;gap:5px;';
+            zoomControls.innerHTML = '<button id="zoomInBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">+</button><button id="zoomOutBtn" style="width:35px;height:35px;background:#1a237e;color:white;border:none;border-radius:6px;font-size:18px;cursor:pointer;font-weight:bold;">−</button>';
+            hero.appendChild(zoomControls);
+            
+            var currentZoom = 1;
+            document.getElementById('zoomInBtn').onclick = function() {
+                currentZoom += 0.1;
                 mapEl.style.transform = 'scale(' + currentZoom + ')';
                 mapEl.style.transformOrigin = 'center center';
-            }
-        };
+            };
+            document.getElementById('zoomOutBtn').onclick = function() {
+                if (currentZoom > 0.5) {
+                    currentZoom -= 0.1;
+                    mapEl.style.transform = 'scale(' + currentZoom + ')';
+                    mapEl.style.transformOrigin = 'center center';
+                }
+            };
+        }
         
-        // 7. صورة الشخصين
+        // 5. صورة الشخصين تحت tagline
         var existingImg = loginCard.querySelector('div[style*="postimg"]');
         if (existingImg) existingImg.remove();
         
@@ -3093,7 +3097,12 @@ window._deletePendingReport = function(id) {
             tagline.parentNode.appendChild(personImg);
         }
         
-        console.log('✅ Login layout applied');
+        // 6. تحديث الخريطة
+        if (mapEl._leaflet_map) {
+            mapEl._leaflet_map.invalidateSize();
+        }
+        
+        console.log('✅ Login page layout applied');
     }
 })();
 
