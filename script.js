@@ -3048,7 +3048,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.body.style.cssText = 'margin:0;padding:0;';
         
-        // 3. الخريطة - بدون innerHTML = ''
+        // 3. الخريطة
         var hero = document.querySelector('.login-hero');
         hero.style.cssText = 'flex:1;position:relative;overflow:hidden;';
         hero.style.backgroundImage = 'none';
@@ -3061,7 +3061,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
             
-            // تحديث الخريطة
+            // 🔧 الحل: نجبر ارتفاع الخريطة
+            mapEl.style.height = hero.clientHeight + 'px';
+            
             if (mapEl._leaflet_map) {
                 mapEl._leaflet_map.invalidateSize();
             }
