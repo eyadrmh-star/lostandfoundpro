@@ -3072,29 +3072,31 @@ window.addEventListener('load', function() {
             mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
         }
         
-        // ✨ حل يراقب ارتفاع الفورم باستمرار
-        function updateMapHeight() {
+        // ✨ نستنى الخريطة تتجهز بعدين نضبط ارتفاعها
+        function fixHeight() {
             var formHeight = loginContainer.scrollHeight;
-            if (formHeight > 300) { // نتأكد إنه مش صغير
-                hero.style.height = formHeight + 'px';
-                hero.style.display = 'flex';
-                if (mapEl && mapEl._leaflet_map) {
-                    mapEl._leaflet_map.invalidateSize();
-                }
-                console.log('✅ Map height set to:', formHeight);
+            hero.style.height = formHeight + 'px';
+            hero.style.display = 'flex';
+            if (mapEl && mapEl._leaflet_map) {
+                mapEl._leaflet_map.invalidateSize();
             }
+            console.log('Map height set to:', formHeight);
         }
         
-        // نجرب كل 500ms لحد ما يزبط
-        var attempts = 0;
-        var interval = setInterval(function() {
-            updateMapHeight();
-            attempts++;
-            if (attempts > 20) { // 10 ثواني كحد أقصى
-                clearInterval(interval);
-                updateMapHeight(); // محاولة أخيرة
-            }
-        }, 500);
+        if (typeof publicMap !== 'undefined' && publicMap) {
+            publicMap.whenReady(function() {
+                setTimeout(fixHeight, 500);
+            });
+        } else {
+            var checkMap = setInterval(function() {
+                if (typeof publicMap !== 'undefined' && publicMap) {
+                    clearInterval(checkMap);
+                    publicMap.whenReady(function() {
+                        setTimeout(fixHeight, 500);
+                    });
+                }
+            }, 200);
+        }
         
         // 4. أزرار [+][-]
         if (!document.getElementById('zoomInBtn')) {
@@ -3132,7 +3134,7 @@ window.addEventListener('load', function() {
             tagline.parentNode.appendChild(personImg);
         }
         
-        console.log('✅ Login layout applied');
+        console.log('Login layout applied');
     }
 });
 
