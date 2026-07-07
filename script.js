@@ -3137,6 +3137,19 @@ window.addEventListener('load', function() {
         console.log('Login layout applied');
     }
 });
+// ========================================
+// شريط الإعلانات أسفل الصفحة
+// ========================================
+window.addEventListener('load', function() {
+    var adBar = document.getElementById('adBar');
+    if (adBar) { adBar.remove(); }
+
+    var adBanner = document.getElementById('adBanner');
+    if (adBanner) {
+        adBanner.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;text-align:center;z-index:9999;background:#1a237e;color:white;padding:10px;font-size:13px;display:flex;justify-content:center;align-items:center;gap:15px;flex-wrap:wrap;';
+        adBanner.innerHTML = '🔍 Lost & Found Pro - Help us continue &nbsp;|&nbsp; ⭐ Subscribe Premium &nbsp;|&nbsp; ❤️ Donate &nbsp;|&nbsp; 📢 Your Ad Here - Contact us';
+    }
+});
 
 
 console.log('✅ All fixes applied');
