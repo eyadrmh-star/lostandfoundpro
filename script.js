@@ -3034,7 +3034,7 @@ window._deletePendingReport = function(id) {
 // ========================================
 // Login Page Layout - خريطة يسار + فورم يمين
 // ========================================
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', function() {
     if (document.getElementById('loginPage')) {
         // 1. عكس الاتجاه
         document.getElementById('loginPage').style.cssText = 'display:flex;flex-direction:row-reverse;align-items:stretch;height:100vh;overflow:hidden;';
@@ -3048,7 +3048,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.body.style.cssText = 'margin:0;padding:0;';
         
-        // 3. الخريطة
+        // 3. الخريطة - مع تأخير
         var hero = document.querySelector('.login-hero');
         hero.style.cssText = 'flex:1;position:relative;overflow:hidden;';
         hero.style.backgroundImage = 'none';
@@ -3059,18 +3059,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hero.contains(mapEl)) {
                 hero.appendChild(mapEl);
             }
-            
-            // ✨ الحل الجديد: الخريطة تاخد ارتفاع الفورم
+            mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
+        }
+        
+        // ✨ نأخر ضبط ارتفاع الخريطة لحد ما الفورم يتحمل كامل
+        setTimeout(function() {
             var formHeight = loginContainer.scrollHeight;
             hero.style.height = formHeight + 'px';
             hero.style.display = 'flex';
             
-            mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
-            
-            if (mapEl._leaflet_map) {
+            if (mapEl && mapEl._leaflet_map) {
                 mapEl._leaflet_map.invalidateSize();
             }
-        }
+            console.log('Map resized to form height:', formHeight);
+        }, 1000);
         
         // 4. أزرار [+][-]
         if (!document.getElementById('zoomInBtn')) {
