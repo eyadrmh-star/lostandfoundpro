@@ -3150,25 +3150,26 @@ window.addEventListener('load', function() {
         adBanner.innerHTML = '🔍 Lost & Found Pro - Help us continue &nbsp;|&nbsp; ⭐ Subscribe Premium &nbsp;|&nbsp; ❤️ Donate &nbsp;|&nbsp; 📢 Your Ad Here - Contact us';
     }
 });
-// إخفاء 🗺️ Live global activity
-var allP = document.querySelectorAll('p');
-allP.forEach(function(p) {
-    if (p.innerText.includes('Live global activity')) {
-        p.remove();
-    }
-});
-
-// تكبير صورة الشخصين
-var personImg = document.querySelector('.login-card div[style*="postimg"]');
-if (personImg) {
-    personImg.style.height = '300px';
-    personImg.style.width = '110%';
-    personImg.style.marginLeft = '-5%';
-    personImg.style.backgroundSize = 'cover';
-    personImg.style.backgroundPosition = 'center 20%';
-    personImg.style.borderRadius = '15px';
-    personImg.style.margin = '15px 0';
-}
+        // 5. صورة الشخصين وإخفاء النص
+        var allP = loginCard.querySelectorAll('p');
+        allP.forEach(function(p) {
+            if (p.innerText.includes('Live global activity')) {
+                p.remove();
+            }
+        });
+        
+        var existingImg = loginCard.querySelector('div[style*="postimg"]');
+        if (existingImg) existingImg.remove();
+        
+        var tagline = loginCard.querySelector('p');
+        var personImg = document.createElement('div');
+        personImg.style.cssText = 'height:300px;width:110%;margin-left:-5%;background-image:url(https://i.postimg.cc/nrHrRZnv/Chat-GPT-Image-May-6-2026-02-11-58-PM.png);background-size:cover;background-position:center 20%;border-radius:15px;margin-top:15px;margin-bottom:15px;';
+        
+        if (tagline && tagline.nextSibling) {
+            tagline.parentNode.insertBefore(personImg, tagline.nextSibling);
+        } else if (tagline) {
+            tagline.parentNode.appendChild(personImg);
+        }
 
 
 console.log('✅ All fixes applied');
