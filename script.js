@@ -3059,10 +3059,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hero.contains(mapEl)) {
                 hero.appendChild(mapEl);
             }
-            mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
             
-            // 🔧 الحل: نجبر ارتفاع الخريطة
-            mapEl.style.height = hero.clientHeight + 'px';
+            // ✨ الحل الجديد: الخريطة تاخد ارتفاع الفورم
+            var formHeight = loginContainer.scrollHeight;
+            hero.style.height = formHeight + 'px';
+            hero.style.display = 'flex';
+            
+            mapEl.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;z-index:1;';
             
             if (mapEl._leaflet_map) {
                 mapEl._leaflet_map.invalidateSize();
