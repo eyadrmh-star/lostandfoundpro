@@ -3133,7 +3133,8 @@ window.addEventListener('load', function() {
         
         var tagline = loginCard.querySelector('p');
         var personImg = document.createElement('div');
-personImg.style.cssText = 'height:300px;width:110%;margin-left:-5%;background-image:url(https://i.postimg.cc/nrHrRZnv/Chat-GPT-Image-May-6-2026-02-11-58-PM.png);background-size:cover;background-position:center 55%;border-radius:15px;margin-top:15px;margin-bottom:15px;';
+personImg.style.cssText = 'height:300px;width:110%;margin-left:-5%;background-image:url(https://i.postimg.cc/nrHrRZnv/Chat-GPT-Image-May-6-2026-02-11-58-PM.png);background-size:cover;background-position:center 55%;border-radius:15px;margin-top:15px;margin-bottom:15px;';        if (tagline && tagline.nextSibling) {
+            tagline.parentNode.insertBefore(personImg, tagline.nextSibling);
         } else if (tagline) {
             tagline.parentNode.appendChild(personImg);
         }
