@@ -3150,6 +3150,25 @@ window.addEventListener('load', function() {
         adBanner.innerHTML = '🔍 Lost & Found Pro - Help us continue &nbsp;|&nbsp; ⭐ Subscribe Premium &nbsp;|&nbsp; ❤️ Donate &nbsp;|&nbsp; 📢 Your Ad Here - Contact us';
     }
 });
+// إخفاء 🗺️ Live global activity
+var allP = document.querySelectorAll('p');
+allP.forEach(function(p) {
+    if (p.innerText.includes('Live global activity')) {
+        p.remove();
+    }
+});
+
+// تكبير صورة الشخصين
+var personImg = document.querySelector('.login-card div[style*="postimg"]');
+if (personImg) {
+    personImg.style.height = '300px';
+    personImg.style.width = '110%';
+    personImg.style.marginLeft = '-5%';
+    personImg.style.backgroundSize = 'cover';
+    personImg.style.backgroundPosition = 'center 20%';
+    personImg.style.borderRadius = '15px';
+    personImg.style.margin = '15px 0';
+}
 
 
 console.log('✅ All fixes applied');
