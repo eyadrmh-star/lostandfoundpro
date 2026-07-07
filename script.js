@@ -1684,6 +1684,16 @@ function initPublicMap() {
         publicMap = L.map('publicMap', { zoomControl: false, attributionControl: false }).setView([31.95, 35.9], 7);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(publicMap);
 
+        // ✨ ضبط ارتفاع الخريطة حسب الفورم
+        publicMap.whenReady(function() {
+            var hero = document.querySelector('.login-hero');
+            var loginContainer = document.querySelector('.login-container');
+            if (hero && loginContainer) {
+                hero.style.height = loginContainer.scrollHeight + 'px';
+                publicMap.invalidateSize();
+            }
+        });
+
         // جلب المستخدمين المحظورين من Firestore
         let bannedUsers = [];
         db.collection('users').where('banned', '==', true).get().then(function(snap) {
