@@ -3155,5 +3155,50 @@ window.addEventListener('load', function() {
         adBanner.innerHTML = '🔍 Lost & Found Pro - Help us continue &nbsp;|&nbsp; ⭐ Subscribe Premium &nbsp;|&nbsp; ❤️ Donate &nbsp;|&nbsp; 📢 Your Ad Here - Contact us';
     }
 });
+// ========== إصلاح ID الأزرار في Pending Reports ==========
+function fixPendingReportButtons() {
+    var btns = document.querySelectorAll('[onclick*="approvePendingReport"]');
+    if (btns.length === 0) return;
+    
+    var db = firebase.firestore();
+    db.collection('pendingReports').get().then(function(snap) {
+        var reports = {};
+        snap.forEach(function(doc) {
+            var data = doc.data();
+            if (data.id) {
+                reports[data.id] = doc.id;
+            }
+        });
+        
+        btns.forEach(function(btn) {
+            var oldOnclick = btn.getAttribute('onclick');
+            var match = oldOnclick.match(/'([^']+)'/);
+            if (match) {
+                var oldId = match[1];
+                var newId = reports[oldId];
+                if (newId) {
+                    btn.setAttribute('onclick', "window._approvePendingReport('" + newId + "')");
+                    console.log('✅ Fixed button for ID:', oldId, '→', newId);
+                }
+            }
+        });
+    }).catch(function(error) {
+        console.error('❌ Error fixing buttons:', error);
+    });
+}
+
+// تشغيل الإصلاح تلقائياً كل 3 ثواني
+setInterval(function() {
+    var h3s = document.querySelectorAll('#adminDynamicContent h3');
+    var found = false;
+    h3s.forEach(function(h3) {
+        if (h3.textContent.includes('Pending Reports')) {
+            found = true;
+        }
+    });
+    if (found) {
+        fixPendingReportButtons();
+    }
+}, 3000);
 
 console.log('✅ All fixes applied');
