@@ -1354,13 +1354,11 @@ window.refreshAdminPanel = async function() {
     </div>
         <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
-        ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(doc => {
-    const r = doc.data();
-    return ` `
+        ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(r => `
         <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
             <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
             <div style="display:flex;gap:6px;">
-                <button onclick="window._approvePendingReport('${doc.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
+                <button onclick="window._approvePendingReport('${r.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
                 <button onclick="window._deletePendingReport('${r.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
             </div>
         </div>`).join('')}
@@ -3157,86 +3155,5 @@ window.addEventListener('load', function() {
         adBanner.innerHTML = '🔍 Lost & Found Pro - Help us continue &nbsp;|&nbsp; ⭐ Subscribe Premium &nbsp;|&nbsp; ❤️ Donate &nbsp;|&nbsp; 📢 Your Ad Here - Contact us';
     }
 });
-// ========== إصلاح ID الأزرار في Pending Reports ==========
-function fixPendingReportButtons() {
-    var btns = document.querySelectorAll('[onclick*="approvePendingReport"]');
-    if (btns.length === 0) return;
-    
-    var db = firebase.firestore();
-    db.collection('pendingReports').get().then(function(snap) {
-        var reports = {};
-        snap.forEach(function(doc) {
-            var data = doc.data();
-            if (data.id) {
-                reports[data.id] = doc.id;
-            }
-        });
-        
-        btns.forEach(function(btn) {
-            var oldOnclick = btn.getAttribute('onclick');
-            var match = oldOnclick.match(/'([^']+)'/);
-            if (match) {
-                var oldId = match[1];
-                var newId = reports[oldId];
-                if (newId) {
-                    btn.setAttribute('onclick', "window._approvePendingReport('" + newId + "')");
-                    console.log('✅ Fixed button for ID:', oldId, '→', newId);
-                }
-            }
-        });
-    }).catch(function(error) {
-        console.error('❌ Error fixing buttons:', error);
-    });
-}
-
-// تشغيل الإصلاح تلقائياً كل 3 ثواني
-setInterval(function() {
-    var h3s = document.querySelectorAll('#adminDynamicContent h3');
-    var found = false;
-    h3s.forEach(function(h3) {
-        if (h3.textContent.includes('Pending Reports')) {
-            found = true;
-        }
-    });
-    if (found) {
-        fixPendingReportButtons();
-    }
-}, 3000);
-// ========== إصلاح أزرار Approve تلقائياً ==========
-function fixAllApproveButtons() {
-    document.querySelectorAll('[onclick*="approvePendingReport"]').forEach(function(btn) {
-        var match = btn.getAttribute('onclick').match(/'([^']+)'/);
-        if (!match) return;
-        var oldId = match[1];
-        firebase.firestore().collection('pendingReports').get().then(function(snap) {
-            snap.forEach(function(doc) {
-                if (doc.data().id == oldId) {
-                    var newId = doc.id;
-                    btn.setAttribute('onclick', "window._approvePendingReport('" + newId + "')");
-                    console.log('✅ تم إصلاح زر:', oldId, '→', newId);
-                }
-            });
-        });
-    });
-}
-
-// تشغيل الإصلاح عند تحميل الصفحة وبعد كل تحديث للأدمن
-setTimeout(function() {
-    fixAllApproveButtons();
-}, 2000);
-
-// مراقبة التغييرات في صفحة الأدمن
-setInterval(function() {
-    var h3s = document.querySelectorAll('#adminDynamicContent h3');
-    var found = false;
-    h3s.forEach(function(h3) {
-        if (h3.textContent.includes('Pending Reports')) {
-            found = true;
-        }
-    });
-    if (found) {
-        fixAllApproveButtons();
-    }
-}, 4000);
 
 console.log('✅ All fixes applied');
