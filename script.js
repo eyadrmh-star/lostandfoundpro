@@ -2996,28 +2996,54 @@ window._rejectOrg = function(orgId) {
 window._approvePendingReport = function(id) {
     if (!confirm('Approve this report and move to dashboard?')) return;
     var db = firebase.firestore();
-    db.collection('pendingReports').doc(id).get().then(function(doc) {
-        if (!doc.exists) return;
-        var data = doc.data();
-        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
-        db.collection(collection).add(data).then(function() {
-            doc.ref.delete().then(function() {
-                var el = document.querySelector('[onclick*="' + id + '"]');
-                if (el) {
-                    el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
-                }
+    var numericId = parseInt(id);
+    db.collection('pendingReports').where('id', '==', numericId).get().then(function(snapshot) {
+        if (snapshot.empty) {
+            alert('❌ Report not found');
+            return;
+        }
+        snapshot.forEach(function(doc) {
+            var data = doc.data();
+            var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
+            db.collection(collection).add(data).then(function() {
+                doc.ref.delete().then(function() {
+                    var el = document.querySelector('[onclick*="' + id + '"]');
+                    if (el) {
+                        var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
+                        if (parent) parent.remove();
+                    }
+                    alert('✅ Report approved and moved to dashboard');
+                });
             });
         });
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('❌ Error: ' + error.message);
     });
 };
 
 window._deletePendingReport = function(id) {
     if (!confirm('Delete this report permanently?')) return;
-    firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
-        var el = document.querySelector('[onclick*="' + id + '"]');
-        if (el) {
-            el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
+    var db = firebase.firestore();
+    var numericId = parseInt(id);
+    db.collection('pendingReports').where('id', '==', numericId).get().then(function(snapshot) {
+        if (snapshot.empty) {
+            alert('❌ Report not found');
+            return;
         }
+        snapshot.forEach(function(doc) {
+            doc.ref.delete().then(function() {
+                var el = document.querySelector('[onclick*="' + id + '"]');
+                if (el) {
+                    var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
+                    if (parent) parent.remove();
+                }
+                alert('🗑️ Report deleted');
+            });
+        });
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('❌ Error: ' + error.message);
     });
 };
 // ========================================
