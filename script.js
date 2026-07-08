@@ -3426,5 +3426,26 @@ function buildCharts() {
 
 // تشغيل
 createRealCharts();
+// ========== إعادة رسم الرسوم البيانية تلقائياً ==========
+function autoRenderCharts() {
+    var observer = new MutationObserver(function() {
+        setTimeout(function() {
+            createRealCharts();
+        }, 500);
+    });
+    
+    var target = document.getElementById('adminDynamicContent');
+    if (target) {
+        observer.observe(target, { childList: true, subtree: true });
+    }
+}
+
+// تشغيل المراقبة
+setTimeout(function() {
+    autoRenderCharts();
+    setTimeout(function() {
+        createRealCharts();
+    }, 1000);
+}, 2000);
 
 console.log('✅ All fixes applied');
