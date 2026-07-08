@@ -3160,5 +3160,115 @@ window.addEventListener('load', function() {
         adBanner.innerHTML = '🔍 Lost & Found Pro - Help us continue &nbsp;|&nbsp; ⭐ Subscribe Premium &nbsp;|&nbsp; ❤️ Donate &nbsp;|&nbsp; 📢 Your Ad Here - Contact us';
     }
 });
+// ========== تفعيل الرسوم البيانية في لوحة الأدمن ==========
+function renderAdminCharts() {
+    // 1. التحقق من وجود Chart.js
+    if (typeof Chart === 'undefined') {
+        // تحميل Chart.js إذا لم يكن موجوداً
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = function() {
+            createCharts();
+        };
+        document.head.appendChild(script);
+    } else {
+        createCharts();
+    }
+}
+
+function createCharts() {
+    var db = firebase.firestore();
+    
+    // جلب البيانات
+    db.collection('lostItems').get().then(function(lostSnap) {
+        db.collection('foundItems').get().then(function(foundSnap) {
+            var lostData = {};
+            var foundData = {};
+            
+            lostSnap.forEach(function(doc) {
+                var date = doc.data().date || 'N/A';
+                lostData[date] = (lostData[date] || 0) + 1;
+            });
+            
+            foundSnap.forEach(function(doc) {
+                var date = doc.data().date || 'N/A';
+                foundData[date] = (foundData[date] || 0) + 1;
+            });
+            
+            var allDates = [...new Set([...Object.keys(lostData), ...Object.keys(foundData)])].sort();
+            var last7Dates = allDates.slice(-7);
+            
+            var lostValues = last7Dates.map(function(d) { return lostData[d] || 0; });
+            var foundValues = last7Dates.map(function(d) { return foundData[d] || 0; });
+            
+            // 1. رسم Lost vs Found
+            var ctx1 = document.getElementById('lostFoundChart');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: last7Dates,
+                        datasets: [
+                            {
+                                label: 'Lost',
+                                data: lostValues,
+                                backgroundColor: '#e74c3c',
+                                borderRadius: 5
+                            },
+                            {
+                                label: 'Found',
+                                data: foundValues,
+                                backgroundColor: '#27ae60',
+                                borderRadius: 5
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' }
+                        }
+                    }
+                });
+            }
+            
+            // 2. رسم Category (الأقسام)
+            var categories = {};
+            lostSnap.forEach(function(doc) {
+                var cat = doc.data().category || 'other';
+                categories[cat] = (categories[cat] || 0) + 1;
+            });
+            foundSnap.forEach(function(doc) {
+                var cat = doc.data().category || 'other';
+                categories[cat] = (categories[cat] || 0) + 1;
+            });
+            
+            var ctx2 = document.getElementById('categoryChart');
+            if (ctx2) {
+                new Chart(ctx2, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(categories),
+                        datasets: [{
+                            data: Object.values(categories),
+                            backgroundColor: ['#e74c3c', '#27ae60', '#3498db', '#f39c12', '#8e44ad', '#1abc9c']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'right' }
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
+
+// تشغيل عند تحميل الأدمن
+setTimeout(function() {
+    renderAdminCharts();
+}, 2000);
 
 console.log('✅ All fixes applied');
