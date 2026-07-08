@@ -1327,30 +1327,42 @@ window.refreshAdminPanel = async function() {
         <div style="flex:1;min-width:250px;background:white;border-radius:20px;padding:20px;box-shadow:0 2px 15px rgba(0,0,0,0.08);"><h3 style="color:#1a237e;">🥧 Category</h3><div style="width:100%;height:200px;background:#f9f9f9;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#aaa;">🥧 Chart Area</div></div>
     </div>
     <div style="background:white;border-radius:16px;padding:14px;margin-bottom:20px;text-align:center;border-left:5px solid #8e44ad;font-weight:bold;">🌍 Most Active Country: -- Select City -- (1 reports)</div>
+    <div style="margin-bottom:24px;padding:16px;background:white;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+        <h3 style="color:#1a237e;">📅 Daily Reports</h3>
+        <table style="width:100%;border-collapse:collapse;"><tr style="background:#1a237e;color:white;"><th style="padding:10px;">Date</th><th style="padding:10px;">❌ Lost</th><th style="padding:10px;">✅ Found</th></tr>${last7Dates.map((d, idx) => `<tr><td style="padding:8px;text-align:center;">${d}</td><td style="color:#e74c3c;text-align:center;">${lost7[idx]}</td><td style="color:#27ae60;text-align:center;">${found7[idx]}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#999;">No data</td></tr>'}</table>
+        <div style="text-align:right;margin-top:10px;"><button style="padding:8px 20px;background:#27ae60;color:white;border:none;border-radius:6px;cursor:pointer;">📊 Export Report</button></div>
+    </div>
     <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-    <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
-    ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(r => `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
-        <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
-        <div style="display:flex;gap:6px;">
-            <button onclick="window._approvePendingReport('${r.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
-            <button onclick="window._deletePendingReport('${r.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
-        </div>
-    </div>`).join('')}
-</div>
+        <h3 style="color:#1a237e;">⏳ User Registration Requests</h3>
+        ${pendingUsers.length===0?'<p style="color:#999;">No pending requests</p>':pendingUsers.map(u => `<div style="display:flex;justify-content:space-between;margin:8px 0;padding:12px;background:#f5f5f5;border-radius:12px;"><div><strong>${u.name}</strong><br><small>${u.email||u.phone}</small></div><div style="display:flex;gap:6px;"><button style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="approveUser('${u.id}')">✅ Approve</button><button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="rejectUser('${u.id}')">❌ Reject</button></div></div>`).join('')}
+    </div>
+    <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+        <h3 style="color:#1a237e;">👥 Approved Users</h3>
+        ${approvedUsers.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#e8f5e9;border-radius:12px;flex-wrap:wrap;gap:6px;"><span><strong>${u.name||'User'}</strong> (${u.email||u.phone})</span><div style="display:flex;gap:6px;"><button style="padding:6px 12px;background:#009688;color:white;border:none;border-radius:5px;cursor:pointer;">👁️ Details</button><button style="padding:6px 12px;background:#f39c12;color:white;border:none;border-radius:5px;cursor:pointer;">📨 Send Message</button><button style="padding:6px 12px;background:${u.banned?'#27ae60':'#e74c3c'};color:white;border:none;border-radius:5px;cursor:pointer;" onclick="banUserFirestore('${u.email||u.phone}')">${u.banned?'✅ فك الحظر':'🚫 Ban'}</button><button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="deleteUserFirestore('${u.email||u.phone}')">🗑️ Delete</button></div></div>`).join('')}
+        ${approvedUsers.length===0?'<p style="color:#999;">No users</p>':''}
+    </div>
+    <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+        <h3 style="color:#1a237e;">🏛️ طلبات المنظمات</h3>
+                ${pendingOrganizations.length===0?'<p style="color:#999;">No organization requests / لا توجد طلبات منظمات</p>':pendingOrganizations.map(o => `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
+            <span><strong>${o.name||'No name'}</strong><br><small>📧 ${o.email||''} | 📞 ${o.phone||''} | 🏢 ${o.type||''}</small></span>
+            <div style="display:flex;gap:6px;">
+                <button onclick="window._approveOrg('${o.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
+                <button onclick="window._rejectOrg('${o.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
+            </div>
+        </div>`).join('')}
+    </div>
         <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-    <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
-    ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(doc => {
-        const r = doc.data();
-        return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
-        <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
-        <div style="display:flex;gap:6px;">
-            <button onclick="window._approvePendingReport('${doc.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
-            <button onclick="window._deletePendingReport('${doc.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
-        </div>
-    </div>`}).join('')}
-</div>
+        <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
+        ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
+            <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
+            <div style="display:flex;gap:6px;">
+                <button onclick="window._approvePendingReport('${r.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
+                <button onclick="window._deletePendingReport('${r.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
+            </div>
+        </div>`).join('')}
+    </div>
     <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">👥 Sub Admins</h3>
         ${subAdmins.length===0?'<p style="color:#999;">No sub admins</p>':subAdmins.map(u => `<div style="display:flex;justify-content:space-between;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;"><span>${u.name} (${u.email||u.phone})</span><button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">Remove Sub Admin</button></div>`).join('')}
@@ -2883,7 +2895,28 @@ setTimeout(function() {
         console.log('✅ Search auto-fixed');
     }
 }, 4000);
+// ========== دوال Pending Reports الموحدة ==========
+window._approvePendingReport = function(id) {
+    if (!confirm('Approve this report and move to dashboard?')) return;
+    var db = firebase.firestore();
+    db.collection('pendingReports').doc(id).get().then(function(doc) {
+        if (!doc.exists) return;
+        var data = doc.data();
+        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
+        db.collection(collection).add(data).then(function() {
+            doc.ref.delete().then(function() {
+                location.reload();
+            });
+        });
+    });
+};
 
+window._deletePendingReport = function(id) {
+    if (!confirm('Delete this report permanently?')) return;
+    firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
+        location.reload();
+    });
+};
 setInterval(function() { showMatches(); }, 30000);
 document.getElementById('dashboardProfileBtn').addEventListener('click', function() {
     var u = currentUser;
@@ -2992,20 +3025,10 @@ window._approvePendingReport = function(id) {
             doc.ref.delete().then(function() {
                 var el = document.querySelector('[onclick*="' + id + '"]');
                 if (el) {
-                    var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
-                    if (parent) parent.remove();
+                    el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
                 }
-                if (typeof loadDashboardItems === 'function') {
-                    loadDashboardItems();
-                }
-                if (typeof updateAllUI === 'function') {
-                    updateAllUI();
-                }
-                showToast('✅ Report approved and moved to dashboard', 'success');
             });
         });
-    }).catch(function(error) {
-        showToast('❌ Error: ' + error.message, 'error');
     });
 };
 
@@ -3014,12 +3037,8 @@ window._deletePendingReport = function(id) {
     firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
         var el = document.querySelector('[onclick*="' + id + '"]');
         if (el) {
-            var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
-            if (parent) parent.remove();
+            el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
         }
-        showToast('🗑️ Report deleted', 'error');
-    }).catch(function(error) {
-        showToast('❌ Error: ' + error.message, 'error');
     });
 };
 // ========================================
