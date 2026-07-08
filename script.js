@@ -3447,5 +3447,89 @@ setTimeout(function() {
         createRealCharts();
     }, 1000);
 }, 2000);
+// ========== عرض المدينة والدولة الأكثر نشاطاً ==========
+function updateMostActiveCountry() {
+    var db = firebase.firestore();
+    
+    function getCountryByCity(cityName) {
+        for (var i = 0; i < geoData.length; i++) {
+            if (geoData[i].cities && geoData[i].cities.indexOf(cityName) !== -1) {
+                return geoData[i].name;
+            }
+        }
+        return '';
+    }
+    
+    db.collection('lostItems').get().then(function(lostSnap) {
+        db.collection('foundItems').get().then(function(foundSnap) {
+            var countryCount = {};
+            
+            lostSnap.forEach(function(doc) {
+                var city = doc.data().city || '';
+                if (city) {
+                    var country = getCountryByCity(city);
+                    var location = city + (country ? ' (' + country + ')' : '');
+                    countryCount[location] = (countryCount[location] || 0) + 1;
+                }
+            });
+            
+            foundSnap.forEach(function(doc) {
+                var city = doc.data().city || '';
+                if (city) {
+                    var country = getCountryByCity(city);
+                    var location = city + (country ? ' (' + country + ')' : '');
+                    countryCount[location] = (countryCount[location] || 0) + 1;
+                }
+            });
+            
+            var mostActive = '';
+            var maxCount = 0;
+            for (var loc in countryCount) {
+                if (countryCount[loc] > maxCount) {
+                    maxCount = countryCount[loc];
+                    mostActive = loc;
+                }
+            }
+            
+            var container = document.querySelector('#adminDynamicContent');
+            if (container) {
+                var divs = container.querySelectorAll('div[style*="border-left:5px solid #8e44ad"]');
+                if (divs.length > 0) {
+                    if (mostActive && maxCount > 0) {
+                        divs[0].innerHTML = '🌍 Most Active: <strong style="color:#1a237e;font-size:20px;">' + mostActive + '</strong> (' + maxCount + ' reports)';
+                        divs[0].style.fontSize = '18px';
+                        divs[0].style.color = '#1a237e';
+                        divs[0].style.background = '#f0f4ff';
+                        divs[0].style.padding = '16px';
+                        divs[0].style.borderRadius = '12px';
+                    } else {
+                        divs[0].innerHTML = '🌍 Most Active: <strong>No reports yet</strong>';
+                        divs[0].style.fontSize = '18px';
+                        divs[0].style.color = '#999';
+                    }
+                }
+            }
+        });
+    }).catch(function(error) {
+        console.error('Error fetching most active country:', error);
+    });
+}
+
+// تشغيل عند تحميل الصفحة
+setTimeout(function() {
+    updateMostActiveCountry();
+}, 3000);
+
+// تحديث عند كل تغيير في لوحة الأدمن
+var observer = new MutationObserver(function() {
+    setTimeout(function() {
+        updateMostActiveCountry();
+    }, 500);
+});
+
+var target = document.getElementById('adminDynamicContent');
+if (target) {
+    observer.observe(target, { childList: true, subtree: true });
+}
 
 console.log('✅ All fixes applied');
