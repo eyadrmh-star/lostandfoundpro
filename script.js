@@ -1353,16 +1353,18 @@ window.refreshAdminPanel = async function() {
         </div>`).join('')}
     </div>
         <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-        <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
-        ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(r => `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
-            <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
-            <div style="display:flex;gap:6px;">
-                <button onclick="window._approvePendingReport('${r.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
-                <button onclick="window._deletePendingReport('${r.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
-            </div>
-        </div>`).join('')}
-    </div>
+    <h3 style="color:#1a237e;">⏳ Pending Reports</h3>
+    ${pendingReports.length===0?'<p style="color:#999;">لا توجد بلاغات معلقة</p>':pendingReports.map(doc => {
+        const r = doc.data();
+        return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
+        <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
+        <div style="display:flex;gap:6px;">
+            <button onclick="window._approvePendingReport('${doc.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
+            <button onclick="window._deletePendingReport('${doc.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
+        </div>
+    </div>`}).join('')}
+</div>
     <div style="margin-bottom:24px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
         <h3 style="color:#1a237e;">👥 Sub Admins</h3>
         ${subAdmins.length===0?'<p style="color:#999;">No sub admins</p>':subAdmins.map(u => `<div style="display:flex;justify-content:space-between;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;"><span>${u.name} (${u.email||u.phone})</span><button style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">Remove Sub Admin</button></div>`).join('')}
