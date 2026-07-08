@@ -3370,5 +3370,75 @@ var target = document.getElementById('adminDynamicContent');
 if (target) {
     observer.observe(target, { childList: true, subtree: true });
 }
+// ========== ربط أزرار Details و Send Message (نسخة نهائية) ==========
+function bindUserActionsFinal() {
+    document.querySelectorAll('#adminDynamicContent button').forEach(function(btn) {
+        var text = btn.textContent.trim();
+        
+        // ربط Details
+        if (text === '👁️ Details') {
+            if (btn._listenerAdded) return;
+            btn._listenerAdded = true;
+            
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                var parent = this.closest('div[style*="display:flex;justify-content:space-between"]');
+                if (!parent) {
+                    parent = this.closest('div');
+                }
+                var content = parent ? parent.textContent : '';
+                var emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                if (emailMatch) {
+                    showUserDetails(emailMatch[0]);
+                } else {
+                    alert('❌ No email found');
+                }
+            });
+        }
+        
+        // ربط Send Message
+        if (text === '📨 Send Message') {
+            if (btn._listenerAdded) return;
+            btn._listenerAdded = true;
+            
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                var parent = this.closest('div[style*="display:flex;justify-content:space-between"]');
+                if (!parent) {
+                    parent = this.closest('div');
+                }
+                var content = parent ? parent.textContent : '';
+                var emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                if (emailMatch) {
+                    var msg = prompt('📨 Enter message for ' + emailMatch[0] + ':');
+                    if (msg && msg.trim()) {
+                        sendMessageToUser(emailMatch[0], msg.trim());
+                    }
+                } else {
+                    alert('❌ No email found');
+                }
+            });
+        }
+    });
+}
+
+// تشغيل عند تحميل الصفحة
+setTimeout(function() {
+    bindUserActionsFinal();
+}, 2000);
+
+// تحديث عند كل تغيير في لوحة الأدمن
+var observer = new MutationObserver(function() {
+    setTimeout(function() {
+        bindUserActionsFinal();
+    }, 500);
+});
+
+var target = document.getElementById('adminDynamicContent');
+if (target) {
+    observer.observe(target, { childList: true, subtree: true });
+}
 
 console.log('✅ All fixes applied');
