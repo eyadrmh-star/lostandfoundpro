@@ -3270,5 +3270,161 @@ function createCharts() {
 setTimeout(function() {
     renderAdminCharts();
 }, 2000);
+// ========== رسم الأعمدة والدائرة بألوان نيونية زاهية جداً ==========
+function createRealCharts() {
+    if (typeof Chart === 'undefined') {
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = function() { buildCharts(); };
+        document.head.appendChild(script);
+    } else {
+        buildCharts();
+    }
+}
+
+function buildCharts() {
+    var db = firebase.firestore();
+    
+    db.collection('lostItems').get().then(function(lostSnap) {
+        db.collection('foundItems').get().then(function(foundSnap) {
+            var lostData = {};
+            var foundData = {};
+            var categories = {};
+            
+            lostSnap.forEach(function(doc) {
+                var date = doc.data().date || 'N/A';
+                lostData[date] = (lostData[date] || 0) + 1;
+                var cat = doc.data().category || 'other';
+                categories[cat] = (categories[cat] || 0) + 1;
+            });
+            
+            foundSnap.forEach(function(doc) {
+                var date = doc.data().date || 'N/A';
+                foundData[date] = (foundData[date] || 0) + 1;
+                var cat = doc.data().category || 'other';
+                categories[cat] = (categories[cat] || 0) + 1;
+            });
+            
+            var allDates = [...new Set([...Object.keys(lostData), ...Object.keys(foundData)])].sort();
+            var last7Dates = allDates.slice(-7);
+            var lostValues = last7Dates.map(function(d) { return lostData[d] || 0; });
+            var foundValues = last7Dates.map(function(d) { return foundData[d] || 0; });
+            
+            var chartDivs = document.querySelectorAll('#adminDynamicContent div[style*="background:#f9f9f9"]');
+            
+            if (chartDivs.length >= 2) {
+                // 1. الأعمدة بألوان نيونية زاهية
+                var canvas1 = document.createElement('canvas');
+                canvas1.id = 'lostFoundChart_' + Date.now();
+                chartDivs[0].innerHTML = '';
+                chartDivs[0].style.background = '#0a0a2a';
+                chartDivs[0].style.padding = '20px';
+                chartDivs[0].style.borderRadius = '16px';
+                chartDivs[0].appendChild(canvas1);
+                
+                new Chart(canvas1, {
+                    type: 'bar',
+                    data: {
+                        labels: last7Dates,
+                        datasets: [
+                            {
+                                label: '🔴 Lost',
+                                data: lostValues,
+                                backgroundColor: '#ff0730',
+                                borderColor: '#ff0730',
+                                borderWidth: 2,
+                                borderRadius: 6,
+                                hoverBackgroundColor: '#ff6b81'
+                            },
+                            {
+                                label: '🟢 Found',
+                                data: foundValues,
+                                backgroundColor: '#39ff14',
+                                borderColor: '#39ff14',
+                                borderWidth: 2,
+                                borderRadius: 6,
+                                hoverBackgroundColor: '#7bed9f'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff',
+                                    font: { size: 14, weight: 'bold' }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1, color: '#ffffff' },
+                                grid: { color: 'rgba(255,255,255,0.1)' }
+                            },
+                            x: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255,255,255,0.1)' }
+                            }
+                        }
+                    }
+                });
+                
+                // 2. الدائرة بألوان نيونية زاهية
+                var canvas2 = document.createElement('canvas');
+                canvas2.id = 'categoryChart_' + Date.now();
+                chartDivs[1].innerHTML = '';
+                chartDivs[1].style.background = '#0a0a2a';
+                chartDivs[1].style.padding = '20px';
+                chartDivs[1].style.borderRadius = '16px';
+                chartDivs[1].appendChild(canvas2);
+                
+                var categoryLabels = Object.keys(categories);
+                var categoryValues = Object.values(categories);
+                var neonColors = [
+                    '#ff0730', // أحمر نيون
+                    '#39ff14', // أخضر نيون
+                    '#00ffff', // فيروزي نيون
+                    '#ff00ff', // وردي نيون
+                    '#ffff00', // أصفر نيون
+                    '#ff6600', // برتقالي نيون
+                    '#9900ff', // بنفسجي نيون
+                    '#00ff99'  // أزرق نيون
+                ];
+                
+                new Chart(canvas2, {
+                    type: 'pie',
+                    data: {
+                        labels: categoryLabels,
+                        datasets: [{
+                            data: categoryValues,
+                            backgroundColor: neonColors.slice(0, categoryLabels.length),
+                            borderColor: '#0a0a2a',
+                            borderWidth: 3,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#ffffff',
+                                    font: { size: 13, weight: 'bold' },
+                                    padding: 15
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
+
+// تشغيل
+createRealCharts();
 
 console.log('✅ All fixes applied');
