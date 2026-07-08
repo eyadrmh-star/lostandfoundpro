@@ -3004,10 +3004,20 @@ window._approvePendingReport = function(id) {
             doc.ref.delete().then(function() {
                 var el = document.querySelector('[onclick*="' + id + '"]');
                 if (el) {
-                    el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
+                    var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
+                    if (parent) parent.remove();
                 }
+                if (typeof loadDashboardItems === 'function') {
+                    loadDashboardItems();
+                }
+                if (typeof updateAllUI === 'function') {
+                    updateAllUI();
+                }
+                showToast('✅ Report approved and moved to dashboard', 'success');
             });
         });
+    }).catch(function(error) {
+        showToast('❌ Error: ' + error.message, 'error');
     });
 };
 
@@ -3016,8 +3026,12 @@ window._deletePendingReport = function(id) {
     firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
         var el = document.querySelector('[onclick*="' + id + '"]');
         if (el) {
-            el.closest('div[style*="display:flex;justify-content:space-between"]').remove();
+            var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
+            if (parent) parent.remove();
         }
+        showToast('🗑️ Report deleted', 'error');
+    }).catch(function(error) {
+        showToast('❌ Error: ' + error.message, 'error');
     });
 };
 // ========================================
