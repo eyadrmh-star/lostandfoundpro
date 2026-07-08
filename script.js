@@ -2895,28 +2895,7 @@ setTimeout(function() {
         console.log('✅ Search auto-fixed');
     }
 }, 4000);
-// ========== دوال Pending Reports الموحدة ==========
-window._approvePendingReport = function(id) {
-    if (!confirm('Approve this report and move to dashboard?')) return;
-    var db = firebase.firestore();
-    db.collection('pendingReports').doc(id).get().then(function(doc) {
-        if (!doc.exists) return;
-        var data = doc.data();
-        var collection = data.type === 'lost' ? 'lostItems' : 'foundItems';
-        db.collection(collection).add(data).then(function() {
-            doc.ref.delete().then(function() {
-                location.reload();
-            });
-        });
-    });
-};
 
-window._deletePendingReport = function(id) {
-    if (!confirm('Delete this report permanently?')) return;
-    firebase.firestore().collection('pendingReports').doc(id).delete().then(function() {
-        location.reload();
-    });
-};
 setInterval(function() { showMatches(); }, 30000);
 document.getElementById('dashboardProfileBtn').addEventListener('click', function() {
     var u = currentUser;
