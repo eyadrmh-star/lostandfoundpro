@@ -3200,5 +3200,41 @@ setInterval(function() {
         fixPendingReportButtons();
     }
 }, 3000);
+// ========== إصلاح أزرار Approve تلقائياً ==========
+function fixAllApproveButtons() {
+    document.querySelectorAll('[onclick*="approvePendingReport"]').forEach(function(btn) {
+        var match = btn.getAttribute('onclick').match(/'([^']+)'/);
+        if (!match) return;
+        var oldId = match[1];
+        firebase.firestore().collection('pendingReports').get().then(function(snap) {
+            snap.forEach(function(doc) {
+                if (doc.data().id == oldId) {
+                    var newId = doc.id;
+                    btn.setAttribute('onclick', "window._approvePendingReport('" + newId + "')");
+                    console.log('✅ تم إصلاح زر:', oldId, '→', newId);
+                }
+            });
+        });
+    });
+}
+
+// تشغيل الإصلاح عند تحميل الصفحة وبعد كل تحديث للأدمن
+setTimeout(function() {
+    fixAllApproveButtons();
+}, 2000);
+
+// مراقبة التغييرات في صفحة الأدمن
+setInterval(function() {
+    var h3s = document.querySelectorAll('#adminDynamicContent h3');
+    var found = false;
+    h3s.forEach(function(h3) {
+        if (h3.textContent.includes('Pending Reports')) {
+            found = true;
+        }
+    });
+    if (found) {
+        fixAllApproveButtons();
+    }
+}, 4000);
 
 console.log('✅ All fixes applied');
