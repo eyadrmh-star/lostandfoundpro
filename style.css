@@ -326,3 +326,13 @@ body.rtl-mode .premium-list { text-align: right; }
     overflow-y: auto;
     padding-right: 8px;
 }
+#dashboardMap {
+    width: 100% !important;
+    height: 250px !important;
+    margin: 15px 0 !important;
+    display: block !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+}
