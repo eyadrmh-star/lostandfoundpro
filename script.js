@@ -2488,11 +2488,15 @@ renderDashboardData = function() {
 // تحديث كل دقيقة
 setInterval(loadDashboardItems, 60000);
 // ========== بطاقة Matches الذكية ==========
+var matchRendered = false;
 function showMatches() {
+    var container = document.getElementById('dashMatches');
+    if (!container) return;
+    
     var matches = [];
     lostArray.forEach(function(l) {
         foundArray.forEach(function(f) {
-            if (typeof isSimilar === 'function' && (isSimilar(l.desc, f.desc) || l.city === f.city)) {
+            if (isSimilar(l.desc, f.desc) || l.city === f.city) {
                 var score = 0;
                 if (isSimilar(l.desc, f.desc)) score += 60;
                 if (l.city === f.city) score += 25;
@@ -2504,58 +2508,19 @@ function showMatches() {
     
     matches.sort(function(a, b) { return b.score - a.score; });
     
-    var container = document.getElementById('dashMatches');
-if (!container) return;
-container.innerHTML = '';
-
-if (matches.length === 0) {
+    if (matches.length === 0) {
         container.innerHTML = '<p style="color:var(--text-light);">No matches yet</p>';
         return;
     }
     
-    container.innerHTML = matches.map(function(m) {
+    var html = '';
+    matches.forEach(function(m) {
         var lostName = m.lost.name || m.lost.userEmail || 'Unknown';
         var foundName = m.found.name || m.found.userEmail || 'Unknown';
-        return `
-        <div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); border-left:5px solid #8e44ad;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-weight:bold; font-size:18px;">🎯 ${m.score}% Match</span>
-                <div style="display:flex; gap:6px;">
-                    <button onclick="connectMatch('${m.lost.id}', '${m.found.id}', '${lostName}', '${foundName}')" style="padding:8px 16px; background:#8e44ad; color:white; border:none; border-radius:8px; cursor:pointer;">🤝 Connect</button>
-                    <button onclick="shareMatch('${m.lost.id}', '${m.found.id}')" style="padding:8px 16px; background:#3498db; color:white; border:none; border-radius:8px; cursor:pointer;">📤 Share</button>
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <div style="background:white; padding:12px; border-radius:12px; border-left:4px solid #e74c3c;">
-                    <strong>🔴 Lost</strong><br>
-                    ${m.lost.images?.[0] ? `<img src="${m.lost.images[0]}" style="width:100%; height:80px; object-fit:cover; border-radius:8px; margin:8px 0;">` : ''}
-                    <div><strong>${m.lost.desc}</strong></div>
-                    <small>📍 ${m.lost.city} | 📅 ${m.lost.date}</small><br>
-                    <small>👤 <strong>${lostName}</strong></small>
-                </div>
-                <div style="background:white; padding:12px; border-radius:12px; border-left:4px solid #27ae60;">
-                    <strong>✅ Found</strong><br>
-                    ${m.found.images?.[0] ? `<img src="${m.found.images[0]}" style="width:100%; height:80px; object-fit:cover; border-radius:8px; margin:8px 0;">` : ''}
-                    <div><strong>${m.found.desc}</strong></div>
-                    <small>📍 ${m.found.city} | 📅 ${m.found.date}</small><br>
-                    <small>👤 <strong>${foundName}</strong></small>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
+        html += '<div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); border-left:5px solid #8e44ad;"><span style="font-weight:bold; font-size:18px;">🎯 ' + m.score + '% Match</span> - 🔴 ' + m.lost.desc + ' ↔ ✅ ' + m.found.desc + ' | 📍 ' + m.lost.city + '</div>';
+    });
+    container.innerHTML = html;
 }
-
-window.connectMatch = function(lostId, foundId, lostName, foundName) {
-    alert('🎯 Match Found!\n\n🔴 Lost by: ' + lostName + '\n✅ Found by: ' + foundName + '\n\nBoth users will be notified.');
-};
-window.shareMatch = function(lostId, foundId) {
-    alert('📤 Match shared!');
-};
-
-// تحميل Matches تلقائياً بعد تحميل البيانات
-setTimeout(function() {
-    if (typeof showMatches === 'function') showMatches();
-}, 3000);
 // ========== تحسينات الداشبورد - الفلاتر، البحث، التنسيق ==========
 (function() {
     function applyDashboardMods() {
