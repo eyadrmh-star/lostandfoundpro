@@ -2505,9 +2505,10 @@ function showMatches() {
     matches.sort(function(a, b) { return b.score - a.score; });
     
     var container = document.getElementById('dashMatches');
-    if (!container) return;
-    
-    if (matches.length === 0) {
+if (!container) return;
+container.innerHTML = '';
+
+if (matches.length === 0) {
         container.innerHTML = '<p style="color:var(--text-light);">No matches yet</p>';
         return;
     }
