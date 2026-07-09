@@ -2294,10 +2294,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         var mapEl = document.getElementById('dashboardMap');
         if (mapEl && typeof updateDashboardMap === 'function') {
-            mapEl.style.display = 'block';
-            mapEl.style.height = '300px';
-            mapEl.style.width = '100%';
+            mapEl.style.cssText = 'width:100% !important; height:250px !important; margin:15px 0 !important; display:block !important; position:relative !important;';
             updateDashboardMap();
+            setTimeout(function() {
+                if (dashboardMap) dashboardMap.invalidateSize();
+            }, 1000);
             console.log('✅ Dashboard map loaded');
         }
     }, 1500);
