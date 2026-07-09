@@ -3480,5 +3480,10 @@ var target = document.getElementById('adminDynamicContent');
 if (target) {
     observer.observe(target, { childList: true, subtree: true });
 }
-
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        loadDashboardItems();
+        updateDashboardStats();
+    }, 1500);
+});
 console.log('✅ All fixes applied');
