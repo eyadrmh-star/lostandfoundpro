@@ -2496,20 +2496,42 @@ function showMatches() {
     var matches = [];
     lostArray.forEach(function(l) {
         foundArray.forEach(function(f) {
-            if (l.city === f.city && l.desc.trim().toLowerCase() === f.desc.trim().toLowerCase()) {
-                matches.push({ lost: l, found: f });
+            var score = 0;
+            var d1 = (l.desc || '').toLowerCase().trim();
+            var d2 = (f.desc || '').toLowerCase().trim();
+            var w1 = d1.split(/\s+/);
+            
+            // تشابه بالكلمات
+            w1.forEach(function(w) {
+                if (w.length > 2 && d2.includes(w)) score += 30;
+            });
+            
+            // نفس المدينة
+            if (l.city === f.city) score += 25;
+            
+            // نفس الفئة
+            if (l.category && f.category && l.category === f.category) score += 20;
+            
+            // نفس التاريخ
+            if (l.date && f.date && l.date === f.date) score += 25;
+            
+            // حد أدنى 50%
+            if (score >= 50) {
+                matches.push({ lost: l, found: f, score: Math.min(score, 100) });
             }
         });
     });
     
+    matches.sort(function(a, b) { return b.score - a.score; });
+    
     if (matches.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-light);">No exact matches yet</p>';
+        container.innerHTML = '<p style="color:var(--text-light);">No matches yet</p>';
         return;
     }
     
     var html = '';
     matches.forEach(function(m) {
-        html += '<div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; border-left:5px solid #27ae60;">🎯 Exact Match: 🔴 ' + m.lost.desc + ' ↔ ✅ ' + m.found.desc + ' | 📍 ' + m.lost.city + '</div>';
+        html += '<div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; border-left:5px solid #8e44ad;"><span style="font-weight:bold; font-size:18px;">🎯 ' + m.score + '% Match</span><br>🔴 Lost: ' + m.lost.desc + '<br>✅ Found: ' + m.found.desc + '<br>📍 ' + (m.lost.city || 'N/A') + ' | 📅 ' + (m.lost.date || 'N/A') + '</div>';
     });
     container.innerHTML = html;
 }
