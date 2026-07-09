@@ -773,6 +773,9 @@ async function updateDashboardMap() {
     });
     
     if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { dashboardMap.setView([p.coords.latitude, p.coords.longitude], 13); L.marker([p.coords.latitude, p.coords.longitude]).bindPopup('📍 Your location').addTo(dashboardMap); });
+setTimeout(function() {
+    if (dashboardMap) dashboardMap.invalidateSize();
+}, 500);
 }
 async function refreshDataFromFirestore() {
     const db = firebase.firestore();
