@@ -2291,17 +2291,19 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 // تحميل خريطة الداشبورد
 (function() {
-    setTimeout(function() {
-        var mapEl = document.getElementById('dashboardMap');
-        if (mapEl && typeof updateDashboardMap === 'function') {
-            mapEl.style.cssText = 'width:100% !important; height:250px !important; margin:15px 0 !important; display:block !important; position:relative !important;';
-            updateDashboardMap();
-            setTimeout(function() {
-                if (dashboardMap) dashboardMap.invalidateSize();
-            }, 1000);
-            console.log('✅ Dashboard map loaded');
+    var mapEl = document.getElementById('dashboardMap');
+    if (!mapEl || typeof updateDashboardMap !== 'function') return;
+    
+    mapEl.style.cssText = 'width:100% !important; height:250px !important; margin:15px 0 !important; display:block !important; position:relative !important; left:0 !important; top:0 !important;';
+    
+    updateDashboardMap();
+    
+    var checkMap = setInterval(function() {
+        if (dashboardMap) {
+            dashboardMap.invalidateSize();
+            clearInterval(checkMap);
         }
-    }, 1500);
+    }, 500);
 })();
 // ========== إصلاح القوائم والموقع ==========
 
