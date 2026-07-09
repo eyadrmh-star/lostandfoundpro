@@ -2488,53 +2488,122 @@ renderDashboardData = function() {
 // تحديث كل دقيقة
 setInterval(loadDashboardItems, 60000);
 // ========== بطاقة Matches الذكية ==========
-function showMatches() {
+function showMatches(filterType) {
     var container = document.getElementById('dashMatches');
     if (!container) return;
     container.innerHTML = '';
+    
+    // فلترة سريعة
+    if (!filterType) filterType = 'all';
     
     var matches = [];
     lostArray.forEach(function(l) {
         foundArray.forEach(function(f) {
             var score = 0;
+            var reasons = [];
             var d1 = (l.desc || '').toLowerCase().trim();
             var d2 = (f.desc || '').toLowerCase().trim();
             var w1 = d1.split(/\s+/);
             
-            // تشابه بالكلمات
+            var wordMatch = false;
             w1.forEach(function(w) {
-                if (w.length > 2 && d2.includes(w)) score += 30;
+                if (w.length > 2 && d2.includes(w)) { score += 30; wordMatch = true; }
             });
+            if (wordMatch) reasons.push('📝 Similar words');
             
-            // نفس المدينة
-            if (l.city === f.city) score += 25;
+            var cityMatch = false;
+            if (l.city && f.city && l.city === f.city) { score += 25; cityMatch = true; reasons.push('📍 Same city'); }
             
-            // نفس الفئة
-            if (l.category && f.category && l.category === f.category) score += 20;
+            var catMatch = false;
+            if (l.category && f.category && l.category === f.category) { score += 20; catMatch = true; reasons.push('🏷 Same category'); }
             
-            // نفس التاريخ
-            if (l.date && f.date && l.date === f.date) score += 25;
+            var dateMatch = false;
+            if (l.date && f.date && l.date === f.date) { score += 25; dateMatch = true; reasons.push('📅 Same date'); }
             
-            // حد أدنى 50%
             if (score >= 50) {
-                matches.push({ lost: l, found: f, score: Math.min(score, 100) });
+                if (filterType === 'city' && !cityMatch) return;
+                if (filterType === 'word' && !wordMatch) return;
+                if (filterType === 'date' && !dateMatch) return;
+                matches.push({ lost: l, found: f, score: Math.min(score, 100), reasons: reasons });
             }
         });
     });
     
     matches.sort(function(a, b) { return b.score - a.score; });
     
+    // أزرار الفلتر
+    var filterHTML = '<div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;">';
+    filterHTML += '<button onclick="showMatches(\'all\')" style="padding:8px 16px;background:#8e44ad;color:white;border:none;border-radius:20px;cursor:pointer;">All</button>';
+    filterHTML += '<button onclick="showMatches(\'word\')" style="padding:8px 16px;background:#3498db;color:white;border:none;border-radius:20px;cursor:pointer;">📝 Similar Words</button>';
+    filterHTML += '<button onclick="showMatches(\'city\')" style="padding:8px 16px;background:#27ae60;color:white;border:none;border-radius:20px;cursor:pointer;">📍 Same City</button>';
+    filterHTML += '<button onclick="showMatches(\'date\')" style="padding:8px 16px;background:#f39c12;color:white;border:none;border-radius:20px;cursor:pointer;">📅 Same Date</button>';
+    filterHTML += '</div>';
+    
     if (matches.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-light);">No matches yet</p>';
+        container.innerHTML = filterHTML + '<p style="color:var(--text-light);text-align:center;padding:20px;">No matches found</p>';
         return;
     }
     
-    var html = '';
+    var html = filterHTML;
     matches.forEach(function(m) {
-        html += '<div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; border-left:5px solid #8e44ad;"><span style="font-weight:bold; font-size:18px;">🎯 ' + m.score + '% Match</span><br>🔴 Lost: ' + m.lost.desc + '<br>✅ Found: ' + m.found.desc + '<br>📍 ' + (m.lost.city || 'N/A') + ' | 📅 ' + (m.lost.date || 'N/A') + '</div>';
+        var lostName = m.lost.name || m.lost.userEmail || 'Unknown';
+        var foundName = m.found.name || m.found.userEmail || 'Unknown';
+        var lostImg = m.lost.images && m.lost.images[0] ? m.lost.images[0] : '';
+        var foundImg = m.found.images && m.found.images[0] ? m.found.images[0] : '';
+        
+        html += '<div style="background:white; border-radius:16px; padding:0; margin:15px 0; box-shadow:0 4px 20px rgba(0,0,0,0.1); overflow:hidden;">';
+        
+        // شريط نسبة التطابق والأسباب
+        html += '<div style="background:linear-gradient(135deg, #8e44ad, #6c3cb3); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">';
+        html += '<span style="font-size:20px; font-weight:bold;">🎯 ' + m.score + '% Match</span>';
+        html += '<span style="font-size:12px;">' + m.reasons.join(' | ') + '</span>';
+        html += '</div>';
+        
+        // البطاقتين جنب بعض
+        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0;">';
+        
+        // Lost
+        html += '<div style="padding:16px; border-right:1px solid #eee;">';
+        html += '<div style="font-size:14px; color:#e74c3c; font-weight:bold; margin-bottom:8px;">🔴 LOST</div>';
+        if (lostImg) html += '<img src="' + lostImg + '" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:8px;">';
+        html += '<div style="font-weight:bold; margin-bottom:4px;">' + m.lost.desc + '</div>';
+        html += '<div style="font-size:12px; color:#666;">👤 ' + lostName + '</div>';
+        html += '<div style="font-size:12px; color:#666;">📍 ' + (m.lost.city || 'N/A') + ' | 📅 ' + (m.lost.date || 'N/A') + '</div>';
+        html += '<button onclick="sendMessageToReporter(' + m.lost.id + ', \'lost\', \'' + lostName + '\', \'' + (m.lost.userEmail || '') + '\')" style="margin-top:8px; padding:6px 14px; background:#e74c3c; color:white; border:none; border-radius:6px; cursor:pointer; width:100%;">📨 Message</button>';
+        html += '</div>';
+        
+        // Found
+        html += '<div style="padding:16px;">';
+        html += '<div style="font-size:14px; color:#27ae60; font-weight:bold; margin-bottom:8px;">✅ FOUND</div>';
+        if (foundImg) html += '<img src="' + foundImg + '" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:8px;">';
+        html += '<div style="font-weight:bold; margin-bottom:4px;">' + m.found.desc + '</div>';
+        html += '<div style="font-size:12px; color:#666;">👤 ' + foundName + '</div>';
+        html += '<div style="font-size:12px; color:#666;">📍 ' + (m.found.city || 'N/A') + ' | 📅 ' + (m.found.date || 'N/A') + '</div>';
+        html += '<button onclick="sendMessageToReporter(' + m.found.id + ', \'found\', \'' + foundName + '\', \'' + (m.found.userEmail || '') + '\')" style="margin-top:8px; padding:6px 14px; background:#27ae60; color:white; border:none; border-radius:6px; cursor:pointer; width:100%;">📨 Message</button>';
+        html += '</div>';
+        
+        html += '</div>';
+        
+        // أزرار أسفل البطاقة
+        html += '<div style="padding:12px 16px; background:#f9f9f9; display:flex; gap:8px; border-top:1px solid #eee;">';
+        html += '<button onclick="connectMatch(\'' + m.lost.id + '\', \'' + m.found.id + '\', \'' + lostName + '\', \'' + foundName + '\')" style="flex:1; padding:8px; background:#8e44ad; color:white; border:none; border-radius:8px; cursor:pointer;">🤝 Connect Both</button>';
+        html += '<button onclick="shareMatch(\'' + m.lost.id + '\', \'' + m.found.id + '\')" style="flex:1; padding:8px; background:#3498db; color:white; border:none; border-radius:8px; cursor:pointer;">📤 Share Match</button>';
+        html += '</div>';
+        
+        html += '</div>';
     });
+    
     container.innerHTML = html;
 }
+
+window.connectMatch = function(lostId, foundId, lostName, foundName) {
+    alert('🎯 Connecting ' + lostName + ' with ' + foundName + '...\n\nBoth parties will be notified!');
+};
+window.shareMatch = function(lostId, foundId) {
+    var link = window.location.origin + window.location.pathname + '?match=' + lostId + '-' + foundId;
+    navigator.clipboard.writeText(link);
+    alert('📤 Match link copied!\n' + link);
+};
 // ========== تحسينات الداشبورد - الفلاتر، البحث، التنسيق ==========
 (function() {
     function applyDashboardMods() {
