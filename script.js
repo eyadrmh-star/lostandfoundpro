@@ -780,6 +780,7 @@ async function refreshDataFromFirestore() {
     foundArray = fSnap.docs.map(d => d.data());
     let lSnap = await db.collection('lostItems').get();
     lostArray = lSnap.docs.map(d => d.data());
+    updateDashboardStats();
 }
 function initLostMap() { if (lostSelectMap) return; lostSelectMap = L.map('lostSelectMap').setView([30, 0], 2); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(lostSelectMap); lostSelectMap.on('click', e => { if (lostMarker) lostSelectMap.removeLayer(lostMarker); lostMarker = L.marker(e.latlng).addTo(lostSelectMap); document.getElementById('lostLat').value = e.latlng.lat.toFixed(6); document.getElementById('lostLng').value = e.latlng.lng.toFixed(6); }); }
 function initFoundMap() { if (foundSelectMap) return; foundSelectMap = L.map('foundSelectMap').setView([30, 0], 2); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(foundSelectMap); foundSelectMap.on('click', e => { if (foundMarker) foundSelectMap.removeLayer(foundMarker); foundMarker = L.marker(e.latlng).addTo(foundSelectMap); document.getElementById('foundLat').value = e.latlng.lat.toFixed(6); document.getElementById('foundLng').value = e.latlng.lng.toFixed(6); }); }
