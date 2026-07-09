@@ -2488,36 +2488,28 @@ renderDashboardData = function() {
 // تحديث كل دقيقة
 setInterval(loadDashboardItems, 60000);
 // ========== بطاقة Matches الذكية ==========
-var matchRendered = false;
 function showMatches() {
     var container = document.getElementById('dashMatches');
     if (!container) return;
+    container.innerHTML = '';
     
     var matches = [];
     lostArray.forEach(function(l) {
         foundArray.forEach(function(f) {
-            if (isSimilar(l.desc, f.desc) || l.city === f.city) {
-                var score = 0;
-                if (isSimilar(l.desc, f.desc)) score += 60;
-                if (l.city === f.city) score += 25;
-                if (l.category === f.category) score += 15;
-                matches.push({ lost: l, found: f, score: score });
+            if (l.city === f.city && l.desc.trim().toLowerCase() === f.desc.trim().toLowerCase()) {
+                matches.push({ lost: l, found: f });
             }
         });
     });
     
-    matches.sort(function(a, b) { return b.score - a.score; });
-    
     if (matches.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-light);">No matches yet</p>';
+        container.innerHTML = '<p style="color:var(--text-light);">No exact matches yet</p>';
         return;
     }
     
     var html = '';
     matches.forEach(function(m) {
-        var lostName = m.lost.name || m.lost.userEmail || 'Unknown';
-        var foundName = m.found.name || m.found.userEmail || 'Unknown';
-        html += '<div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); border-left:5px solid #8e44ad;"><span style="font-weight:bold; font-size:18px;">🎯 ' + m.score + '% Match</span> - 🔴 ' + m.lost.desc + ' ↔ ✅ ' + m.found.desc + ' | 📍 ' + m.lost.city + '</div>';
+        html += '<div style="background:linear-gradient(135deg, #e8f5e9, #f3e5f5); border-radius:16px; padding:16px; margin:10px 0; border-left:5px solid #27ae60;">🎯 Exact Match: 🔴 ' + m.lost.desc + ' ↔ ✅ ' + m.found.desc + ' | 📍 ' + m.lost.city + '</div>';
     });
     container.innerHTML = html;
 }
