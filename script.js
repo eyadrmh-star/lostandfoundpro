@@ -1012,83 +1012,74 @@ async function addToFavorites(id, type) {
     await db.collection('favorites').add({ userId, reportId: id, type, timestamp: new Date().toISOString() });
     showToast(t('addedToFav'));
 }
-
-function renderDashboardData() {
-    let category = document.getElementById('filterCategory')?.value || 'all';
-    let country = document.getElementById('filterCountry')?.value || '';
-    let city = document.getElementById('filterCity')?.value || '';
-    let fLost = lostArray, fFound = foundArray;
-    let timeFilter = document.getElementById('filterTime')?.value || 'all';
-    
-    // جلب المستخدمين المحظورين من Firestore
-    let bannedUsers = [];
-    db.collection('users').where('banned', '==', true).get().then(function(snapshot) {
-        snapshot.forEach(function(doc) {
-            const data = doc.data();
-            bannedUsers.push(data.email || data.phone);
-        });
-    }).catch(function() {});
-    
-    if (category === 'reward') {
-        fLost = fLost.filter(i => i.reward?.money);
-        fFound = fFound.filter(i => i.reward?.money);
-    }
-    if (timeFilter === 'today') { let today = new Date().toISOString().slice(0, 10); fLost = fLost.filter(i => i.date === today); fFound = fFound.filter(i => i.date === today); }
-    if (timeFilter === 'week') { let weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10); fLost = fLost.filter(i => i.date >= weekAgo); fFound = fFound.filter(i => i.date >= weekAgo); }
-    if (country) { fLost = fLost.filter(i => i.city === country); fFound = fFound.filter(i => i.city === country); }
-    if (city) { fLost = fLost.filter(i => i.city === city); fFound = fFound.filter(i => i.city === city); }
-    let fMatches = 0;
-    for (let l of fLost) for (let f of fFound) if (isSimilar(l.desc, f.desc)) fMatches++;
-    let dashLost = document.getElementById('dashLost'), dashFound = document.getElementById('dashFound'), dashMatches = document.getElementById('dashMatches');
-    
-    if (category === 'all' || category === 'lost' || category === 'reward') {
-        if (dashLost) dashLost.innerHTML = fLost.length === 0 ? `<p style="color:var(--text-light);">${t('noItems')}</p>` : fLost.slice().reverse().map(i => {
-            let isBanned = bannedUsers.includes(i.userEmail);
-            return `
-            <div class="saved-item${isBanned ? ' banned-item' : ''}" style="border-left:4px solid var(--lost-color);">
-                <div><strong>🔴 ${escapeHtml(i.desc)}</strong>${isBanned ? ' 🚫' : ''}${i.images && i.images.length > 0 ? `<img src="${i.images[0]}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;margin-left:8px;float:right;">` : ''}<br><small>👤 ${escapeHtml(i.name)} | 📍 ${i.city} | 📅 ${i.date}</small></div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-sm favoriteBtnSmall" data-id="${i.id}" data-type="lost">⭐</button>
-                    <button class="btn-sm btn-teal printPdfBtn" data-desc="${escapeHtml(i.desc)}" data-city="${i.city}" data-date="${i.date}" data-name="${escapeHtml(i.name)}" data-phone="${escapeHtml(i.phone1)}" data-type="lost">🖨️ PDF</button>
-                    <button class="btn-sm btn-yellow contactBtn" data-id="${i.id}" data-type="lost" data-name="${escapeHtml(i.name)}" data-email="${escapeHtml(i.userEmail)}">📨 Message</button>
-                </div>
-            </div>`;
-        }).join('');
-    } else if (dashLost) dashLost.innerHTML = `<p style="color:var(--text-light);">${t('all')} / ${t('lost')}</p>`;
-    
-    if (category === 'all' || category === 'found' || category === 'reward') {
-        if (dashFound) dashFound.innerHTML = fFound.length === 0 ? `<p style="color:var(--text-light);">${t('noItems')}</p>` : fFound.slice().reverse().map(i => {
-            let isBanned = bannedUsers.includes(i.userEmail);
-            return `
-            <div class="saved-item${isBanned ? ' banned-item' : ''}" style="border-left:4px solid var(--found-color);">
-                <div><strong>🟢 ${escapeHtml(i.desc)}</strong>${isBanned ? ' 🚫' : ''}${i.images && i.images.length > 0 ? `<img src="${i.images[0]}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;margin-left:8px;float:right;">` : ''}<br><small>👤 ${escapeHtml(i.name)} | 📍 ${i.city} | 📅 ${i.date}</small></div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-sm favoriteBtnSmall" data-id="${i.id}" data-type="found">⭐</button>
-                    <button class="btn-sm btn-teal printPdfBtn" data-desc="${escapeHtml(i.desc)}" data-city="${i.city}" data-date="${i.date}" data-name="${escapeHtml(i.name)}" data-phone="${escapeHtml(i.phone1)}" data-type="found">🖨️ PDF</button>
-                    <button class="btn-sm btn-yellow contactBtn" data-id="${i.id}" data-type="found" data-name="${escapeHtml(i.name)}" data-email="${escapeHtml(i.userEmail)}">📨 Message</button>
-                </div>
-            </div>`;
-        }).join('');
-    } else if (dashFound) dashFound.innerHTML = `<p style="color:var(--text-light);">${t('all')} / ${t('found')}</p>`;
-    
-    if (category === 'all' || category === 'match') {
-        if (dashMatches) {
-            if (fMatches === 0) dashMatches.innerHTML = `<p style="color:var(--text-light);">${t('noMatches')}</p>`;
-            else {
-                let html = '';
-                for (let l of fLost) for (let f of fFound) if (isSimilar(l.desc, f.desc)) {
-                    let isBannedL = bannedUsers.includes(l.userEmail);
-                    let isBannedF = bannedUsers.includes(f.userEmail);
-                    html += `<div class="saved-item${(isBannedL || isBannedF) ? ' banned-item' : ''}" style="border-left:4px solid var(--match-color);"><div><strong>🔹 ${escapeHtml(l.desc)}</strong>${isBannedL ? ' 🚫' : ''} ↔ <strong>🔸 ${escapeHtml(f.desc)}</strong>${isBannedF ? ' 🚫' : ''}<br><small>📍 ${l.city}</small></div></div>`;
-                }
-                dashMatches.innerHTML = html;
-            }
+function renderItemCard(item, type) {
+    var statusColors = { open: '#27ae60', in_review: '#f39c12', resolved: '#3498db', invalid: '#e74c3c' };
+    var statusLabels = { open: 'OPEN', in_review: 'IN REVIEW', resolved: 'RESOLVED', invalid: 'INVALID' };
+    var status = item.status || 'open';
+    var statusColor = statusColors[status] || '#27ae60';
+    var statusLabel = statusLabels[status] || 'OPEN';
+    var name = item.name || item.userEmail || 'Unknown';
+    var cityName = item.city || 'N/A';
+    var countryName = '';
+    for (var i = 0; i < geoData.length; i++) {
+        if (geoData[i].cities && geoData[i].cities.indexOf(cityName) !== -1) {
+            countryName = geoData[i].name;
+            break;
         }
-    } else if (dashMatches) dashMatches.innerHTML = `<p style="color:var(--text-light);">${t('all')} / ${t('match')}</p>`;
-    
-    document.querySelectorAll('.favoriteBtnSmall').forEach(btn => { btn.onclick = () => addToFavorites(parseInt(btn.dataset.id), btn.dataset.type); });
-    document.querySelectorAll('.printPdfBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); printReportAsPDF(btn.dataset.desc, btn.dataset.city, btn.dataset.date, btn.dataset.name, btn.dataset.phone, btn.dataset.type); }; });
-    document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); sendMessageToReporter(parseInt(btn.dataset.id), btn.dataset.type, btn.dataset.name, btn.dataset.email); }; });
+    }
+    var locationText = cityName + (countryName ? ', ' + countryName : '');
+    var dateVal = item.date || '';
+    var timeAgoText = item.timestamp ? ' · 🕐 ' + timeAgo(item.timestamp) : '';
+    var views = reportViews[item.id] || 0;
+    var imgHTML = '';
+    if (item.images && item.images[0]) {
+        imgHTML = '<img src="' + item.images[0] + '" style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom:10px;" onerror="this.style.display=\'none\'">';
+    }
+    var rewardHTML = '';
+    if (item.reward && item.reward.money && item.reward.moneyAmount) {
+        rewardHTML = '<div style="background:#fef3e0; padding:8px 12px; margin:8px 0; border-radius:8px; font-weight:bold; color:#d68910;">💰 Reward: $' + item.reward.moneyAmount + '</div>';
+    }
+    var categoryLabel = item.category || 'other';
+    return '<div style="background:white; border-radius:16px; padding:0; margin:12px 0; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden; border-top:4px solid ' + (type === 'lost' ? '#e74c3c' : '#27ae60') + ';">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fafafa; border-bottom:1px solid #eee;">' +
+        '<span style="background:' + statusColor + '; color:white; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">' + statusLabel + '</span>' +
+        '<div style="display:flex; gap:12px; align-items:center;">' +
+        '<span style="font-size:13px; color:#666;">👁️ ' + views + '</span>' +
+        '<button onclick="addToFavorites(' + item.id + ', \'' + type + '\')" style="background:none; border:none; cursor:pointer; font-size:16px;">⭐</button>' +
+        '</div></div>' +
+        '<div style="padding:16px;">' + imgHTML +
+        '<div style="font-size:18px; font-weight:bold; margin-bottom:4px;">' + (type === 'lost' ? '🔴 ' : '✅ ') + item.desc + '</div>' +
+        '<div style="font-size:13px; color:#888; margin-bottom:8px;">🏷 ' + categoryLabel + '</div>' +
+        '<div style="display:flex; flex-direction:column; gap:4px; font-size:14px; color:#555;">' +
+        '<div>👤 ' + name + '</div><div>📍 ' + locationText + '</div><div>📅 ' + dateVal + timeAgoText + '</div></div>' + rewardHTML + '</div>' +
+        '<div style="display:flex; gap:0; border-top:1px solid #eee;">' +
+        '<button onclick="sendMessageToReporter(' + item.id + ', \'' + type + '\', \'' + name + '\', \'' + (item.userEmail || '') + '\')" style="flex:1; padding:12px; background:white; border:none; cursor:pointer; font-size:14px; color:#555;">📨 Message</button>' +
+        '<button onclick="shareItem(' + item.id + ', \'' + type + '\')" style="flex:1; padding:12px; background:white; border:none; cursor:pointer; font-size:14px; color:#555; border-left:1px solid #eee;">📤 Share</button>' +
+        '<button onclick="viewItemDetails(' + item.id + ', \'' + type + '\')" style="flex:1; padding:12px; background:white; border:none; cursor:pointer; font-size:14px; color:#555; border-left:1px solid #eee;">📋 Details</button>' +
+        '</div></div>';
+}
+
+window.shareItem = function(id, type) {
+    var link = window.location.origin + window.location.pathname + '?report=' + type + '-' + id;
+    navigator.clipboard.writeText(link);
+    showToast('✅ Link copied');
+};
+
+window.viewItemDetails = function(id, type) {
+    var item = type === 'lost' ? lostArray.find(function(i) { return i.id === id; }) : foundArray.find(function(i) { return i.id === id; });
+    if (item) {
+        alert('📱 ' + item.desc + '\n👤 ' + (item.name || 'Unknown') + '\n📍 ' + (item.city || 'N/A') + '\n📅 ' + (item.date || 'N/A') + '\n🏷 ' + (item.category || 'other') + '\n🕐 ' + (item.timestamp ? timeAgo(item.timestamp) : 'N/A'));
+    }
+};
+function renderDashboardData() {
+    var fLost = lostArray.slice();
+    var fFound = foundArray.slice();
+    fLost.sort(function(a, b) { return new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date); });
+    fFound.sort(function(a, b) { return new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date); });
+    var dashLost = document.getElementById('dashLost');
+    var dashFound = document.getElementById('dashFound');
+    if (dashLost) dashLost.innerHTML = fLost.length === 0 ? '<p style="color:#888;text-align:center;padding:20px;">No lost items</p>' : fLost.map(function(item) { return renderItemCard(item, 'lost'); }).join('');
+    if (dashFound) dashFound.innerHTML = fFound.length === 0 ? '<p style="color:#888;text-align:center;padding:20px;">No found items</p>' : fFound.map(function(item) { return renderItemCard(item, 'found'); }).join('');
 }
 async function loginUser(credential, pwd, isAdminLogin = false) {
     let user = null;
