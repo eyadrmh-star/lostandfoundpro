@@ -2292,21 +2292,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
-// تحميل خريطة الداشبورد
+// تحميل خريطة الداشبورد - حل جذري
 (function() {
-    var mapEl = document.getElementById('dashboardMap');
-    if (!mapEl || typeof updateDashboardMap !== 'function') return;
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.target.id === 'dashboardPage' && 
+                !mutation.target.classList.contains('hidden') &&
+                mutation.target.style.display !== 'none') {
+                
+                var mapEl = document.getElementById('dashboardMap');
+                if (mapEl && !mapEl._mapLoaded) {
+                    mapEl._mapLoaded = true;
+                    mapEl.style.width = '100%';
+                    mapEl.style.height = '250px';
+                    
+                    if (typeof updateDashboardMap === 'function') {
+                        updateDashboardMap();
+                    }
+                    
+                    setTimeout(function() {
+                        if (dashboardMap) dashboardMap.invalidateSize();
+                    }, 1000);
+                }
+            }
+        });
+    });
     
-    mapEl.style.cssText = 'width:100% !important; height:250px !important; margin:15px 0 !important; display:block !important; position:relative !important; left:0 !important; top:0 !important;';
-    
-    updateDashboardMap();
-    
-    var checkMap = setInterval(function() {
-        if (dashboardMap) {
-            dashboardMap.invalidateSize();
-            clearInterval(checkMap);
-        }
-    }, 500);
+    var dashboardPage = document.getElementById('dashboardPage');
+    if (dashboardPage) {
+        observer.observe(dashboardPage, { 
+            attributes: true, 
+            attributeFilter: ['class', 'style'] 
+        });
+    }
 })();
 // ========== إصلاح القوائم والموقع ==========
 
