@@ -849,6 +849,7 @@ async function saveLost() {
     } else {
         await db.collection('pendingReports').add(newItem);
         showAlert(t('success'), "Report sent to admin for approval");
+        addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
     }
     
@@ -921,6 +922,7 @@ async function saveFound() {
     } else {
         await db.collection('pendingReports').add(newItem);
         showAlert(t('success'), "Report sent to admin for approval");
+        addNotification('📝 تم إرسال بلاغ الموجودات للمراجعة', 'report_submitted');
         if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
     }
     
@@ -3511,4 +3513,112 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDashboardStats();
     }, 1500);
 });
+// ========== نظام الإشعارات الجديد - Dropdown ==========
+async function loadDashboardNotifications() {
+    if (!currentUser) return;
+    let userId = currentUser.id;
+    
+    try {
+        const snap = await db.collection('notifications')
+            .where('recipientId', '==', userId)
+            .limit(10)
+            .get();
+        
+        let notifs = [];
+        snap.forEach(doc => notifs.push({ id: doc.id, ...doc.data() }));
+        notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        notifs = notifs.slice(0, 5);
+        
+        let badge = document.getElementById('notifBadge');
+        let dropdown = document.getElementById('notifDropdown');
+        let btn = document.getElementById('dashboardNotificationsBtn');
+        if (!btn) return;
+        
+        if (!dropdown) {
+            badge = document.createElement('span');
+            badge.id = 'notifBadge';
+            badge.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;display:none;';
+            btn.style.position = 'relative';
+            btn.appendChild(badge);
+            
+            dropdown = document.createElement('div');
+            dropdown.id = 'notifDropdown';
+            dropdown.style.cssText = 'display:none;position:absolute;top:45px;right:0;background:white;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);width:320px;max-height:400px;overflow-y:auto;z-index:10000;padding:12px;';
+            btn.parentElement.style.position = 'relative';
+            btn.parentElement.appendChild(dropdown);
+            
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                if (dropdown.style.display === 'block') loadDashboardNotifications();
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target) && e.target !== btn) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+        
+        let unread = notifs.filter(n => !n.read).length;
+        if (badge) {
+            badge.style.display = unread > 0 ? 'flex' : 'none';
+            badge.textContent = unread;
+        }
+        
+        if (notifs.length === 0) {
+            dropdown.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">🔔 لا توجد إشعارات</p>';
+        } else {
+            dropdown.innerHTML = '<div style="font-weight:bold;color:#1a237e;margin-bottom:10px;">🔔 الإشعارات (' + notifs.length + ')</div>';
+            notifs.forEach(n => {
+                let div = document.createElement('div');
+                div.style.cssText = 'padding:10px;border-radius:8px;margin:5px 0;background:' + (n.read ? '#fff' : '#e3f2fd') + ';cursor:pointer;';
+                div.innerHTML = '<div style="font-size:13px;">' + n.msg + '</div><small style="color:#999;">' + new Date(n.timestamp).toLocaleString() + '</small>';
+                dropdown.appendChild(div);
+            });
+            
+            let viewAll = document.createElement('button');
+            viewAll.style.cssText = 'width:100%;padding:8px;margin-top:8px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;';
+            viewAll.textContent = '📋 عرض كل الإشعارات ←';
+            viewAll.onclick = function() {
+                dropdown.style.display = 'none';
+                if (typeof showNotifications === 'function') showNotifications();
+            };
+            dropdown.appendChild(viewAll);
+        }
+        
+    } catch(e) {
+        console.log('⚠️ الإشعارات:', e.message);
+    }
+}
+
+// دالة إضافة إشعار (للاستخدام في أي مكان)
+async function addNotification(msg, type) {
+    if (!currentUser) return;
+    let userId = currentUser.id;
+    try {
+        await db.collection('notifications').add({
+            recipientId: userId,
+            msg: msg,
+            type: type || 'system',
+            timestamp: new Date().toISOString(),
+            from: 'System',
+            read: false
+        });
+        console.log('✅ إشعار جديد:', msg);
+    } catch(e) {
+        console.error('❌ خطأ في الإشعار:', e);
+    }
+}
+
+// تحميل الإشعارات عند فتح الداشبورد
+setInterval(function() {
+    if (document.getElementById('dashboardPage') && 
+        !document.getElementById('dashboardPage').classList.contains('hidden')) {
+        loadDashboardNotifications();
+    }
+}, 5000);
+
+// تحميل أول مرة
+setTimeout(loadDashboardNotifications, 2000);
 console.log('✅ All fixes applied');
