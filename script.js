@@ -843,15 +843,16 @@ async function saveLost() {
     const db = firebase.firestore();
     
     if (isAdminFlag) {
-        lostArray.push(newItem);
-        await db.collection('lostItems').add(newItem);
-        showAlert(t('success'), t('reportSaved'));
-    } else {
-        await db.collection('pendingReports').add(newItem);
-        showAlert(t('success'), "Report sent to admin for approval");
-        addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
-        if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
-    }
+    lostArray.push(newItem);
+    await db.collection('lostItems').add(newItem);
+    showAlert(t('success'), t('reportSaved'));
+} else {
+    await db.collection('pendingReports').add(newItem);
+    showAlert(t('success'), "Report sent to admin for approval");
+    if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
+}
+// الإشعار للكل
+addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
     
     checkRealtimeMatch(newItem, 'lost');
     await addPoints(userId, 10);
@@ -916,15 +917,16 @@ async function saveFound() {
     const db = firebase.firestore();
     
     if (isAdminFlag) {
-        foundArray.push(newItem);
-        await db.collection('foundItems').add(newItem);
-        showAlert(t('success'), t('reportSaved'));
-    } else {
-        await db.collection('pendingReports').add(newItem);
-        showAlert(t('success'), "Report sent to admin for approval");
-        addNotification('📝 تم إرسال بلاغ الموجودات للمراجعة', 'report_submitted');
-        if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
-    }
+    lostArray.push(newItem);
+    await db.collection('lostItems').add(newItem);
+    showAlert(t('success'), t('reportSaved'));
+} else {
+    await db.collection('pendingReports').add(newItem);
+    showAlert(t('success'), "Report sent to admin for approval");
+    if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
+}
+// الإشعار للكل
+addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
     
     checkRealtimeMatch(newItem, 'found');
     await addPoints(userId, 15);
