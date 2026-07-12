@@ -941,47 +941,74 @@ addNotification('📝 تم إرسال بلاغ المفقودات للمراجع
     autoMatchAndNotify();
 }
 function clearLostForm() { 
-    document.getElementById('lostDesc').value = ''; 
-    document.getElementById('lostImages').value = ''; 
-    document.getElementById('lostImagePreview').innerHTML = '';  
-    document.getElementById('lostPhone1').value = ''; 
-    document.getElementById('lostPhone2').value = ''; 
-    document.getElementById('lostDate').value = new Date().toISOString().slice(0, 10); 
-    let lc = document.getElementById('lostCountry'), lci = document.getElementById('lostCity'); 
-    if (lc) lc.selectedIndex = 0; 
-    if (lci) lci.innerHTML = '<option value="">-- Select City --</option>'; 
-    document.querySelectorAll('#lostSection input[type="checkbox"]').forEach(cb => { if(cb) cb.checked = false; }); 
-    document.getElementById('lost-money').style.display = 'none'; 
-    document.getElementById('lost-money').value = ''; 
-    document.getElementById('lostLat').value = ''; 
-    document.getElementById('lostLng').value = ''; 
-    if (lostMarker && lostSelectMap) { lostSelectMap.removeLayer(lostMarker); lostMarker = null; } 
-    if (lostSelectMap) lostSelectMap.setView([30, 0], 2); 
-    document.querySelectorAll('#lostSection .chip').forEach(c => c.classList.remove('active')); 
-    selectedCategory = 'other'; 
+    document.getElementById('lostDesc').value = '';
+    document.getElementById('lostDate').value = '';
+    document.getElementById('lostPhone1').value = '';
+    document.getElementById('lostPhone2').value = '';
+    document.getElementById('lost-money').value = '';
+    document.getElementById('lostLat').value = '';
+    document.getElementById('lostLng').value = '';
+    document.getElementById('lostImages').value = '';
+
+    let code1 = document.getElementById('lostPhoneCode');
+    if (code1) code1.selectedIndex = 0;
+    let code2 = document.getElementById('lostPhoneCode2');
+    if (code2) code2.selectedIndex = 0;
+
+    let country = document.getElementById('lostCountry');
+    if (country) country.selectedIndex = 0;
+    let city = document.getElementById('lostCity');
+    if (city) city.innerHTML = '<option value="">-- Select City --</option>';
+
+    document.querySelectorAll('#lostSection input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#lostSection .chip').forEach(c => c.classList.remove('active'));
+
+    let moneyEl = document.getElementById('lost-money');
+    if (moneyEl) { moneyEl.value = ''; moneyEl.style.display = 'none'; }
+
+    let preview = document.getElementById('lostImagePreview');
+    if (preview) preview.innerHTML = '<img src="https://placehold.co/300x300/EEE/999?text=Image" style="max-width:100%;border-radius:8px;">';
+
+    if (lostMarker && lostSelectMap) { lostSelectMap.removeLayer(lostMarker); lostMarker = null; }
+    if (lostSelectMap) lostSelectMap.setView([31.9539, 35.9106], 8);
+    
+    selectedCategory = 'other';
 }
 
 function clearFoundForm() { 
-    document.getElementById('foundDesc').value = ''; 
-    document.getElementById('foundImages').value = ''; 
-    document.getElementById('foundImagePreview').innerHTML = '';  
-    document.getElementById('foundPhone1').value = ''; 
-    document.getElementById('foundPhone2').value = ''; 
-    document.getElementById('foundDate').value = new Date().toISOString().slice(0, 10); 
-    let fc = document.getElementById('foundCountry'), fci = document.getElementById('foundCity'); 
-    if (fc) fc.selectedIndex = 0; 
-    if (fci) fci.innerHTML = '<option value="">-- Select City --</option>'; 
-    document.querySelectorAll('#foundSection input[type="checkbox"]').forEach(cb => { if(cb) cb.checked = false; }); 
-    document.getElementById('found-money').style.display = 'none'; 
-    document.getElementById('found-money').value = ''; 
-    document.getElementById('foundLat').value = ''; 
-    document.getElementById('foundLng').value = ''; 
-    if (foundMarker && foundSelectMap) { foundSelectMap.removeLayer(foundMarker); foundMarker = null; } 
-    if (foundSelectMap) foundSelectMap.setView([30, 0], 2); 
-    document.querySelectorAll('#foundSection .chip').forEach(c => c.classList.remove('active')); 
-    selectedCategory = 'other'; 
-}
+    document.getElementById('foundDesc').value = '';
+    document.getElementById('foundDate').value = '';
+    document.getElementById('foundPhone1').value = '';
+    document.getElementById('foundPhone2').value = '';
+    document.getElementById('found-money').value = '';
+    document.getElementById('foundLat').value = '';
+    document.getElementById('foundLng').value = '';
+    document.getElementById('foundImages').value = '';
 
+    let code1 = document.getElementById('foundPhoneCode');
+    if (code1) code1.selectedIndex = 0;
+    let code2 = document.getElementById('foundPhoneCode2');
+    if (code2) code2.selectedIndex = 0;
+
+    let country = document.getElementById('foundCountry');
+    if (country) country.selectedIndex = 0;
+    let city = document.getElementById('foundCity');
+    if (city) city.innerHTML = '<option value="">-- Select City --</option>';
+
+    document.querySelectorAll('#foundSection input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#foundSection .chip').forEach(c => c.classList.remove('active'));
+
+    let moneyEl = document.getElementById('found-money');
+    if (moneyEl) { moneyEl.value = ''; moneyEl.style.display = 'none'; }
+
+    let preview = document.getElementById('foundImagePreview');
+    if (preview) preview.innerHTML = '<img src="https://placehold.co/300x300/EEE/999?text=Image" style="max-width:100%;border-radius:8px;">';
+
+    if (foundMarker && foundSelectMap) { foundSelectMap.removeLayer(foundMarker); foundMarker = null; }
+    if (foundSelectMap) foundSelectMap.setView([31.9539, 35.9106], 8);
+    
+    selectedCategory = 'other';
+}
 function saveAllDataToLocalStorage() {
     // Firestore هو المصدر الآن
 }
