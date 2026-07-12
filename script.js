@@ -1607,61 +1607,6 @@ async function sendMessageToUser(credential, msg) {
     }
 }
 
-async function showNotificationsBadge() {
-    const db = firebase.firestore(); // تعريف db محلياً
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-    
-    // جلب بيانات المستخدم من Firestore
-    const doc = await db.collection('users').doc(user.uid).get();
-    if (doc.exists && doc.data().isAdmin) return;
-    
-    let userId = user.uid;
-    
-    const snap = await db.collection('notifications')
-        .where('recipientId', '==', userId)
-        .where('read', '==', false)
-        .get();
-    let count = snap.docs.length;
-    let btn = document.getElementById('dashboardNotificationsBtn');
-    if (btn) {
-        if (count > 0) {
-            btn.style.background = '#ff4444';
-            btn.title = `${count} new notifications`;
-        } else {
-            btn.style.background = 'rgba(255,255,255,0.15)';
-            btn.title = t('notifications');
-        }
-    }
-}
-
-async function showNotifications() {
-    const db = firebase.firestore(); // تعريف db محلياً
-    document.getElementById('dashboardPage').classList.add('hidden');
-    document.getElementById('notificationsPage').classList.remove('hidden');
-    
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-    
-    let userId = user.uid;
-    let snap = await db.collection('notifications')
-        .where('recipientId', '==', userId)
-        .orderBy('timestamp', 'desc')
-        .get();
-    let notifs = snap.docs.map(d => d.data());
-    let container = document.getElementById('notificationsList');
-    if (notifs.length === 0) {
-        container.innerHTML = `<p style="text-align:center;padding:40px;color:var(--text-light);">${t('noNotifications')}</p>`;
-        return;
-    }
-    container.innerHTML = notifs.map(n => {
-        let extendHTML = '';
-        if (n.type === 'mapExpiry' && n.reportId) {
-            extendHTML = `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},30)">📅 1M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},90)">📅 3M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},180)">📅 6M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},270)">📅 9M</button><button class="btn-sm btn-save" onclick="extendMapExpiry(${n.reportId},365)">📅 1Y</button></div>`;
-        }
-        return `<div style="background:var(--card);border-radius:12px;padding:14px;margin:8px 0;border-left:4px solid var(--primary);"><strong>📢 ${t('fromAdmin')}</strong><br><p>${n.msg}</p><small>${new Date(n.timestamp).toLocaleString()}</small>${extendHTML}</div>`;
-    }).join('');
-}
 
 function extendMapExpiry(reportId, days) {
     let item = lostArray.find(i => i.id === reportId) || foundArray.find(i => i.id === reportId);
@@ -3515,86 +3460,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDashboardStats();
     }, 1500);
 });
-// ========== نظام الإشعارات الجديد - Dropdown ==========
-async function loadDashboardNotifications() {
-    if (!currentUser) return;
-    let userId = currentUser.id;
-    
-    try {
-        const snap = await db.collection('notifications')
-            .where('recipientId', '==', userId)
-            .limit(10)
-            .get();
-        
-        let notifs = [];
-        snap.forEach(doc => notifs.push({ id: doc.id, ...doc.data() }));
-        notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        notifs = notifs.slice(0, 5);
-        
-        let badge = document.getElementById('notifBadge');
-        let dropdown = document.getElementById('notifDropdown');
-        let btn = document.getElementById('dashboardNotificationsBtn');
-        if (!btn) return;
-        
-        if (!dropdown) {
-            badge = document.createElement('span');
-            badge.id = 'notifBadge';
-            badge.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;display:none;';
-            btn.style.position = 'relative';
-            btn.appendChild(badge);
-            
-            dropdown = document.createElement('div');
-            dropdown.id = 'notifDropdown';
-            dropdown.style.cssText = 'display:none;position:absolute;top:45px;right:0;background:white;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);width:320px;max-height:400px;overflow-y:auto;z-index:10000;padding:12px;';
-            btn.parentElement.style.position = 'relative';
-            btn.parentElement.appendChild(dropdown);
-            
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-                if (dropdown.style.display === 'block') loadDashboardNotifications();
-            });
-            
-            document.addEventListener('click', function(e) {
-                if (!dropdown.contains(e.target) && e.target !== btn) {
-                    dropdown.style.display = 'none';
-                }
-            });
-        }
-        
-        let unread = notifs.filter(n => !n.read).length;
-        if (badge) {
-            badge.style.display = unread > 0 ? 'flex' : 'none';
-            badge.textContent = unread;
-        }
-        
-        if (notifs.length === 0) {
-            dropdown.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">🔔 لا توجد إشعارات</p>';
-        } else {
-            dropdown.innerHTML = '<div style="font-weight:bold;color:#1a237e;margin-bottom:10px;">🔔 الإشعارات (' + notifs.length + ')</div>';
-            notifs.forEach(n => {
-                let div = document.createElement('div');
-                div.style.cssText = 'padding:10px;border-radius:8px;margin:5px 0;background:' + (n.read ? '#fff' : '#e3f2fd') + ';cursor:pointer;';
-                div.innerHTML = '<div style="font-size:13px;">' + n.msg + '</div><small style="color:#999;">' + new Date(n.timestamp).toLocaleString() + '</small>';
-                dropdown.appendChild(div);
-            });
-            
-            let viewAll = document.createElement('button');
-            viewAll.style.cssText = 'width:100%;padding:8px;margin-top:8px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;';
-            viewAll.textContent = '📋 عرض كل الإشعارات ←';
-            viewAll.onclick = function() {
-                dropdown.style.display = 'none';
-                if (typeof showNotifications === 'function') showNotifications();
-            };
-            dropdown.appendChild(viewAll);
-        }
-        
-    } catch(e) {
-        console.log('⚠️ الإشعارات:', e.message);
-    }
-}
+// ========== نظام الإشعارات الجديد ==========
 
-// دالة إضافة إشعار (للاستخدام في أي مكان)
+// دالة إضافة إشعار
 async function addNotification(msg, type) {
     if (!currentUser) return;
     let userId = currentUser.id;
@@ -3607,20 +3475,100 @@ async function addNotification(msg, type) {
             from: 'System',
             read: false
         });
-        console.log('✅ إشعار جديد:', msg);
     } catch(e) {
         console.error('❌ خطأ في الإشعار:', e);
     }
 }
 
-// تحميل الإشعارات عند فتح الداشبورد
-setInterval(function() {
-    if (document.getElementById('dashboardPage') && 
-        !document.getElementById('dashboardPage').classList.contains('hidden')) {
-        loadDashboardNotifications();
-    }
-}, 5000);
+// دالة فتح صفحة الإشعارات
+function showNotifications() {
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    let notifPage = document.getElementById('notificationsPage');
+    if (!notifPage) return;
+    
+    notifPage.classList.remove('hidden');
+    notifPage.innerHTML = `
+        <div style="background:#1a237e;color:white;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;">
+            <h3 style="margin:0;">🔔 الإشعارات</h3>
+            <button onclick="document.querySelectorAll('.page').forEach(p => p.classList.add('hidden')); document.getElementById('dashboardPage').classList.remove('hidden');" style="background:white;color:#1a237e;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;font-weight:bold;">← رجوع للرئيسية</button>
+        </div>
+        <div id="notifsContainer" style="padding:20px;text-align:center;color:#999;">⏳ جاري التحميل...</div>
+    `;
+    
+    loadNotificationsToPage();
+}
 
-// تحميل أول مرة
-setTimeout(loadDashboardNotifications, 2000);
+// دالة تحميل الإشعارات في الصفحة
+async function loadNotificationsToPage() {
+    let container = document.getElementById('notifsContainer');
+    if (!container || !currentUser) return;
+    
+    try {
+        const snap = await db.collection('notifications')
+            .where('recipientId', '==', currentUser.id)
+            .limit(50)
+            .get();
+        
+        let notifs = [];
+        snap.forEach(doc => notifs.push({ id: doc.id, ...doc.data() }));
+        notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        if (notifs.length === 0) {
+            container.innerHTML = '<div style="padding:60px;color:#999;">🔔 لا توجد إشعارات</div>';
+            return;
+        }
+        
+        container.innerHTML = '<div style="color:#666;margin-bottom:15px;text-align:right;">عدد الإشعارات: <b>' + notifs.length + '</b></div>';
+        
+        notifs.forEach(n => {
+            let card = document.createElement('div');
+            card.style.cssText = 'background:white;padding:15px;margin:10px 0;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:center;';
+            card.innerHTML = `
+                <div style="flex:1;">
+                    <div style="font-weight:bold;margin-bottom:5px;">${n.msg}</div>
+                    <small style="color:#999;">📅 ${new Date(n.timestamp).toLocaleString()}</small>
+                </div>
+                <button class="delNotifBtn" data-id="${n.id}" style="background:#ff4444;color:white;border:none;border-radius:8px;padding:8px 15px;cursor:pointer;margin-left:10px;">🗑️ حذف</button>
+            `;
+            container.appendChild(card);
+        });
+        
+        // أحداث الحذف
+        document.querySelectorAll('.delNotifBtn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                let id = this.getAttribute('data-id');
+                let card = this.parentElement;
+                
+                if (confirm('🗑️ هل أنت متأكد من حذف هذا الإشعار؟')) {
+                    try {
+                        await db.collection('notifications').doc(id).delete();
+                        card.style.opacity = '0';
+                        card.style.transition = '0.3s';
+                        setTimeout(() => card.remove(), 300);
+                    } catch(err) {
+                        alert('❌ فشل في الحذف');
+                    }
+                }
+            });
+        });
+        
+    } catch(e) {
+        container.innerHTML = '❌ خطأ في التحميل';
+    }
+}
+
+// ربط زر الإشعارات في الداشبورد
+setTimeout(() => {
+    let btn = document.getElementById('dashboardNotificationsBtn');
+    if (btn) {
+        let newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showNotifications();
+        });
+    }
+}, 1000);
+
+console.log('✅ نظام الإشعارات الجديد جاهز');
 console.log('✅ All fixes applied');
