@@ -3497,78 +3497,103 @@ function showNotifications() {
     
     loadNotificationsToPage();
 }
+// ========== نظام الإشعارات - صفحة كاملة مع حذف ==========
 
-// دالة تحميل الإشعارات في الصفحة
-async function loadNotificationsToPage() {
-    let container = document.getElementById('notifsContainer');
-    if (!container || !currentUser) return;
-    
+// دالة إضافة إشعار
+async function addNotification(msg, type) {
+    if (!currentUser) return;
     try {
-        const snap = await db.collection('notifications')
-            .where('recipientId', '==', currentUser.id)
-            .limit(50)
-            .get();
-        
-        let notifs = [];
-        snap.forEach(doc => notifs.push({ id: doc.id, ...doc.data() }));
-        notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        if (notifs.length === 0) {
-            container.innerHTML = '<div style="padding:60px;color:#999;">🔔 لا توجد إشعارات</div>';
-            return;
-        }
-        
-        container.innerHTML = '<div style="color:#666;margin-bottom:15px;text-align:right;">عدد الإشعارات: <b>' + notifs.length + '</b></div>';
-        
-        notifs.forEach(n => {
-            let card = document.createElement('div');
-            card.style.cssText = 'background:white;padding:15px;margin:10px 0;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:center;';
-            card.innerHTML = `
-                <div style="flex:1;">
-                    <div style="font-weight:bold;margin-bottom:5px;">${n.msg}</div>
-                    <small style="color:#999;">📅 ${new Date(n.timestamp).toLocaleString()}</small>
-                </div>
-                <button class="delNotifBtn" data-id="${n.id}" style="background:#ff4444;color:white;border:none;border-radius:8px;padding:8px 15px;cursor:pointer;margin-left:10px;">🗑️ حذف</button>
-            `;
-            container.appendChild(card);
+        await db.collection('notifications').add({
+            recipientId: currentUser.id,
+            msg: msg,
+            type: type || 'system',
+            timestamp: new Date().toISOString(),
+            from: 'System',
+            read: false
         });
-        
-        // أحداث الحذف
-        document.querySelectorAll('.delNotifBtn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                let id = this.getAttribute('data-id');
-                let card = this.parentElement;
-                
-                if (confirm('🗑️ هل أنت متأكد من حذف هذا الإشعار؟')) {
-                    try {
-                        await db.collection('notifications').doc(id).delete();
-                        card.style.opacity = '0';
-                        card.style.transition = '0.3s';
-                        setTimeout(() => card.remove(), 300);
-                    } catch(err) {
-                        alert('❌ فشل في الحذف');
-                    }
-                }
-            });
-        });
-        
     } catch(e) {
-        container.innerHTML = '❌ خطأ في التحميل';
+        console.error('❌ خطأ في الإشعار:', e);
     }
 }
 
-// ربط زر الإشعارات في الداشبورد
-setTimeout(() => {
+// دالة عرض صفحة الإشعارات
+function showNotifications() {
+    document.getElementById('dashboardPage').style.display = 'none';
+    document.getElementById('dashboardPage').classList.add('hidden');
+    
+    let np = document.getElementById('notificationsPage');
+    np.style.display = 'block';
+    np.classList.remove('hidden');
+    
+    np.innerHTML = `
+        <div style="background:#1a237e;color:white;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="margin:0;">🔔 الإشعارات</h3>
+            <button id="backFromNotif" style="background:white;color:#1a237e;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;font-weight:bold;">← رجوع</button>
+        </div>
+        <div id="notifsHere" style="padding:20px;text-align:center;">⏳ جاري التحميل...</div>
+    `;
+    
+    document.getElementById('backFromNotif').addEventListener('click', function() {
+        np.style.display = 'none';
+        np.classList.add('hidden');
+        document.getElementById('dashboardPage').style.display = 'block';
+        document.getElementById('dashboardPage').classList.remove('hidden');
+    });
+    
+    loadNotifsToPage();
+}
+
+// دالة تحميل الإشعارات
+async function loadNotifsToPage() {
+    let c = document.getElementById('notifsHere');
+    if (!c || !currentUser) return;
+    
+    const snap = await db.collection('notifications')
+        .where('recipientId', '==', currentUser.id)
+        .limit(50).get();
+    
+    let notifs = [];
+    snap.forEach(d => notifs.push({ id: d.id, ...d.data() }));
+    notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    if (notifs.length === 0) {
+        c.innerHTML = '<p style="padding:60px;">🔔 لا توجد إشعارات</p>';
+        return;
+    }
+    
+    c.innerHTML = '<p style="text-align:right;margin-bottom:15px;">عدد: <b>' + notifs.length + '</b></p>';
+    
+    notifs.forEach(n => {
+        let card = document.createElement('div');
+        card.style.cssText = 'background:white;padding:15px;margin:10px 0;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:center;';
+        card.innerHTML = `
+            <div style="flex:1;">
+                <b>${n.msg}</b><br>
+                <small style="color:#666;">📅 ${new Date(n.timestamp).toLocaleString()}</small>
+            </div>
+            <button style="background:#ff4444;color:white;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;margin-left:10px;">🗑️ حذف</button>
+        `;
+        card.querySelector('button').addEventListener('click', async function() {
+            if (confirm('🗑️ حذف؟')) {
+                await db.collection('notifications').doc(n.id).delete();
+                card.remove();
+            }
+        });
+        c.appendChild(card);
+    });
+}
+
+// ربط زر الإشعارات
+setTimeout(function() {
     let btn = document.getElementById('dashboardNotificationsBtn');
     if (btn) {
         let newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        newBtn.addEventListener('click', function() {
             showNotifications();
         });
     }
 }, 1000);
 
-console.log('✅ نظام الإشعارات الجديد جاهز');
+console.log('✅ نظام الإشعارات جاهز');
 console.log('✅ All fixes applied');
