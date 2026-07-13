@@ -424,17 +424,7 @@ function timeAgo(timestamp) { let now = Date.now(); let then = new Date(timestam
 function isNew(timestamp) { let now = Date.now(); let then = new Date(timestamp).getTime(); return (now - then) < 86400000; }
 function getUserLevel(points) { if (points >= 1000) return t('investigator'); if (points >= 500) return t('expert'); if (points >= 100) return t('helper'); return t('beginner'); }
 
-async function addPoints(userId, pts) {
-    userPoints[userId] = (userPoints[userId] || 0) + pts;
-    const db = firebase.firestore();
-    await db.collection('userPoints').doc(userId).set({ userId, points: userPoints[userId] }, { merge: true });
-}
 
-async function addBalance(userId, amount) {
-    userBalances[userId] = (userBalances[userId] || 0) + amount;
-    const db = firebase.firestore();
-    await db.collection('userBalances').doc(userId).set({ userId, balance: userBalances[userId] }, { merge: true });
-}
 
 async function addView(reportId) {
     reportViews[reportId] = (reportViews[reportId] || 0) + 1;
@@ -869,12 +859,7 @@ async function saveLost() {
         if (userId) {
             addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
             checkRealtimeMatch(newItem, 'lost');
-            await addPoints(userId, 15);
-            if (isUrgent) await addPoints(userId, 5);
-            if (isFeatured) await addPoints(userId, 10);
-            if (isUrgent) await addBalance(userId, 0.99);
-            if (isFeatured) await addBalance(userId, 1.99);
-            if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
+            
         }
         
         updateAllUI();
@@ -965,12 +950,7 @@ async function saveFound() {
         if (userId) {
             addNotification('📝 تم إرسال بلاغ الموجودات للمراجعة', 'report_submitted');
             checkRealtimeMatch(newItem, 'found');
-            await addPoints(userId, 15);
-            if (isUrgent) await addPoints(userId, 5);
-            if (isFeatured) await addPoints(userId, 10);
-            if (isUrgent) await addBalance(userId, 0.99);
-            if (isFeatured) await addBalance(userId, 1.99);
-            if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
+            
         }
         
         updateAllUI();
