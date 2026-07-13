@@ -794,151 +794,193 @@ function initCountries() { document.querySelectorAll('.country-select').forEach(
 function setupImagePreview(inputId, previewId) { let input = document.getElementById(inputId), preview = document.getElementById(previewId); if (!input) return; input.onchange = () => { preview.innerHTML = ''; Array.from(input.files).slice(0, 5).forEach(file => { let r = new FileReader(); r.onload = e => { let img = document.createElement('img'); img.src = e.target.result; preview.appendChild(img); }; r.readAsDataURL(file); }); }; }
 // ========== حفظ البلاغات ==========
 async function saveLost() {
-    let desc = document.getElementById('lostDesc').value.trim();
-    if (!desc) return showToast(t('enterDescription'), 'error');
-    let date = document.getElementById('lostDate').value;
-    let citySel = document.getElementById('lostCity');
-    let city = citySel.options[citySel.selectedIndex]?.text || '';
-    
-    // الحصول على المستخدم الحالي من Firebase Auth
-    const user = firebase.auth().currentUser;
-    let userName = '';
-    let userId = '';
-    let isAdminFlag = false;
-    
-    if (user) {
-        const doc = await db.collection('users').doc(user.uid).get();
-        if (doc.exists) {
-            const data = doc.data();
-            userName = data.name || data.email || user.email || '';
-            userId = data.email || data.phone || user.uid;
-            isAdminFlag = data.isAdmin || false;
-        } else {
-            userName = user.displayName || user.email || '';
-            userId = user.email || user.uid;
+    try {
+        let desc = document.getElementById('lostDesc').value.trim();
+        if (!desc) return showToast(t('enterDescription'), 'error');
+        
+        let date = document.getElementById('lostDate').value;
+        let citySel = document.getElementById('lostCity');
+        let city = citySel.options[citySel.selectedIndex]?.text || '';
+        
+        let userName = '', userId = '', isAdminFlag = false;
+        
+        if (currentUser) {
+            userName = currentUser.name || currentUser.email || '';
+            userId = currentUser.email || currentUser.phone || currentUser.id;
+            isAdminFlag = currentUser.isAdmin || false;
         }
+        
+        let phoneCode1 = document.getElementById('lostPhoneCode').value;
+        let phone1 = document.getElementById('lostPhone1').value;
+        let phoneCode2 = document.getElementById('lostPhoneCode2').value;
+        let phone2 = document.getElementById('lostPhone2').value;
+        let phoneFull1 = phoneCode1 ? phoneCode1 + ' ' + phone1 : phone1;
+        let phoneFull2 = phoneCode2 ? phoneCode2 + ' ' + phone2 : phone2;
+        let lat = parseFloat(document.getElementById('lostLat').value) || null;
+        let lng = parseFloat(document.getElementById('lostLng').value) || null;
+        let isUrgent = document.getElementById('lostUrgent')?.checked || false;
+        let isFeatured = document.getElementById('lostFeatured')?.checked || false;
+        
+        let tell = {
+            rose: document.querySelector('#lostSection .tellRose')?.checked || false,
+            thanks: document.querySelector('#lostSection .tellThanks')?.checked || false,
+            invite: document.querySelector('#lostSection .tellInvite')?.checked || false
+        };
+        
+        let notify = {
+            police: document.querySelector('#lostSection .notifyPolice')?.checked || false,
+            un: document.querySelector('#lostSection .notifyUN')?.checked || false,
+            interpol: document.querySelector('#lostSection .notifyInterpol')?.checked || false,
+            foreign: document.querySelector('#lostSection .notifyForeign')?.checked || false,
+            record: document.querySelector('#lostSection .notifyRecord')?.checked || false
+        };
+        
+        let images = [], files = document.getElementById('lostImages').files;
+        if (files && files.length > 0) images = await compressImages(files);
+        
+        let reward = { money: false, moneyAmount: null };
+        let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[0];
+        if (moneyCheck?.checked) {
+            reward.money = true;
+            reward.moneyAmount = document.getElementById('lost-money').value;
+        }
+        
+        let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        
+        let newItem = {
+            id: Date.now(), type: 'lost', desc, date, city, name: userName,
+            phone1: phoneFull1, phone2: phoneFull2, images, lat, lng,
+            category: selectedCategory, tell, notify, isUrgent, isFeatured,
+            timestamp: new Date().toISOString(), userEmail: userId, reward,
+            status: 'open', comments: [], mapExpiry: mapExpiry
+        };
+        
+        const db = firebase.firestore();
+        
+        if (isAdminFlag) {
+            lostArray.push(newItem);
+            await db.collection('lostItems').add(newItem);
+            showToast(t('success'), t('reportSaved'));
+        } else {
+            await db.collection('pendingReports').add(newItem);
+            showToast(t('success'), "Report sent to admin for approval");
+        }
+        
+        if (userId) {
+            addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
+            checkRealtimeMatch(newItem, 'lost');
+            await addPoints(userId, 15);
+            if (isUrgent) await addPoints(userId, 5);
+            if (isFeatured) await addPoints(userId, 10);
+            if (isUrgent) await addBalance(userId, 0.99);
+            if (isFeatured) await addBalance(userId, 1.99);
+            if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
+        }
+        
+        updateAllUI();
+        clearLostForm();
+        addLog('Add Lost', userId, desc);
+        autoMatchAndNotify();
+        
+    } catch (error) {
+        clearLostForm();
     }
-    
-    let phoneCode1 = document.getElementById('lostPhoneCode').value;
-    let phone1 = document.getElementById('lostPhone1').value;
-    let phoneCode2 = document.getElementById('lostPhoneCode2').value;
-    let phone2 = document.getElementById('lostPhone2').value;
-    let phoneFull1 = phoneCode1 ? phoneCode1 + ' ' + phone1 : phone1;
-    let phoneFull2 = phoneCode2 ? phoneCode2 + ' ' + phone2 : phone2;
-    let lat = parseFloat(document.getElementById('lostLat').value) || null;
-    let lng = parseFloat(document.getElementById('lostLng').value) || null;
-    let isUrgent = document.getElementById('lostUrgent')?.checked || false;
-    let isFeatured = document.getElementById('lostFeatured')?.checked || false;
-    let tell = { rose: document.querySelector('#lostSection .tellRose')?.checked || false, thanks: document.querySelector('#lostSection .tellThanks')?.checked || false, invite: document.querySelector('#lostSection .tellInvite')?.checked || false };
-    let notify = { police: document.querySelector('#lostSection .notifyPolice')?.checked || false, un: document.querySelector('#lostSection .notifyUN')?.checked || false, interpol: document.querySelector('#lostSection .notifyInterpol')?.checked || false, foreign: document.querySelector('#lostSection .notifyForeign')?.checked || false, record: document.querySelector('#lostSection .notifyRecord')?.checked || false };
-    let images = [];
-    let files = document.getElementById('lostImages').files;
-    if (files && files.length > 0) { images = await compressImages(files); }
-    let reward = { money: false, moneyAmount: null };
-    let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[0];
-    if (moneyCheck?.checked) { reward.money = true; reward.moneyAmount = document.getElementById('lost-money').value; }
-    let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    let newItem = { id: Date.now(), type: 'lost', desc, date, city, name: userName, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
-    
-    const db = firebase.firestore();
-    
-    if (isAdminFlag) {
-    lostArray.push(newItem);
-    await db.collection('lostItems').add(newItem);
-    showAlert(t('success'), t('reportSaved'));
-} else {
-    await db.collection('pendingReports').add(newItem);
-    showAlert(t('success'), "Report sent to admin for approval");
-    if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
 }
-// الإشعار للكل
-addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
-    
-    checkRealtimeMatch(newItem, 'lost');
-    await addPoints(userId, 10);
-    if (isUrgent) await addPoints(userId, 5);
-    if (isFeatured) await addPoints(userId, 10);
-    if (isUrgent) await addBalance(userId, 0.99);
-    if (isFeatured) await addBalance(userId, 1.99);
-    if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
-    updateAllUI();
-    clearLostForm();
-    addLog('Add Lost', userId, desc);
-    autoMatchAndNotify();
-}
-
 async function saveFound() {
-    let desc = document.getElementById('foundDesc').value.trim();
-    if (!desc) return showToast(t('enterDescription'), 'error');
-    let date = document.getElementById('foundDate').value;
-    let citySel = document.getElementById('foundCity');
-    let city = citySel.options[citySel.selectedIndex]?.text || '';
-    
-    // الحصول على المستخدم الحالي من Firebase Auth
-    const user = firebase.auth().currentUser;
-    let userName = '';
-    let userId = '';
-    let isAdminFlag = false;
-    
-    if (user) {
-        const doc = await db.collection('users').doc(user.uid).get();
-        if (doc.exists) {
-            const data = doc.data();
-            userName = data.name || data.email || user.email || '';
-            userId = data.email || data.phone || user.uid;
-            isAdminFlag = data.isAdmin || false;
-        } else {
-            userName = user.displayName || user.email || '';
-            userId = user.email || user.uid;
+    try {
+        let desc = document.getElementById('foundDesc').value.trim();
+        if (!desc) return showToast(t('enterDescription'), 'error');
+        
+        let date = document.getElementById('foundDate').value;
+        let citySel = document.getElementById('foundCity');
+        let city = citySel.options[citySel.selectedIndex]?.text || '';
+        
+        let userName = '', userId = '', isAdminFlag = false;
+        
+        if (currentUser) {
+            userName = currentUser.name || currentUser.email || '';
+            userId = currentUser.email || currentUser.phone || currentUser.id;
+            isAdminFlag = currentUser.isAdmin || false;
         }
+        
+        let phoneCode1 = document.getElementById('foundPhoneCode').value;
+        let phone1 = document.getElementById('foundPhone1').value;
+        let phoneCode2 = document.getElementById('foundPhoneCode2').value;
+        let phone2 = document.getElementById('foundPhone2').value;
+        let phoneFull1 = phoneCode1 ? phoneCode1 + ' ' + phone1 : phone1;
+        let phoneFull2 = phoneCode2 ? phoneCode2 + ' ' + phone2 : phone2;
+        let lat = parseFloat(document.getElementById('foundLat').value) || null;
+        let lng = parseFloat(document.getElementById('foundLng').value) || null;
+        let isUrgent = document.getElementById('foundUrgent')?.checked || false;
+        let isFeatured = document.getElementById('foundFeatured')?.checked || false;
+        
+        let tell = {
+            rose: document.querySelector('#foundSection .tellRose')?.checked || false,
+            thanks: document.querySelector('#foundSection .tellThanks')?.checked || false,
+            invite: document.querySelector('#foundSection .tellInvite')?.checked || false
+        };
+        
+        let notify = {
+            police: document.querySelector('#foundSection .notifyPolice')?.checked || false,
+            un: document.querySelector('#foundSection .notifyUN')?.checked || false,
+            interpol: document.querySelector('#foundSection .notifyInterpol')?.checked || false,
+            foreign: document.querySelector('#foundSection .notifyForeign')?.checked || false,
+            record: document.querySelector('#foundSection .notifyRecord')?.checked || false
+        };
+        
+        let images = [], files = document.getElementById('foundImages').files;
+        if (files && files.length > 0) images = await compressImages(files);
+        
+        let reward = { money: false, moneyAmount: null };
+        let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[1];
+        if (moneyCheck?.checked) {
+            reward.money = true;
+            reward.moneyAmount = document.getElementById('found-money').value;
+        }
+        
+        let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        
+        let newItem = {
+            id: Date.now(), type: 'found', desc, date, city, name: userName,
+            phone1: phoneFull1, phone2: phoneFull2, images, lat, lng,
+            category: selectedCategory, tell, notify, isUrgent, isFeatured,
+            timestamp: new Date().toISOString(), userEmail: userId, reward,
+            status: 'open', comments: [], mapExpiry: mapExpiry
+        };
+        
+        const db = firebase.firestore();
+        
+        if (isAdminFlag) {
+            foundArray.push(newItem);
+            await db.collection('foundItems').add(newItem);
+            showToast(t('success'), t('reportSaved'));
+        } else {
+            await db.collection('pendingReports').add(newItem);
+            showToast(t('success'), "Report sent to admin for approval");
+            if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) {
+                refreshAdminPanel();
+            }
+        }
+        
+        if (userId) {
+            addNotification('📝 تم إرسال بلاغ الموجودات للمراجعة', 'report_submitted');
+            checkRealtimeMatch(newItem, 'found');
+            await addPoints(userId, 15);
+            if (isUrgent) await addPoints(userId, 5);
+            if (isFeatured) await addPoints(userId, 10);
+            if (isUrgent) await addBalance(userId, 0.99);
+            if (isFeatured) await addBalance(userId, 1.99);
+            if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
+        }
+        
+        updateAllUI();
+        clearFoundForm();
+        addLog('Add Found', userId, desc);
+        autoMatchAndNotify();
+        
+    } catch (error) {
+        clearFoundForm();
     }
-    
-    let phoneCode1 = document.getElementById('foundPhoneCode').value;
-    let phone1 = document.getElementById('foundPhone1').value;
-    let phoneCode2 = document.getElementById('foundPhoneCode2').value;
-    let phone2 = document.getElementById('foundPhone2').value;
-    let phoneFull1 = phoneCode1 ? phoneCode1 + ' ' + phone1 : phone1;
-    let phoneFull2 = phoneCode2 ? phoneCode2 + ' ' + phone2 : phone2;
-    let lat = parseFloat(document.getElementById('foundLat').value) || null;
-    let lng = parseFloat(document.getElementById('foundLng').value) || null;
-    let isUrgent = document.getElementById('foundUrgent')?.checked || false;
-    let isFeatured = document.getElementById('foundFeatured')?.checked || false;
-    let tell = { rose: document.querySelector('#foundSection .tellRose')?.checked || false, thanks: document.querySelector('#foundSection .tellThanks')?.checked || false, invite: document.querySelector('#foundSection .tellInvite')?.checked || false };
-    let notify = { police: document.querySelector('#foundSection .notifyPolice')?.checked || false, un: document.querySelector('#foundSection .notifyUN')?.checked || false, interpol: document.querySelector('#foundSection .notifyInterpol')?.checked || false, foreign: document.querySelector('#foundSection .notifyForeign')?.checked || false, record: document.querySelector('#foundSection .notifyRecord')?.checked || false };
-    let images = [];
-    let files = document.getElementById('foundImages').files;
-    if (files && files.length > 0) { images = await compressImages(files); }
-    let reward = { money: false, moneyAmount: null };
-    let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[1];
-    if (moneyCheck?.checked) { reward.money = true; reward.moneyAmount = document.getElementById('found-money').value; }
-    let mapExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    let newItem = { id: Date.now(), type: 'found', desc, date, city, name: userName, phone1: phoneFull1, phone2: phoneFull2, images, lat, lng, category: selectedCategory, tell, notify, isUrgent, isFeatured, timestamp: new Date().toISOString(), userEmail: userId, reward, status: 'open', comments: [], mapExpiry: mapExpiry };
-    
-    const db = firebase.firestore();
-    
-    if (isAdminFlag) {
-    lostArray.push(newItem);
-    await db.collection('lostItems').add(newItem);
-    showAlert(t('success'), t('reportSaved'));
-} else {
-    await db.collection('pendingReports').add(newItem);
-    showAlert(t('success'), "Report sent to admin for approval");
-    if (document.getElementById('adminPanel') && !document.getElementById('adminPanel').classList.contains('hidden')) { refreshAdminPanel(); }
-}
-// الإشعار للكل
-addNotification('📝 تم إرسال بلاغ المفقودات للمراجعة', 'report_submitted');
-    
-    checkRealtimeMatch(newItem, 'found');
-    await addPoints(userId, 15);
-    if (isUrgent) await addPoints(userId, 5);
-    if (isFeatured) await addPoints(userId, 10);
-    if (isUrgent) await addBalance(userId, 0.99);
-    if (isFeatured) await addBalance(userId, 1.99);
-    if (reward.money) await addBalance(userId, parseFloat(reward.moneyAmount) * 0.05 || 0);
-    updateAllUI();
-    clearFoundForm();
-    addLog('Add Found', userId, desc);
-    autoMatchAndNotify();
 }
 function clearLostForm() { 
     document.getElementById('lostDesc').value = '';
