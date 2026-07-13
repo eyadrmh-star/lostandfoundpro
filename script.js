@@ -1281,24 +1281,59 @@ function submitRegistration() {
     let pwd = document.getElementById('regPwd').value;
     let isEmail = email.includes('@') && email.includes('.');
     let isPhone = !isEmail && email.length >= 7;
+    
     if (!name || !email || !pwd) return showAlert(t('error'), 'Please fill all fields', 'error');
     if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error');
+    
     const db = firebase.firestore();
-    db.collection('pendingUsers').add({
-        name: name,
-        email: isEmail ? email : '',
-        phone: isPhone ? email : '',
-        password: pwd,
-        approved: false,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        showAlert(t('success'), t('regSent'));
-        document.getElementById('registerForm').style.display = 'none';
-        addLog('Registration Request', email, 'Pending approval');
-    }).catch(function(error) {
-        console.error('Error:', error);
-        showAlert(t('error'), 'Registration failed.', 'error');
+    const credential = email;
+    
+    // فحص إذا موجود في users (approved)
+    db.collection('users').where('email', '==', credential).get().then(function(snap1) {
+        if (!snap1.empty) {
+            showAlert(t('error'), 'This email is already registered', 'error');
+            return;
+        }
+        
+        // فحص إذا موجود في pendingUsers (منتظر موافقة)
+        db.collection('pendingUsers').where('email', '==', credential).get().then(function(snap2) {
+            if (!snap2.empty) {
+                showAlert(t('error'), 'Registration already submitted, waiting for approval', 'error');
+                return;
+            }
+            
+            // فحص phone إذا كان credential هو phone
+            if (isPhone) {
+                db.collection('users').where('phone', '==', credential).get().then(function(snap3) {
+                    if (!snap3.empty) {
+                        showAlert(t('error'), 'This phone is already registered', 'error');
+                        return;
+                    }
+                    savePending();
+                });
+            } else {
+                savePending();
+            }
+        });
     });
+    
+    function savePending() {
+        db.collection('pendingUsers').add({
+            name: name,
+            email: isEmail ? email : '',
+            phone: isPhone ? email : '',
+            password: pwd,
+            approved: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            showAlert(t('success'), t('regSent'));
+            document.getElementById('registerForm').style.display = 'none';
+            addLog('Registration Request', email, 'Pending approval');
+        }).catch(function(error) {
+            console.error('Error:', error);
+            showAlert(t('error'), 'Registration failed.', 'error');
+        });
+    }
 }
 // ========== تسجيل الجهات الرسمية ==========
 function showOrgRegisterForm() {
@@ -1316,29 +1351,61 @@ function submitOrgRegistration() {
     if (!name || !pwd || (!email && !phone)) return showAlert(t('error'), 'Please fill all fields', 'error');
     
     const db = firebase.firestore();
-    const orgData = {
-        name: name,
-        type: type,
-        email: email,
-        phone: phone,
-        password: pwd,
-        approved: false,
-        isAdmin: false,
-        isOrganization: true,
-        isSuperAdmin: false,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
+    const credential = email || phone;
     
-    db.collection('pendingOrganizations').add(orgData)
-        .then(() => {
+    // فحص إذا موجود في users
+    db.collection('users').where('email', '==', credential).get().then(function(snap1) {
+        if (!snap1.empty) {
+            showAlert(t('error'), 'This email is already registered', 'error');
+            return;
+        }
+        
+        db.collection('users').where('phone', '==', credential).get().then(function(snap2) {
+            if (!snap2.empty) {
+                showAlert(t('error'), 'This phone is already registered', 'error');
+                return;
+            }
+            
+            // فحص إذا موجود في pendingUsers
+            db.collection('pendingUsers').where('email', '==', credential).get().then(function(snap3) {
+                if (!snap3.empty) {
+                    showAlert(t('error'), 'Already submitted, waiting for approval', 'error');
+                    return;
+                }
+                
+                // فحص إذا موجود في pendingOrganizations
+                db.collection('pendingOrganizations').where('email', '==', credential).get().then(function(snap4) {
+                    if (!snap4.empty) {
+                        showAlert(t('error'), 'Organization request already submitted', 'error');
+                        return;
+                    }
+                    
+                    saveOrg();
+                });
+            });
+        });
+    });
+    
+    function saveOrg() {
+        db.collection('pendingOrganizations').add({
+            name: name,
+            type: type,
+            email: email,
+            phone: phone,
+            password: pwd,
+            approved: false,
+            isAdmin: false,
+            isOrganization: true,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
             showAlert(t('success'), t('orgRegSent'));
             document.getElementById('orgRegisterForm').style.display = 'none';
-            addLog('Org Registration', email || phone, name);
-        })
-        .catch(function(error) {
+            addLog('Org Registration', credential, name);
+        }).catch(function(error) {
             console.error('Error:', error);
             showAlert(t('error'), 'Organization registration failed.', 'error');
         });
+    }
 }
 // ==========================================
 // 1. حذف أي تعريفات قديمة
