@@ -3697,4 +3697,84 @@ setTimeout(function() {
 }, 1000);
 
 console.log('✅ نظام الإشعارات جاهز');
+// ========== Upgrade System - Orange Money ==========
+const ORANGE_MONEY = {
+    number: '+962775388520',
+    name: 'EYAD RAJAB MOHAMMAD AL HIAREY'
+};
+
+// Upgrade pricing by country group
+const PRICING = {
+    group1: { map3: 19.99, map6: 29.99, sticky: 9.99 },
+    group2: { map3: 9.99, map6: 14.99, sticky: 5.99 },
+    group3: { map3: 4.99, map6: 7.99, sticky: 2.99 }
+};
+
+// Determine country group
+function getCountryGroup(countryName) {
+    const group1 = ['United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Australia', 'United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Kuwait'];
+    const group2 = ['Brazil', 'Turkey', 'Egypt', 'Jordan', 'Morocco', 'Tunisia', 'South Africa', 'Russia', 'China'];
+    if (group1.includes(countryName)) return 'group1';
+    if (group2.includes(countryName)) return 'group2';
+    return 'group3';
+}
+
+// Open payment modal
+function openPaymentModal(reportId, reportType) {
+    let item = reportType === 'lost' 
+        ? lostArray.find(i => i.id === reportId) 
+        : foundArray.find(i => i.id === reportId);
+    if (!item) return showToast('Report not found', 'error');
+    
+    let country = document.getElementById(reportType + 'Country')?.value || '';
+    let group = getCountryGroup(country);
+    let price = PRICING[group];
+    
+    let modal = document.createElement('div');
+    modal.id = 'paymentModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:9999;';
+    modal.innerHTML = `
+        <div style="background:white;border-radius:16px;padding:25px;max-width:400px;width:90%;text-align:center;">
+            <h3>⭐ Upgrade Report</h3>
+            <p><b>Report:</b> ${item.desc?.substring(0, 30)}...</p>
+            <p><b>Country:</b> ${country || 'N/A'}</p>
+            <hr>
+            <p><b>Transfer to Orange Money:</b></p>
+            <p style="font-size:20px;color:#f0a500;font-weight:bold;">📱 ${ORANGE_MONEY.number}</p>
+            <p>👤 ${ORANGE_MONEY.name}</p>
+            <hr>
+            <p>Choose service:</p>
+            <button onclick="submitPayment(${reportId}, '${reportType}', 'map3', ${price.map3})" style="padding:10px;margin:5px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;width:80%;">🗺️ Map 3 Months - $${price.map3}</button>
+            <button onclick="submitPayment(${reportId}, '${reportType}', 'map6', ${price.map6})" style="padding:10px;margin:5px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;width:80%;">🗺️ Map 6 Months - $${price.map6}</button>
+            <button onclick="submitPayment(${reportId}, '${reportType}', 'sticky', ${price.sticky})" style="padding:10px;margin:5px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;width:80%;">📌 Sticky 1 Month - $${price.sticky}</button>
+            <br><br>
+            <button onclick="document.getElementById('paymentModal').remove()" style="padding:8px 20px;background:#ccc;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Submit payment request
+async function submitPayment(reportId, reportType, service, amount) {
+    document.getElementById('paymentModal')?.remove();
+    
+    const db = firebase.firestore();
+    await db.collection('paymentRequests').add({
+        reportId: reportId,
+        reportType: reportType,
+        service: service,
+        amount: amount,
+        status: 'pending',
+        userEmail: currentUser?.email || '',
+        timestamp: new Date().toISOString()
+    });
+    
+    let message = `Hello, I want to upgrade my report #${reportId} to ${service === 'map3' ? 'Map 3 Months' : service === 'map6' ? 'Map 6 Months' : 'Sticky 1 Month'} for $${amount}. Payment sent to Orange Money.`;
+    let whatsappLink = `https://wa.me/${ORANGE_MONEY.number}?text=${encodeURIComponent(message)}`;
+    
+    showToast('✅ Request sent. Will activate after payment confirmed.', 'success');
+    setTimeout(() => window.open(whatsappLink, '_blank'), 1000);
+}
+
+console.log('✅ Orange Money system ready');
 console.log('✅ All fixes applied');
