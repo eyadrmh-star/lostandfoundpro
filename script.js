@@ -21,8 +21,6 @@ let foundSelectMap = null;
 let lostMarker = null;
 let foundMarker = null;
 let selectedCategory = 'other';
-let userPoints = {};
-let userBalances = {};
 let reportViews = {};
 let adminNotifications = {};
 let pendingOrganizations = [];
@@ -554,20 +552,7 @@ async function loadSystemData() {
     pendingReports = [];
     reportsSnap.forEach(doc => pendingReports.push({ id: doc.id, ...doc.data() }));
     
-    // قراءة userPoints و userBalances من Firestore
-    const pointsSnap = await db.collection('userPoints').get();
-    userPoints = {};
-    pointsSnap.forEach(doc => {
-        const data = doc.data();
-        userPoints[data.userId] = data.points || 0;
-    });
     
-    const balanceSnap = await db.collection('userBalances').get();
-    userBalances = {};
-    balanceSnap.forEach(doc => {
-        const data = doc.data();
-        userBalances[data.userId] = data.balance || 0;
-    });
     
     // قراءة adminNotifications من Firestore
     const notifSnap = await db.collection('adminNotifications').get();
