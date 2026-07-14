@@ -3775,4 +3775,15 @@ async function submitPayment(reportId, reportType, service, amount) {
 }
 
 console.log('✅ Orange Money system ready');
+
+// ========== ربط أزرار صفحة من نحن ==========
+document.getElementById('dashboardAboutBtn')?.addEventListener('click', function() {
+    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('aboutPage').classList.remove('hidden');
+});
+
+document.getElementById('aboutBackBtn')?.addEventListener('click', function() {
+    document.getElementById('aboutPage').classList.add('hidden');
+    document.getElementById('dashboardPage').classList.remove('hidden');
+});
 console.log('✅ All fixes applied');
