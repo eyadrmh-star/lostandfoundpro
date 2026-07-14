@@ -1197,8 +1197,15 @@ function renderItemCard(item, type) {
     var views = reportViews[item.id] || 0;
     var imgHTML = '';
     if (item.images && item.images[0]) {
-        imgHTML = '<img src="' + item.images[0] + '" style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom:10px;" onerror="this.style.display=\'none\'">';
+    var file = item.images[0];
+    if (file.endsWith('.mp4') || file.endsWith('.webm') || file.endsWith('.mov') || file.startsWith('data:video')) {
+        imgHTML = '<video controls style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom:10px;"><source src="' + file + '" type="video/mp4"></video>';
+    } else if (file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.ogg') || file.startsWith('data:audio')) {
+        imgHTML = '<audio controls style="width:100%; margin-bottom:10px;"><source src="' + file + '" type="audio/mpeg"></audio>';
+    } else {
+        imgHTML = '<img src="' + file + '" style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom:10px;" onerror="this.style.display=\'none\'">';
     }
+}
     var rewardHTML = '';
     if (item.reward && item.reward.money && item.reward.moneyAmount) {
         rewardHTML = '<div style="background:#fef3e0; padding:8px 12px; margin:8px 0; border-radius:8px; font-weight:bold; color:#d68910;">💰 Reward: $' + item.reward.moneyAmount + '</div>';
