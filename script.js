@@ -1200,7 +1200,7 @@ function renderItemCard(item, type) {
         rewardHTML = '<div style="background:#fef3e0; padding:8px 12px; margin:8px 0; border-radius:8px; font-weight:bold; color:#d68910;">💰 Reward: $' + item.reward.moneyAmount + '</div>';
     }
     var categoryLabel = item.category || 'other';
-    return '<div style="background:white; border-radius:16px; padding:0; margin:12px 0; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden; border-top:4px solid ' + (type === 'lost' ? '#e74c3c' : '#27ae60') + ';">' +
+    return '<div data-country="' + (countryName || '') + '" data-city="' + cityName + '" data-date="' + dateVal + '" data-type="' + type + '" style="background:white; border-radius:16px; padding:0; margin:12px 0; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden; border-top:4px solid ' + (type === 'lost' ? '#e74c3c' : '#27ae60') + ';">' +
         '<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fafafa; border-bottom:1px solid #eee;">' +
         '<span style="background:' + statusColor + '; color:white; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">' + statusLabel + '</span>' +
         '<div style="display:flex; gap:12px; align-items:center;">' +
