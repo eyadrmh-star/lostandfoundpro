@@ -87,15 +87,13 @@
 <body>
 
     <!-- Language Bar -->
-    <div class="lang-bar">
-        <span>🌍 Lost & Found Pro v3.1</span>
-        <select onchange="window.location.href='index.html?lang='+this.value">
-            <option value="en">🇬🇧 English</option>
-            <option value="ar">🇸🇦 العربية</option>
-            <option value="es">🇪🇸 Español</option>
-            <option value="fr">🇫🇷 Français</option>
-        </select>
-    </div>
+<div class="lang-bar">
+    <span>🌍 Lost & Found Pro v3.1</span>
+    <select id="langSelect" onchange="changeLang(this.value)">
+        <option value="en">🇬🇧 English</option>
+        <option value="ar">🇸🇦 العربية</option>
+    </select>
+</div>
 
     <!-- Hero Section -->
     <div class="hero">
