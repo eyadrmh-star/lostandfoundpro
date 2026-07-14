@@ -670,7 +670,104 @@ function attachItemEvents() {
     
     document.querySelectorAll('.contactBtn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); let id = parseInt(btn.dataset.id), type = btn.dataset.type, name = btn.dataset.name, email = btn.dataset.email; sendMessageToReporter(id, type, name, email); }; });
 }
-function filterItems(type) { let search = document.getElementById(type==='lost'?'searchLostInput':'searchFoundInput'); if(!search) return; let q = search.value.toLowerCase(); let items = document.querySelectorAll(`.saved-item[data-type="${type}"]`); items.forEach(div=>{ div.style.display = div.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
+// ========== فلتر البحث المتقدم ==========
+function filterItems(type) {
+    let search = document.getElementById(type==='lost'?'searchLostInput':'searchFoundInput');
+    if(!search) return;
+    let q = search.value.toLowerCase();
+    let items = document.querySelectorAll(`.saved-item[data-type="${type}"]`);
+    items.forEach(div=>{
+        let text = div.innerText.toLowerCase();
+        let match = !q || text.includes(q);
+        div.style.display = match ? 'flex' : 'none';
+    });
+}
+
+// فلتر متقدم للوحة التحكم
+function advancedFilterReports() {
+    let searchTerm = document.getElementById('dashboardGlobalSearch')?.value.toLowerCase() || '';
+    let category = document.getElementById('filterCategory')?.value || 'all';
+    let timeFilter = document.getElementById('filterTime')?.value || 'all';
+    let country = document.getElementById('filterCountry')?.value || '';
+    let city = document.getElementById('filterCity')?.value || '';
+    
+    let lostItems = document.querySelectorAll('#dashLost .saved-item');
+    let foundItems = document.querySelectorAll('#dashFound .saved-item');
+    
+    function filterItems(items, type) {
+        items.forEach(item => {
+            let text = item.innerText.toLowerCase();
+            let itemType = item.dataset.type || type;
+            let itemCountry = item.dataset.country || '';
+            let itemCity = item.dataset.city || '';
+            let itemDate = item.dataset.date || '';
+            
+            // فلتر الكلمة المفتاحية
+            let matchSearch = !searchTerm || text.includes(searchTerm);
+            
+            // فلتر النوع
+            let matchCategory = category === 'all' || 
+                (category === 'lost' && itemType === 'lost') || 
+                (category === 'found' && itemType === 'found');
+            
+            // فلتر الوقت
+            let matchTime = true;
+            if (timeFilter === 'today') {
+                let today = new Date().toISOString().slice(0,10);
+                matchTime = itemDate === today;
+            } else if (timeFilter === 'week') {
+                let weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                matchTime = new Date(itemDate) >= weekAgo;
+            }
+            
+            // فلتر الدولة والمدينة
+            let matchCountry = !country || itemCountry.includes(country);
+            let matchCity = !city || itemCity.includes(city);
+            
+            item.style.display = (matchSearch && matchCategory && matchTime && matchCountry && matchCity) ? 'flex' : 'none';
+        });
+    }
+    
+    filterItems(lostItems, 'lost');
+    filterItems(foundItems, 'found');
+    
+    // إظهار/إخفاء الأعمدة الفارغة
+    let lostColumn = document.querySelector('.lost-column');
+    let foundColumn = document.querySelector('.found-column');
+    let matchColumn = document.querySelector('.match-column');
+    
+    if (category === 'found') lostColumn.style.display = 'none';
+    else lostColumn.style.display = 'block';
+    
+    if (category === 'lost') foundColumn.style.display = 'none';
+    else foundColumn.style.display = 'block';
+}
+
+// ربط الفلاتر
+document.getElementById('dashboardGlobalSearch')?.addEventListener('keyup', advancedFilterReports);
+document.getElementById('filterCategory')?.addEventListener('change', advancedFilterReports);
+document.getElementById('filterTime')?.addEventListener('change', advancedFilterReports);
+document.getElementById('filterCountry')?.addEventListener('change', function() {
+    advancedFilterReports();
+    let country = this.value;
+    let cities = geoData.find(c => c.name === country)?.cities || [];
+    let citySelect = document.getElementById('filterCity');
+    if (citySelect) {
+        citySelect.innerHTML = '<option value="">كل المدن</option>';
+        cities.forEach(c => citySelect.add(new Option(c, c)));
+    }
+});
+document.getElementById('filterCity')?.addEventListener('change', advancedFilterReports);
+document.getElementById('resetFiltersBtn')?.addEventListener('click', function() {
+    document.getElementById('dashboardGlobalSearch').value = '';
+    document.getElementById('filterCategory').value = 'all';
+    document.getElementById('filterTime').value = 'all';
+    document.getElementById('filterCountry').value = '';
+    document.getElementById('filterCity').innerHTML = '<option value="">كل المدن</option>';
+    advancedFilterReports();
+    showToast('✅ تم إعادة ضبط الفلاتر');
+});
 // ========== الخرائط ==========
 async function updateDashboardMap() {
     await refreshDataFromFirestore();
