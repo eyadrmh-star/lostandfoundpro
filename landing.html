@@ -87,13 +87,13 @@
 <body>
 
     <!-- Language Bar -->
-<div class="lang-bar">
-    <span>🌍 Lost & Found Pro v3.1</span>
-    <select id="langSelect" onchange="changeLang(this.value)">
-        <option value="en">🇬🇧 English</option>
-        <option value="ar">🇸🇦 العربية</option>
-    </select>
-</div>
+    <div class="lang-bar">
+        <span>🌍 Lost & Found Pro v3.1</span>
+        <select id="langSelect" onchange="changeLang(this.value)">
+            <option value="en">🇬🇧 English</option>
+            <option value="ar">🇸🇦 العربية</option>
+        </select>
+    </div>
 
     <!-- Hero Section -->
     <div class="hero">
@@ -215,6 +215,68 @@
                     }
                 });
             });
+        }
+        
+        // Multi-language support
+        const translations = {
+            en: {
+                heroTitle: "Lost & Found Pro",
+                heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide",
+                btnStart: "🚀 Get Started Free",
+                statLost: "📦 Lost Items",
+                statFound: "✅ Found Items",
+                statMatch: "🎯 Matches Made",
+                mapTitle: "🗺️ Live Global Activity",
+                step1Title: "1. Report",
+                step1Desc: "Add a report for lost or found items with description, photos, and videos",
+                step2Title: "2. Match",
+                step2Desc: "Our smart system auto-matches reports and notifies you instantly by email",
+                step3Title: "3. Recover",
+                step3Desc: "Connect with the other person and recover your lost items safely",
+                footerLogin: "Login",
+                footerPrivacy: "Privacy Policy"
+            },
+            ar: {
+                heroTitle: "Lost & Found Pro",
+                heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم",
+                btnStart: "🚀 ابدأ الآن مجاناً",
+                statLost: "📦 مفقودات",
+                statFound: "✅ موجودات",
+                statMatch: "🎯 تطابقات",
+                mapTitle: "🗺️ نشاط عالمي مباشر",
+                step1Title: "1. أبلغ",
+                step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو",
+                step2Title: "2. طابق",
+                step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل",
+                step3Title: "3. استلم",
+                step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان",
+                footerLogin: "تسجيل الدخول",
+                footerPrivacy: "سياسة الخصوصية"
+            }
+        };
+
+        function changeLang(lang) {
+            const t = translations[lang];
+            document.querySelector('.hero h1').textContent = '🌍 ' + t.heroTitle;
+            document.querySelector('.hero p').innerHTML = t.heroDesc;
+            document.querySelector('.btn-start').textContent = t.btnStart;
+            document.getElementById('statLost').nextElementSibling.textContent = t.statLost;
+            document.getElementById('statFound').nextElementSibling.textContent = t.statFound;
+            document.getElementById('statMatch').nextElementSibling.textContent = t.statMatch;
+            document.querySelector('.map-section h2').textContent = t.mapTitle;
+            document.querySelectorAll('.step h3')[0].textContent = t.step1Title;
+            document.querySelectorAll('.step h3')[1].textContent = t.step2Title;
+            document.querySelectorAll('.step h3')[2].textContent = t.step3Title;
+            document.querySelectorAll('.step p')[0].textContent = t.step1Desc;
+            document.querySelectorAll('.step p')[1].textContent = t.step2Desc;
+            document.querySelectorAll('.step p')[2].textContent = t.step3Desc;
+            
+            const footerLinks = document.querySelectorAll('.footer p')[2].querySelectorAll('a');
+            footerLinks[0].textContent = t.footerLogin;
+            footerLinks[1].textContent = t.footerPrivacy;
+            
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         }
         
         // Initialize
