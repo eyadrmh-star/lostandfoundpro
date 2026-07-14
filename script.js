@@ -24,6 +24,17 @@ let selectedCategory = 'other';
 let reportViews = {};
 let adminNotifications = {};
 let pendingOrganizations = [];
+// ========== تشفير كلمات المرور ==========
+const ENCRYPTION_KEY = "L&F_Secure_Key_2025_X7k9";
+
+function encryptPassword(password) {
+    return CryptoJS.AES.encrypt(password, ENCRYPTION_KEY).toString();
+}
+
+function decryptPassword(encryptedPassword) {
+    const bytes = CryptoJS.AES.decrypt(encryptedPassword, ENCRYPTION_KEY);
+    return bytes.toString(CryptoJS.enc.Utf8);
+}
 
 // ========== البيانات العالمية للدول والمدن ==========
 const geoData = [
