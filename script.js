@@ -1358,25 +1358,6 @@ function showRegisterForm() {
     document.getElementById('orgRegisterForm').style.display = 'none';
 }
 
-    
-    function savePending() {
-        db.collection('pendingUsers').add({
-            name: name,
-            email: isEmail ? email : '',
-            phone: isPhone ? email : '',
-            password: pwd,
-            approved: false,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function() {
-            showAlert(t('success'), t('regSent'));
-            document.getElementById('registerForm').style.display = 'none';
-            addLog('Registration Request', email, 'Pending approval');
-        }).catch(function(error) {
-            console.error('Error:', error);
-            showAlert(t('error'), 'Registration failed.', 'error');
-        });
-    }
-}
 // ========== تسجيل الجهات الرسمية ==========
 function showOrgRegisterForm() {
     document.getElementById('orgRegisterForm').style.display = 'block';
