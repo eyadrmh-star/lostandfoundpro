@@ -1238,47 +1238,6 @@ function showRegisterForm() {
     document.getElementById('orgRegisterForm').style.display = 'none';
 }
 
-function submitRegistration() {
-    let name = document.getElementById('regName').value.trim();
-    let email = document.getElementById('regEmail').value.trim();
-    let pwd = document.getElementById('regPwd').value;
-    let isEmail = email.includes('@') && email.includes('.');
-    let isPhone = !isEmail && email.length >= 7;
-    
-    if (!name || !email || !pwd) return showAlert(t('error'), 'Please fill all fields', 'error');
-    if (!isEmail && !isPhone) return showAlert(t('error'), 'Please enter a valid email or phone number', 'error');
-    
-    const db = firebase.firestore();
-    const credential = email;
-    
-    // فحص إذا موجود في users (approved)
-    db.collection('users').where('email', '==', credential).get().then(function(snap1) {
-        if (!snap1.empty) {
-            showAlert(t('error'), 'This email is already registered', 'error');
-            return;
-        }
-        
-        // فحص إذا موجود في pendingUsers (منتظر موافقة)
-        db.collection('pendingUsers').where('email', '==', credential).get().then(function(snap2) {
-            if (!snap2.empty) {
-                showAlert(t('error'), 'Registration already submitted, waiting for approval', 'error');
-                return;
-            }
-            
-            // فحص phone إذا كان credential هو phone
-            if (isPhone) {
-                db.collection('users').where('phone', '==', credential).get().then(function(snap3) {
-                    if (!snap3.empty) {
-                        showAlert(t('error'), 'This phone is already registered', 'error');
-                        return;
-                    }
-                    savePending();
-                });
-            } else {
-                savePending();
-            }
-        });
-    });
     
     function savePending() {
         db.collection('pendingUsers').add({
