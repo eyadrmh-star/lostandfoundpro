@@ -1025,17 +1025,40 @@ function autoMatchAndNotify() {
     let matches = [];
     for (let l of lostArray) {
         for (let f of foundArray) {
-            if (l.city === f.city && isSimilar(l.desc, f.desc)) { matches.push({ l, f }); }
+            if (l.city === f.city && isSimilar(l.desc, f.desc)) {
+                matches.push({ l, f });
+            }
         }
     }
     if (matches.length > 0) {
         showToast(`🎯 ${t('foundMatches')}`, 'info');
         sendDesktopNotification(t('newMatchFound'), `${matches.length} ${t('matches')}`);
         playMatchSound();
+        
+        // إرسال إيميل لصاحب البلاغات المتطابقة
+        matches.forEach(m => {
+            if (m.l.userEmail && m.l.userEmail.includes('@')) {
+                sendMatchEmail(m.l.userEmail, m.l.name, m.l.desc, m.l.city, 'lost');
+            }
+            if (m.f.userEmail && m.f.userEmail.includes('@')) {
+                sendMatchEmail(m.f.userEmail, m.f.name, m.f.desc, m.f.city, 'found');
+            }
+        });
     }
 }
 
-function matchItems() { let results = []; for (let l of lostArray) for (let f of foundArray) if (isSimilar(l.desc, f.desc)) results.push({ l, f }); let div = document.getElementById('matchResults'); if (results.length === 0) div.innerHTML = `<p style="text-align:center;padding:20px;">${t('noMatches')}</p>`; else { let html = `<h4>${t('potentialMatches')}</h4>`; results.forEach(r => html += `<div class="saved-item"><div>🔴 Lost: ${escapeHtml(r.l.desc)}<br>🟢 Found: ${escapeHtml(r.f.desc)}<br><small>📍 ${r.l.city}</small></div></div>`); div.innerHTML = html; showToast(`🎯 ${results.length} ${t('matches')}!`, 'success'); } }
+function matchItems() {
+    let results = [];
+    for (let l of lostArray) for (let f of foundArray) if (isSimilar(l.desc, f.desc)) results.push({ l, f });
+    let div = document.getElementById('matchResults');
+    if (results.length === 0) div.innerHTML = `<p style="text-align:center;padding:20px;">${t('noMatches')}</p>`;
+    else {
+        let html = `<h4>${t('potentialMatches')}</h4>`;
+        results.forEach(r => html += `<div class="saved-item"><div>🔴 Lost: ${escapeHtml(r.l.desc)}<br>🟢 Found: ${escapeHtml(r.f.desc)}<br><small>📍 ${r.l.city}</small></div></div>`);
+        div.innerHTML = html;
+        showToast(`🎯 ${results.length} ${t('matches')}!`, 'success');
+    }
+}
 function toggleDarkMode() { document.body.classList.toggle('dark'); saveUserPrefs(); }
 function saveUserPrefs() { /* تفضيلات محلية تبقى في الذاكرة */ }
 function loadUserPrefs() { /* تفضيلات محلية تبقى في الذاكرة */ }
@@ -3916,4 +3939,20 @@ document.getElementById('confirmResetBtn')?.addEventListener('click', async func
         document.getElementById('newPassword').value = '';
     }
 });
+// ========== إشعارات البريد الإلكتروني ==========
+async function sendMatchEmail(userEmail, userName, description, city, type) {
+    try {
+        await emailjs.send("service_dv4y1vo", "template_gj5th5f", {
+            to_email: userEmail,
+            name: userName || "مستخدم",
+            description: description,
+            city: city,
+            type: type === 'lost' ? 'مفقود' : 'موجود',
+            reply_email: "eyadrmh@gmail.com"
+        });
+        console.log('✅ تم إرسال إشعار الإيميل إلى:', userEmail);
+    } catch (error) {
+        console.log('⚠️ خطأ في إرسال الإيميل:', error);
+    }
+}
 console.log('✅ All fixes applied');
