@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lost & Found Pro - المنصة العالمية للمفقودات</title>
+    <title>Lost & Found Pro - Global Lost & Found Platform</title>
     
     <!-- Open Graph -->
-    <meta property="og:title" content="Lost & Found Pro - اعثر على ما فقدته">
-    <meta property="og:description" content="منصة عالمية للعثور على المفقودات. أبلغ عن مفقود أو موجود وتواصل مع الآخرين.">
+    <meta property="og:title" content="Lost & Found Pro - Find What You Lost">
+    <meta property="og:description" content="Global platform for finding lost items. Report lost or found items and connect with others.">
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -86,72 +86,72 @@
 </head>
 <body>
 
-    <!-- شريط اللغة -->
+    <!-- Language Bar -->
     <div class="lang-bar">
         <span>🌍 Lost & Found Pro v3.1</span>
         <select onchange="window.location.href='index.html?lang='+this.value">
-            <option value="ar">🇸🇦 العربية</option>
             <option value="en">🇬🇧 English</option>
+            <option value="ar">🇸🇦 العربية</option>
             <option value="es">🇪🇸 Español</option>
             <option value="fr">🇫🇷 Français</option>
         </select>
     </div>
 
-    <!-- القسم الرئيسي -->
+    <!-- Hero Section -->
     <div class="hero">
         <h1>🌍 Lost & Found Pro</h1>
-        <p>المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم</p>
-        <a href="index.html" class="btn-start">🚀 ابدأ الآن مجاناً</a>
+        <p>The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide</p>
+        <a href="index.html" class="btn-start">🚀 Get Started Free</a>
     </div>
 
-    <!-- إحصائيات حية -->
+    <!-- Live Stats -->
     <div class="stats-bar">
         <div class="stat-box lost">
             <div class="num" id="statLost">...</div>
-            <div class="label">📦 مفقودات</div>
+            <div class="label">📦 Lost Items</div>
         </div>
         <div class="stat-box found">
             <div class="num" id="statFound">...</div>
-            <div class="label">✅ موجودات</div>
+            <div class="label">✅ Found Items</div>
         </div>
         <div class="stat-box match">
             <div class="num" id="statMatch">...</div>
-            <div class="label">🎯 تطابقات</div>
+            <div class="label">🎯 Matches Made</div>
         </div>
     </div>
 
-    <!-- خريطة حية -->
+    <!-- Live Map -->
     <div class="map-section">
-        <h2>🗺️ نشاط عالمي مباشر</h2>
+        <h2>🗺️ Live Global Activity</h2>
         <div id="landingMap"></div>
     </div>
 
-    <!-- 3 خطوات -->
+    <!-- 3 Steps -->
     <div class="steps">
         <div class="step">
             <div class="step-icon">📝</div>
-            <h3>1. أبلغ</h3>
-            <p>أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو</p>
+            <h3>1. Report</h3>
+            <p>Add a report for lost or found items with description, photos, and videos</p>
         </div>
         <div class="step">
             <div class="step-icon">🎯</div>
-            <h3>2. طابق</h3>
-            <p>نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل</p>
+            <h3>2. Match</h3>
+            <p>Our smart system auto-matches reports and notifies you instantly by email</p>
         </div>
         <div class="step">
             <div class="step-icon">🤝</div>
-            <h3>3. استلم</h3>
-            <p>تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان</p>
+            <h3>3. Recover</h3>
+            <p>Connect with the other person and recover your lost items safely</p>
         </div>
     </div>
 
-    <!-- تذييل -->
+    <!-- Footer -->
     <div class="footer">
         <p>📧 eyadrmh@system.com | 📱 +962775388520</p>
-        <p>© 2025 Lost & Found Worldwide (L&F). جميع الحقوق محفوظة.</p>
+        <p>© 2025 Lost & Found Worldwide (L&F). All rights reserved.</p>
         <p>
-            <a href="index.html">تسجيل الدخول</a> |
-            <a href="privacy.html">سياسة الخصوصية</a>
+            <a href="index.html">Login</a> |
+            <a href="privacy.html">Privacy Policy</a>
         </p>
     </div>
 
@@ -168,7 +168,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        // تحميل الإحصائيات
+        // Load live stats
         async function loadStats() {
             const lostSnap = await db.collection('lostItems').get();
             const foundSnap = await db.collection('foundItems').get();
@@ -180,14 +180,13 @@
             document.getElementById('statMatch').textContent = Math.min(lostCount, foundCount);
         }
         
-        // تحميل الخريطة
+        // Load map
         function initMap() {
             const map = L.map('landingMap').setView([20, 0], 2);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OSM'
             }).addTo(map);
             
-            // جلب البلاغات وعرضها على الخريطة
             Promise.all([
                 db.collection('lostItems').get(),
                 db.collection('foundItems').get()
@@ -201,7 +200,7 @@
                                 html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">L</div>',
                                 iconSize: [20, 20]
                             })
-                        }).addTo(map).bindPopup('<b>🔴 مفقود:</b> ' + (data.desc || '') + '<br><small>📍 ' + (data.city || '') + '</small>');
+                        }).addTo(map).bindPopup('<b>🔴 Lost:</b> ' + (data.desc || '') + '<br><small>📍 ' + (data.city || '') + '</small>');
                     }
                 });
                 
@@ -214,13 +213,13 @@
                                 html: '<div style="background:#27ae60;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">F</div>',
                                 iconSize: [20, 20]
                             })
-                        }).addTo(map).bindPopup('<b>✅ موجود:</b> ' + (data.desc || '') + '<br><small>📍 ' + (data.city || '') + '</small>');
+                        }).addTo(map).bindPopup('<b>✅ Found:</b> ' + (data.desc || '') + '<br><small>📍 ' + (data.city || '') + '</small>');
                     }
                 });
             });
         }
         
-        // تشغيل
+        // Initialize
         loadStats();
         setTimeout(initMap, 500);
     </script>
