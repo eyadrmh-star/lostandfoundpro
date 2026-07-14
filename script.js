@@ -1275,7 +1275,7 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
         if (!snap.empty) {
             snap.forEach(doc => {
                 const u = doc.data();
-                if (u.password === pwd) user = { id: doc.id, ...u };
+                if (decryptPassword(u.password) === pwd) user = { id: doc.id, ...u };
             });
         }
     }
@@ -1437,7 +1437,7 @@ function submitOrgRegistration() {
             type: type,
             email: email,
             phone: phone,
-            password: pwd,
+            password: encryptPassword(pwd),
             approved: false,
             isAdmin: false,
             isOrganization: true,
@@ -2958,7 +2958,7 @@ document.getElementById('submitRegisterBtn').onclick = function() {
     firebase.firestore().collection('pendingUsers').add({
         name: name,
         email: email,
-        password: pwd,
+        password: encryptPassword(pwd),
         approved: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function() {
@@ -2991,7 +2991,7 @@ document.getElementById('submitOrgRegisterBtn').onclick = function() {
         type: type,
         email: email,
         phone: phone,
-        password: pwd,
+        password: encryptPassword(pwd),
         approved: false,
         isAdmin: false,
         isOrganization: true,
@@ -3921,7 +3921,7 @@ document.getElementById('verifyCodeBtn')?.addEventListener('click', function() {
             name: name,
             email: email,
             phone: '',
-            password: pwd,
+            password: encryptPassword(pwd),
             approved: false,
             verified: true,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
