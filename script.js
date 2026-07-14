@@ -3786,4 +3786,82 @@ document.getElementById('aboutBackBtn')?.addEventListener('click', function() {
     document.getElementById('aboutPage').classList.add('hidden');
     document.getElementById('dashboardPage').classList.remove('hidden');
 });
+
+// ========== نظام تأكيد الإيميل / الرقم ==========
+let pendingVerificationEmail = '';
+let generatedCode = '';
+
+// دالة توليد كود عشوائي من 6 أرقام
+function generateVerificationCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// تعديل دالة submitRegistration - نخليها ترسل الكود أولاً
+document.getElementById('submitRegisterBtn')?.addEventListener('click', function() {
+    let name = document.getElementById('regName').value.trim();
+    let email = document.getElementById('regEmail').value.trim();
+    let pwd = document.getElementById('regPwd').value;
+    
+    if (!name || !email || !pwd) {
+        showToast('الرجاء ملء جميع الحقول', 'error');
+        return;
+    }
+    
+    // توليد كود وإظهار قسم التحقق
+    generatedCode = generateVerificationCode();
+    pendingVerificationEmail = email;
+    
+    // حفظ بيانات التسجيل مؤقتاً
+    sessionStorage.setItem('regName', name);
+    sessionStorage.setItem('regEmail', email);
+    sessionStorage.setItem('regPwd', pwd);
+    sessionStorage.setItem('regCode', generatedCode);
+    
+    // إظهار الكود للمستخدم (في الواقع حيروح إيميل/واتساب)
+    alert('📩 كود التفعيل التجريبي: ' + generatedCode + '\n\n(في النسخة النهائية سيصل إلى إيميلك أو واتساب)');
+    
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('verificationSection').style.display = 'block';
+});
+
+// زر تأكيد الكود
+document.getElementById('verifyCodeBtn')?.addEventListener('click', function() {
+    let enteredCode = document.getElementById('regVerificationCode').value.trim();
+    let savedCode = sessionStorage.getItem('regCode');
+    
+    if (enteredCode === savedCode) {
+        // الكود صحيح - تسجيل المستخدم
+        let name = sessionStorage.getItem('regName');
+        let email = sessionStorage.getItem('regEmail');
+        let pwd = sessionStorage.getItem('regPwd');
+        
+        db.collection('pendingUsers').add({
+            name: name,
+            email: email,
+            phone: '',
+            password: pwd,
+            approved: false,
+            verified: true,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            showAlert('✅ نجاح', 'تم تفعيل الحساب وإرساله للمراجعة');
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            // تنظيف
+            sessionStorage.clear();
+        }).catch(function(error) {
+            showToast('خطأ في التسجيل', 'error');
+        });
+    } else {
+        showToast('❌ الكود غير صحيح، حاول مرة أخرى', 'error');
+    }
+});
+
+// زر إعادة إرسال الكود
+document.getElementById('resendCodeBtn')?.addEventListener('click', function() {
+    generatedCode = generateVerificationCode();
+    sessionStorage.setItem('regCode', generatedCode);
+    alert('📩 كود التفعيل الجديد: ' + generatedCode);
+    showToast('تم إرسال كود جديد', 'info');
+});
 console.log('✅ All fixes applied');
