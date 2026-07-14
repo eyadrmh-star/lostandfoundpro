@@ -97,7 +97,13 @@
                     <input type="text" id="regName" class="modern-input" data-t="fullName" placeholder="Full Name">
                     <input type="text" id="regEmail" class="modern-input" placeholder="Email or Phone">
                     <input type="password" id="regPwd" class="modern-input" data-t="regPassword" placeholder="Password">
-                    <button id="submitRegisterBtn" class="btn-success" data-t="requestReg">Request Registration</button>
+                    <div id="verificationSection" style="display:none;">
+    <p style="color:#1a237e;font-weight:bold;">📩 أدخل كود التفعيل المرسل إلى إيميلك أو هاتفك</p>
+    <input type="text" id="regVerificationCode" class="modern-input" placeholder="أدخل الكود المكون من 6 أرقام" maxlength="6">
+    <button id="verifyCodeBtn" class="btn-save">✅ تفعيل الحساب</button>
+    <button id="resendCodeBtn" class="btn-sm" style="margin-top:8px;">📤 إعادة إرسال الكود</button>
+</div>
+<button id="submitRegisterBtn" class="btn-success" data-t="requestReg">Request Registration</button>
                 </div>
                 <div id="orgRegisterForm" style="display:none;">
                     <input type="text" id="orgName" class="modern-input" data-t="orgName" placeholder="Organization Name">
