@@ -4,23 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lost & Found Pro - المنصة العالمية للمفقودات</title>
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Lost & Found Pro - اعثر على ما فقدته">
+    <meta property="og:description" content="منصة عالمية للعثور على المفقودات. أبلغ عن مفقود أو موجود وتواصل مع الآخرين.">
+    
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .hero { background: linear-gradient(135deg, #1a237e, #283593); color: white; text-align: center; padding: 60px 20px; }
-        .hero h1 { font-size: 36px; margin-bottom: 15px; }
-        .hero p { font-size: 18px; opacity: 0.9; margin-bottom: 30px; }
-        .btn-start { background: #f0a500; color: white; padding: 15px 40px; font-size: 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 50px 20px; max-width: 1000px; margin: 0 auto; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        
+        .hero { 
+            background: linear-gradient(135deg, #1a237e, #283593); 
+            color: white; text-align: center; padding: 50px 20px 30px; 
+        }
+        .hero h1 { font-size: 36px; margin-bottom: 10px; }
+        .hero p { font-size: 18px; opacity: 0.9; margin-bottom: 20px; }
+        
+        .btn-start { 
+            background: #f0a500; color: #1a237e; padding: 15px 40px; font-size: 20px; 
+            border: none; border-radius: 50px; cursor: pointer; font-weight: bold; 
+            text-decoration: none; display: inline-block; transition: all 0.3s;
+        }
+        .btn-start:hover { background: #ffc107; transform: scale(1.05); }
+        
+        .stats-bar {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;
+            padding: 30px 20px; max-width: 900px; margin: -20px auto 0;
+        }
+        .stat-box {
+            background: white; border-radius: 16px; padding: 20px; text-align: center;
+            flex: 1; min-width: 130px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .stat-box .num { font-size: 32px; font-weight: bold; color: #1a237e; }
+        .stat-box .label { font-size: 14px; color: #666; margin-top: 5px; }
+        .stat-box.lost .num { color: #e74c3c; }
+        .stat-box.found .num { color: #27ae60; }
+        .stat-box.match .num { color: #8e44ad; }
+        
+        .map-section { 
+            max-width: 900px; margin: 30px auto; padding: 0 20px; 
+        }
+        .map-section h2 { 
+            text-align: center; color: #1a237e; margin-bottom: 15px; 
+        }
+        #landingMap { 
+            width: 100%; height: 350px; border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+        }
+        
+        .steps { 
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; 
+            padding: 50px 20px; max-width: 900px; margin: 0 auto; 
+        }
         .step { text-align: center; flex: 1; min-width: 200px; }
         .step-icon { font-size: 50px; margin-bottom: 15px; }
         .step h3 { color: #1a237e; margin-bottom: 10px; }
         .step p { color: #666; }
-        .footer { background: #1a237e; color: white; text-align: center; padding: 30px 20px; }
+        
+        .footer { 
+            background: #1a237e; color: white; text-align: center; padding: 30px 20px; margin-top: 40px; 
+        }
         .footer a { color: #f0a500; text-decoration: none; margin: 0 10px; }
+        
+        .lang-bar {
+            background: #0d1642; color: white; padding: 8px 20px; text-align: center;
+            font-size: 14px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .lang-bar select {
+            padding: 5px 10px; border-radius: 20px; border: 1px solid white;
+            background: transparent; color: white; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
+    <!-- شريط اللغة -->
+    <div class="lang-bar">
+        <span>🌍 Lost & Found Pro v3.1</span>
+        <select onchange="window.location.href='index.html?lang='+this.value">
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Français</option>
+        </select>
+    </div>
 
     <!-- القسم الرئيسي -->
     <div class="hero">
@@ -29,22 +104,44 @@
         <a href="index.html" class="btn-start">🚀 ابدأ الآن مجاناً</a>
     </div>
 
+    <!-- إحصائيات حية -->
+    <div class="stats-bar">
+        <div class="stat-box lost">
+            <div class="num" id="statLost">...</div>
+            <div class="label">📦 مفقودات</div>
+        </div>
+        <div class="stat-box found">
+            <div class="num" id="statFound">...</div>
+            <div class="label">✅ موجودات</div>
+        </div>
+        <div class="stat-box match">
+            <div class="num" id="statMatch">...</div>
+            <div class="label">🎯 تطابقات</div>
+        </div>
+    </div>
+
+    <!-- خريطة حية -->
+    <div class="map-section">
+        <h2>🗺️ نشاط عالمي مباشر</h2>
+        <div id="landingMap"></div>
+    </div>
+
     <!-- 3 خطوات -->
     <div class="steps">
         <div class="step">
             <div class="step-icon">📝</div>
             <h3>1. أبلغ</h3>
-            <p>أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور</p>
+            <p>أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو</p>
         </div>
         <div class="step">
             <div class="step-icon">🎯</div>
             <h3>2. طابق</h3>
-            <p>نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً</p>
+            <p>نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل</p>
         </div>
         <div class="step">
             <div class="step-icon">🤝</div>
             <h3>3. استلم</h3>
-            <p>تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة</p>
+            <p>تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان</p>
         </div>
     </div>
 
@@ -54,10 +151,78 @@
         <p>© 2025 Lost & Found Worldwide (L&F). جميع الحقوق محفوظة.</p>
         <p>
             <a href="index.html">تسجيل الدخول</a> |
-            <a href="privacy.html">سياسة الخصوصية</a> |
-            <a href="index.html#aboutPage">من نحن</a>
+            <a href="privacy.html">سياسة الخصوصية</a>
         </p>
     </div>
 
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeC8-ZrmsBNG4qx-hydqekrrqA29wTz0A",
+            authDomain: "lostandfoundpro-9a14d.firebaseapp.com",
+            projectId: "lostandfoundpro-9a14d",
+            storageBucket: "lostandfoundpro-9a14d.firebasestorage.app",
+            messagingSenderId: "401878871280",
+            appId: "1:401878871280:web:41dc64b460079664d4e635"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // تحميل الإحصائيات
+        async function loadStats() {
+            const lostSnap = await db.collection('lostItems').get();
+            const foundSnap = await db.collection('foundItems').get();
+            const lostCount = lostSnap.size;
+            const foundCount = foundSnap.size;
+            
+            document.getElementById('statLost').textContent = lostCount;
+            document.getElementById('statFound').textContent = foundCount;
+            document.getElementById('statMatch').textContent = Math.min(lostCount, foundCount);
+        }
+        
+        // تحميل الخريطة
+        function initMap() {
+            const map = L.map('landingMap').setView([20, 0], 2);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OSM'
+            }).addTo(map);
+            
+            // جلب البلاغات وعرضها على الخريطة
+            Promise.all([
+                db.collection('lostItems').get(),
+                db.collection('foundItems').get()
+            ]).then(([lostSnap, foundSnap]) => {
+                lostSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.lat && data.lng) {
+                        L.marker([data.lat, data.lng], {
+                            icon: L.divIcon({
+                                className: '',
+                                html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">L</div>',
+                                iconSize: [20, 20]
+                            })
+                        }).addTo(map).bindPopup('<b>🔴 مفقود:</b> ' + (data.desc || '') + '<br><small>📍 ' + (data.city || '') + '</small>');
+                    }
+                });
+                
+                foundSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.lat && data.lng) {
+                        L.marker([data.lat, data.lng], {
+                            icon: L.divIcon({
+                                className: '',
+                                html: '<div style="background:#27ae60;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">F</div>',
+                                iconSize: [20, 20]
+                            })
+                        }).addTo(map).bindPopup('<b>✅ موجود:</b> ' + (data.desc || '') + '<br><small>📍 ' + (data.city || '') + '</small>');
+                    }
+                });
+            });
+        }
+        
+        // تشغيل
+        loadStats();
+        setTimeout(initMap, 500);
+    </script>
 </body>
 </html>
