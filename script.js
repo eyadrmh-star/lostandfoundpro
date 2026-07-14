@@ -930,6 +930,8 @@ async function saveLost() {
         if (isAdminFlag) {
             lostArray.push(newItem);
             await db.collection('lostItems').add(newItem);
+            // إرسال إشعار لجميع المستخدمين
+notifyAllUsers(`📦 بلاغ مفقود جديد: "${desc}" في مدينة ${city || 'غير محددة'}`);
             showToast(t('success'), t('reportSaved'));
         } else {
             await db.collection('pendingReports').add(newItem);
@@ -1018,6 +1020,8 @@ async function saveFound() {
         if (isAdminFlag) {
             foundArray.push(newItem);
             await db.collection('foundItems').add(newItem);
+            // إرسال إشعار لجميع المستخدمين
+            notifyAllUsers(`✅ بلاغ موجود جديد: "${desc}" في مدينة ${city || 'غير محددة'}`);
             showToast(t('success'), t('reportSaved'));
         } else {
             await db.collection('pendingReports').add(newItem);
@@ -4032,5 +4036,52 @@ async function sendMatchEmail(userEmail, userName, description, city, type) {
     } catch (error) {
         console.log('⚠️ خطأ في إرسال الإيميل:', error);
     }
+}
+// ========== نظام الإشعارات المتدرج ==========
+
+// إرسال إشعار لجميع المستخدمين
+async function notifyAllUsers(message) {
+    const db = firebase.firestore();
+    const usersSnap = await db.collection('users').where('approved', '==', true).get();
+    
+    usersSnap.forEach(async (doc) => {
+        await db.collection('notifications').add({
+            recipientId: doc.id,
+            msg: message,
+            type: 'new_report',
+            timestamp: new Date().toISOString(),
+            from: 'System',
+            read: false
+        });
+    });
+    
+    console.log('✅ تم إرسال إشعار لجميع المستخدمين');
+}
+
+// إرسال إشعار + إيميل لصاحب البلاغ عند التطابق
+async function notifyMatchOwner(userEmail, userName, description, city, type) {
+    const db = firebase.firestore();
+    
+    // 1. إشعار داخل التطبيق
+    const userSnap = await db.collection('users').where('email', '==', userEmail).get();
+    userSnap.forEach(async (doc) => {
+        await db.collection('notifications').add({
+            recipientId: doc.id,
+            msg: `🎯 تم العثور على تطابق مع بلاغك: "${description}" في مدينة ${city}`,
+            type: 'match',
+            timestamp: new Date().toISOString(),
+            from: 'System',
+            read: false,
+            reportDesc: description,
+            reportCity: city
+        });
+    });
+    
+    // 2. إرسال إيميل
+    if (userEmail && userEmail.includes('@')) {
+        await sendMatchEmail(userEmail, userName, description, city, type);
+    }
+    
+    console.log('✅ تم إرسال إشعار + إيميل لصاحب البلاغ');
 }
 console.log('✅ All fixes applied');
