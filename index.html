@@ -71,6 +71,21 @@
                 
                 <button id="loginBtn" class="btn-primary" data-t="login">🔑 Login</button>
                 <button id="adminLoginBtn" class="btn-purple" data-t="adminLogin">🔐 Admin Login</button>
+                <p class="register-link" style="margin-top:8px;">
+    <a href="#" id="showForgotPasswordBtn" style="color:#e74c3c;">🔑 نسيت كلمة المرور؟</a>
+</p>
+
+<div id="forgotPasswordForm" style="display:none; margin-top:15px; padding:15px; background:#fff5f5; border-radius:12px; border:1px solid #ffcccc;">
+    <p style="font-weight:bold; color:#c0392b;">📱 استعادة كلمة المرور عبر واتساب</p>
+    <input type="text" id="forgotEmail" class="modern-input" placeholder="أدخل إيميلك أو رقم هاتفك">
+    <button id="sendResetCodeBtn" class="btn-save" style="background:#25D366;">📤 إرسال كود التفعيل عبر واتساب</button>
+    
+    <div id="resetCodeSection" style="display:none; margin-top:10px;">
+        <input type="text" id="resetCode" class="modern-input" placeholder="أدخل الكود المكون من 6 أرقام" maxlength="6">
+        <input type="password" id="newPassword" class="modern-input" placeholder="كلمة مرور جديدة">
+        <button id="confirmResetBtn" class="btn-save">✅ تأكيد استعادة كلمة المرور</button>
+    </div>
+</div>
                 
                 <div class="divider"><span data-t="orContinue">or continue with</span></div>
                 
