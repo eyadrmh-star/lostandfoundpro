@@ -380,11 +380,25 @@ setTimeout(function() {
 })();
 </script>
 
-</body>
-
-<!-- مكان إعلان Google AdSense (سيتفعل بعد ربط الدومين) -->
-<div id="adBanner" style="max-width:728px;height:90px;margin:10px auto;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;text-align:center;padding:10px;">
-    📢 Your Ad Here - Contact us
+<!-- ========== صفحة من نحن ========== -->
+<div id="aboutPage" class="hidden">
+    <div class="top-nav">
+        <div class="nav-brand">ℹ️ About Us</div>
+        <div class="nav-actions"><button class="btn-sm" id="aboutBackBtn">← Back</button></div>
+    </div>
+    <div style="max-width:700px;margin:30px auto;padding:20px;background:white;border-radius:16px;box-shadow:0 2px 15px rgba(0,0,0,0.1);text-align:center;">
+        <h2>🌍 Lost & Found Pro</h2>
+        <p style="font-size:18px;color:#1a237e;margin:15px 0;">نظام عالمي للعثور على المفقودات</p>
+        <p>تأسس عام 2025 لمساعدة الناس في العثور على ما فقدوه أو إعادة ما وجدوه. نغطي جميع دول العالم مع خرائط تفاعلية وإشعارات فورية عند التطابق.</p>
+        <hr style="margin:20px 0;">
+        <h3>📞 Contact Us</h3>
+        <p>📱 WhatsApp: <b>+962775388520</b></p>
+        <p>📧 Email: <b>eyadrmh@system.com</b></p>
+        <p>💳 Orange Money: <b>+962775388520</b></p>
+        <p>👤 EYAD RAJAB MOHAMMAD AL HIAREY</p>
+        <br>
+        <button onclick="document.getElementById('aboutPage').classList.add('hidden');document.getElementById('dashboardPage').classList.remove('hidden');" style="padding:10px 30px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">Back to Dashboard</button>
+    </div>
 </div>
 
-</html>
+</body>
