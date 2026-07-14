@@ -3823,4 +3823,97 @@ document.getElementById('resendCodeBtn')?.addEventListener('click', function() {
     alert('📩 كود التفعيل الجديد: ' + generatedCode);
     showToast('تم إرسال كود جديد', 'info');
 });
+// ========== نظام استعادة كلمة المرور ==========
+let resetEmail = '';
+let resetCodeGenerated = '';
+
+// إظهار وإخفاء نموذج استعادة كلمة المرور
+document.getElementById('showForgotPasswordBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    let form = document.getElementById('forgotPasswordForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+
+// إرسال كود التفعيل عبر واتساب
+document.getElementById('sendResetCodeBtn')?.addEventListener('click', async function() {
+    resetEmail = document.getElementById('forgotEmail').value.trim();
+    
+    if (!resetEmail) {
+        showToast('الرجاء إدخال الإيميل أو رقم الهاتف', 'error');
+        return;
+    }
+    
+    // التحقق من وجود المستخدم
+    const db = firebase.firestore();
+    const isEmail = resetEmail.includes('@');
+    let query = isEmail ? 
+        db.collection('users').where('email', '==', resetEmail) : 
+        db.collection('users').where('phone', '==', resetEmail);
+    
+    const snap = await query.get();
+    
+    if (snap.empty) {
+        showToast('❌ هذا الحساب غير موجود', 'error');
+        return;
+    }
+    
+    // توليد كود عشوائي
+    resetCodeGenerated = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // إنشاء رابط واتساب
+    let phoneNumber = '962775388520'; // رقم واتساب الأدمن
+    let message = encodeURIComponent('🔑 كود استعادة كلمة المرور: ' + resetCodeGenerated + '\n\nللحساب: ' + resetEmail + '\n\nإذا لم تطلب هذا، تجاهل الرسالة.');
+    let whatsappLink = 'https://wa.me/' + phoneNumber + '?text=' + message;
+    
+    // فتح واتساب
+    window.open(whatsappLink, '_blank');
+    
+    // إظهار الكود في تنبيه أيضاً
+    alert('📱 كود استعادة كلمة المرور: ' + resetCodeGenerated + '\n\nتم فتح واتساب لإرسال الكود.\nإذا لم يفتح، استخدم الكود الظاهر هنا.');
+    
+    document.getElementById('resetCodeSection').style.display = 'block';
+    showToast('تم إرسال الكود عبر واتساب', 'info');
+});
+
+// تأكيد استعادة كلمة المرور
+document.getElementById('confirmResetBtn')?.addEventListener('click', async function() {
+    let enteredCode = document.getElementById('resetCode').value.trim();
+    let newPassword = document.getElementById('newPassword').value;
+    
+    if (enteredCode !== resetCodeGenerated) {
+        showToast('❌ الكود غير صحيح', 'error');
+        return;
+    }
+    
+    if (!newPassword || newPassword.length < 6) {
+        showToast('كلمة المرور الجديدة قصيرة جداً (6 أحرف على الأقل)', 'error');
+        return;
+    }
+    
+    // تحديث كلمة المرور في Firestore
+    const db = firebase.firestore();
+    const isEmail = resetEmail.includes('@');
+    let query = isEmail ? 
+        db.collection('users').where('email', '==', resetEmail) : 
+        db.collection('users').where('phone', '==', resetEmail);
+    
+    const snap = await query.get();
+    
+    if (!snap.empty) {
+        snap.forEach(async function(doc) {
+            await db.collection('users').doc(doc.id).update({
+                password: newPassword
+            });
+        });
+        
+        showAlert('✅ نجاح', 'تم تغيير كلمة المرور بنجاح!\nيمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.');
+        
+        // إخفاء النموذج وتنظيف الحقول
+        document.getElementById('forgotPasswordForm').style.display = 'none';
+        document.getElementById('resetCodeSection').style.display = 'none';
+        document.getElementById('forgotEmail').value = '';
+        document.getElementById('resetCode').value = '';
+        document.getElementById('newPassword').value = '';
+    }
+});
 console.log('✅ All fixes applied');
