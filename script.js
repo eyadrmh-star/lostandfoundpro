@@ -24,6 +24,23 @@ let selectedCategory = 'other';
 let reportViews = {};
 let adminNotifications = {};
 let pendingOrganizations = [];
+// ========== فحص مدة الوسائط ==========
+function getMediaDuration(file) {
+    return new Promise((resolve) => {
+        if (!file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
+            resolve(0);
+            return;
+        }
+        let media = document.createElement(file.type.startsWith('video/') ? 'video' : 'audio');
+        media.preload = 'metadata';
+        media.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(media.src);
+            resolve(media.duration);
+        };
+        media.onerror = () => resolve(0);
+        media.src = URL.createObjectURL(file);
+    });
+}
 // ========== تشفير كلمات المرور ==========
 const ENCRYPTION_KEY = "L&F_Secure_Key_2025_X7k9";
 
@@ -923,7 +940,24 @@ async function saveLost() {
         };
         
         let images = [], files = document.getElementById('lostImages').files;
-        if (files && files.length > 0) images = await compressImages(files);
+if (files && files.length > 0) {
+    for (let file of files) {
+        if (file.type.startsWith('video/')) {
+            let duration = await getMediaDuration(file);
+            if (duration > 120) {
+                showToast(`⚠️ Video "${file.name}" is longer than 2 minutes. It will not be uploaded.`, 'error');
+                return;
+            }
+        } else if (file.type.startsWith('audio/')) {
+            let duration = await getMediaDuration(file);
+            if (duration > 180) {
+                showToast(`⚠️ Audio "${file.name}" is longer than 3 minutes. It will not be uploaded.`, 'error');
+                return;
+            }
+        }
+    }
+    images = await compressImages(files);
+}
         
         let reward = { money: false, moneyAmount: null };
         let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[0];
@@ -1013,7 +1047,24 @@ async function saveFound() {
         };
         
         let images = [], files = document.getElementById('foundImages').files;
-        if (files && files.length > 0) images = await compressImages(files);
+if (files && files.length > 0) {
+    for (let file of files) {
+        if (file.type.startsWith('video/')) {
+            let duration = await getMediaDuration(file);
+            if (duration > 120) {
+                showToast(`⚠️ Video "${file.name}" is longer than 2 minutes. It will not be uploaded.`, 'error');
+                return;
+            }
+        } else if (file.type.startsWith('audio/')) {
+            let duration = await getMediaDuration(file);
+            if (duration > 180) {
+                showToast(`⚠️ Audio "${file.name}" is longer than 3 minutes. It will not be uploaded.`, 'error');
+                return;
+            }
+        }
+    }
+    images = await compressImages(files);
+}
         
         let reward = { money: false, moneyAmount: null };
         let moneyCheck = document.querySelectorAll('.rewardMoneyCheck')[1];
