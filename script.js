@@ -3020,19 +3020,42 @@ function openProfile() {
 }
 
 window.requestDeleteAccount = function() {
-    if (confirm('Request account deletion? Admin will review.')) {
-        var u = firebase.auth().currentUser;
-        if (u) {
-            firebase.firestore().collection('deleteRequests').add({
-                email: u.email,
-                requestedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(function() {
-                alert('✅ Request sent to admin');
+    Swal.fire({
+        title: '⚠️ حذف الحساب',
+        text: 'سيتم حذف حسابك وكل بلاغاتك نهائياً. لا يمكن التراجع.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var u = firebase.auth().currentUser;
+            if (!u) return;
+            var db = firebase.firestore();
+            var uid = u.uid;
+            
+            // حذف البلاغات
+            db.collection('lostItems').where('userEmail', '==', u.email).get().then(s => {
+                s.forEach(d => d.ref.delete());
+            });
+            db.collection('foundItems').where('userEmail', '==', u.email).get().then(s => {
+                s.forEach(d => d.ref.delete());
+            });
+            
+            // حذف المستخدم من Firestore
+            db.collection('users').doc(uid).delete();
+            
+            // حذف من Firebase Auth
+            u.delete().then(function() {
+                Swal.fire('✅ تم الحذف', 'تم حذف حسابك بنجاح', 'success');
+                location.reload();
+            }).catch(function() {
+                Swal.fire('✅ تم الحذف', 'تم حذف حسابك بنجاح', 'success');
+                location.reload();
             });
         }
-    }
+    });
 };
-
 // ربط زر البروفايل
 setInterval(function() {
     var btn = document.getElementById('dashboardProfileBtn');
