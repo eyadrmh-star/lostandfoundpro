@@ -32,10 +32,16 @@ function encryptPassword(password) {
 }
 
 function decryptPassword(encryptedPassword) {
-    const bytes = CryptoJS.AES.decrypt(encryptedPassword, ENCRYPTION_KEY);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    if (!encryptedPassword) return '';
+    if (!encryptedPassword.startsWith('U2F')) return encryptedPassword;
+    try {
+        const bytes = CryptoJS.AES.decrypt(encryptedPassword, ENCRYPTION_KEY);
+        const result = bytes.toString(CryptoJS.enc.Utf8);
+        return result || encryptedPassword;
+    } catch(e) {
+        return encryptedPassword;
+    }
 }
-
 // ========== البيانات العالمية للدول والمدن ==========
 const geoData = [
     {name:"Afghanistan", code:"+93", cities:["Kabul","Kandahar","Herat","Mazar-i-Sharif","Jalalabad","Kunduz","Ghazni","Balkh","Baghlan","Farah"]},
