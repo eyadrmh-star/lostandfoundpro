@@ -2687,13 +2687,22 @@ setTimeout(function() {
         }).addTo(dashboardMap);
     }
 }, 2000);
-// ========== تحميل Lost & Found من Firestore للداشبورد ==========
-function loadDashboardItems() {
+// ========== تحميل Lost & Found من Firestore للداشبورد مع Pagination ==========
+let lastLostDoc = null, lastFoundDoc = null;
+const PAGE_SIZE = 20;
+
+function loadDashboardItems(loadMore = false) {
     var db = firebase.firestore();
     
-    // تحميل Lost Items
-    db.collection('lostItems').get().then(function(s) {
-        lostArray = [];
+    let lostQuery = db.collection('lostItems').orderBy('timestamp', 'desc').limit(PAGE_SIZE);
+    let foundQuery = db.collection('foundItems').orderBy('timestamp', 'desc').limit(PAGE_SIZE);
+    
+    if (loadMore && lastLostDoc) lostQuery = lostQuery.startAfter(lastLostDoc);
+    if (loadMore && lastFoundDoc) foundQuery = foundQuery.startAfter(lastFoundDoc);
+    
+    lostQuery.get().then(function(s) {
+        if (!loadMore) lostArray = [];
+        if (!s.empty) lastLostDoc = s.docs[s.docs.length - 1];
         s.forEach(function(d) {
             var data = d.data();
             data.images = data.image ? [data.image] : [];
@@ -2703,9 +2712,9 @@ function loadDashboardItems() {
         if (typeof renderDashboardData === 'function') renderDashboardData();
     });
     
-    // تحميل Found Items
-    db.collection('foundItems').get().then(function(s) {
-        foundArray = [];
+    foundQuery.get().then(function(s) {
+        if (!loadMore) foundArray = [];
+        if (!s.empty) lastFoundDoc = s.docs[s.docs.length - 1];
         s.forEach(function(d) {
             var data = d.data();
             data.images = data.image ? [data.image] : [];
@@ -2716,9 +2725,13 @@ function loadDashboardItems() {
     });
 }
 
-// تحميل عند الدخول
 loadDashboardItems();
 
+window.addEventListener('scroll', function() {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+        loadDashboardItems(true);
+    }
+});
 // ربط showMatches مع renderDashboardData
 var originalRender = renderDashboardData;
 renderDashboardData = function() {
