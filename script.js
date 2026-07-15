@@ -895,7 +895,36 @@ function initFoundMap() { if (foundSelectMap) return; foundSelectMap = L.map('fo
 // ========== تعبئة الدول والمدن ==========
 function fillPhoneCodes() { document.querySelectorAll('.phone-code').forEach(sel => { sel.innerHTML = '<option value="">--</option>'; geoData.forEach(c => sel.add(new Option(c.name + ' (' + c.code + ')', c.code))); }); }
 function initCountries() { document.querySelectorAll('.country-select').forEach(sel => { geoData.forEach(c => sel.add(new Option(c.name, c.name))); }); function fillCities(sc, tc) { let country = sc.value; let cities = geoData.find(c => c.name === country)?.cities || []; let cs = document.getElementById(tc); if (cs) { cs.innerHTML = '<option value="">-- Select City --</option>'; cities.forEach(c => cs.add(new Option(c, c))); } } let lc = document.getElementById('lostCountry'), fc = document.getElementById('foundCountry'); if (lc) { lc.onchange = () => fillCities(lc, 'lostCity'); fillCities(lc, 'lostCity'); } if (fc) { fc.onchange = () => fillCities(fc, 'foundCity'); fillCities(fc, 'foundCity'); } fillPhoneCodes(); }
-function setupImagePreview(inputId, previewId) { let input = document.getElementById(inputId), preview = document.getElementById(previewId); if (!input) return; input.onchange = () => { preview.innerHTML = ''; Array.from(input.files).slice(0, 5).forEach(file => { let r = new FileReader(); r.onload = e => { let img = document.createElement('img'); img.src = e.target.result; preview.appendChild(img); }; r.readAsDataURL(file); }); }; }
+function setupImagePreview(inputId, previewId) {
+    let input = document.getElementById(inputId), preview = document.getElementById(previewId);
+    if (!input) return;
+    input.onchange = () => {
+        preview.innerHTML = '';
+        Array.from(input.files).slice(0, 5).forEach(file => {
+            if (file.type.startsWith('video/')) {
+                let video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                video.style.cssText = 'max-width:100%; max-height:200px; border-radius:8px; margin:5px;';
+                preview.appendChild(video);
+            } else if (file.type.startsWith('audio/')) {
+                let audio = document.createElement('audio');
+                audio.src = URL.createObjectURL(file);
+                audio.controls = true;
+                audio.style.cssText = 'width:100%; margin:5px;';
+                preview.appendChild(audio);
+            } else {
+                let r = new FileReader();
+                r.onload = e => {
+                    let img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                r.readAsDataURL(file);
+            }
+        });
+    };
+}
 // ========== حفظ البلاغات ==========
 async function saveLost() {
     try {
