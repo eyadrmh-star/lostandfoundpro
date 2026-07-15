@@ -939,9 +939,14 @@ async function saveLost() {
             record: document.querySelector('#lostSection .notifyRecord')?.checked || false
         };
         
-        let images = [], files = document.getElementById('lostImages').files;
+        let images = [], files = document.getElementById('foundImages').files;
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 if (files && files.length > 0) {
     for (let file of files) {
+        if (file.size > MAX_SIZE) {
+            showToast(`⚠️ File "${file.name}" is too large (max 50MB).`, 'error');
+            return;
+        }
         if (file.type.startsWith('video/')) {
             let duration = await getMediaDuration(file);
             if (duration > 120) {
@@ -1047,8 +1052,13 @@ async function saveFound() {
         };
         
         let images = [], files = document.getElementById('foundImages').files;
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 if (files && files.length > 0) {
     for (let file of files) {
+        if (file.size > MAX_SIZE) {
+            showToast(`⚠️ File "${file.name}" is too large (max 50MB).`, 'error');
+            return;
+        }
         if (file.type.startsWith('video/')) {
             let duration = await getMediaDuration(file);
             if (duration > 120) {
