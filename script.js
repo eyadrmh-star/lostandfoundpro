@@ -3781,7 +3781,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // دالة إضافة إشعار
 async function addNotification(msg, type) {
     if (!currentUser) return;
-    let userId = currentUser.id;
+    let userId = currentUser.email || currentUser.phone || currentUser.id;
     try {
         await db.collection('notifications').add({
             recipientId: userId,
@@ -3865,7 +3865,7 @@ async function loadNotifsToPage() {
     if (!c || !currentUser) return;
     
     const snap = await db.collection('notifications')
-        .where('recipientId', '==', currentUser.id)
+        .where('recipientId', '==', currentUser.email || currentUser.phone || currentUser.id)
         .limit(50).get();
     
     let notifs = [];
