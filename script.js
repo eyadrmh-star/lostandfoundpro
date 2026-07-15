@@ -2688,8 +2688,11 @@ renderDashboardData = function() {
         showMatches();
     }, 500);
 };
-// تحديث كل دقيقة
-setInterval(loadDashboardItems, 60000);
+// تحديث الخريطة والإحصائيات كل دقيقة
+setInterval(function() {
+    if (typeof updateDashboardMap === 'function') updateDashboardMap();
+    if (typeof updateStats === 'function') updateStats();
+}, 60000);
 // ========== بطاقة Matches الذكية ==========
 function showMatches(filterType) {
     var container = document.getElementById('dashMatches');
