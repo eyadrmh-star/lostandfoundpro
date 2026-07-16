@@ -1413,7 +1413,16 @@ async function loginUser(credential, pwd, isAdminLogin = false) {
         dashboardPage.classList.remove('hidden');
     }
     
-    console.log('✅ دخول ناجح:', user.email, '| Admin:', isAdmin);
+        console.log('✅ دخول ناجح:', user.email, '| Admin:', isAdmin);
+    // عرض الاسم في الناف بار
+    setTimeout(function() {
+      var el = document.getElementById('dashboardUserName');
+      if (el && currentUser) {
+        el.textContent = '🤵 ' + (currentUser.name || currentUser.email);
+        el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
+        console.log('✅ تم عرض الاسم:', currentUser.name);
+      }
+    }, 1000);
     return true;
 }
 // ربط أزرار تسجيل الدخول
@@ -4230,37 +4239,4 @@ async function notifyMatchOwner(userEmail, userName, description, city, type) {
     
     console.log('✅ تم إرسال إشعار + إيميل لصاحب البلاغ');
 }
-// عرض اسم المستخدم في Dashboard - حل مباشر
-function showUserName() {
-  var email = null;
-  var user = firebase.auth().currentUser;
-  if (user && user.email) {
-    email = user.email;
-  } else {
-    email = localStorage.getItem('loggedInEmail');
-  }
-  
-  if (!email) return;
-  
-  firebase.firestore().collection('users').where('email', '==', email).get()
-    .then(function(snap) {
-      if (!snap.empty) {
-        snap.forEach(function(doc) {
-          var el = document.getElementById('dashboardUserName');
-          if (el) {
-            el.textContent = '🤵 ' + doc.data().name;
-            el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
-          }
-        });
-      }
-    });
-}
-
-var observer = new MutationObserver(function() {
-  var dash = document.getElementById('dashboardPage');
-  if (dash && !dash.classList.contains('hidden')) {
-    showUserName();
-  }
-});
-observer.observe(document.body, { childList: true, subtree: true });
 console.log('✅ All fixes applied');
