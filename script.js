@@ -4345,4 +4345,79 @@ async function notifyMatchOwner(userEmail, userName, description, city, type) {
     
     console.log('✅ تم إرسال إشعار + إيميل لصاحب البلاغ');
 }
+// ========== القائمة السفلية للموبايل ==========
+function navigateTo(page) {
+    // إخفاء كل الصفحات
+    var pages = ['loginPage', 'dashboardPage', 'mainApp', 'notificationsPage', 'profilePage', 'adminPanel'];
+    pages.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+        }
+    });
+    
+    // إظهار الصفحة المطلوبة
+    if (page === 'dashboard') {
+        var dash = document.getElementById('dashboardPage');
+        if (dash) {
+            dash.classList.remove('hidden');
+            dash.style.display = 'block';
+        }
+    } else if (page === 'addReport') {
+        var app = document.getElementById('mainApp');
+        if (app) {
+            app.classList.remove('hidden');
+            app.style.display = 'block';
+        }
+    } else if (page === 'profile') {
+        var prof = document.getElementById('profilePage');
+        if (prof) {
+            prof.classList.remove('hidden');
+            prof.style.display = 'block';
+            if (typeof openProfile === 'function') openProfile();
+        }
+    }
+    
+    // تحديث الأيقونة النشطة
+    document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(function(item) {
+        item.classList.remove('active');
+    });
+    var activeItem = document.querySelector('.mobile-bottom-nav [data-page="' + page + '"]');
+    if (activeItem) activeItem.classList.add('active');
+    
+    // إخفاء القائمة في صفحة تسجيل الدخول
+    var mobileNav = document.getElementById('mobileNav');
+    if (mobileNav) {
+        if (page === 'login') {
+            mobileNav.style.display = 'none';
+        } else {
+            mobileNav.style.display = 'block';
+        }
+    }
+}
+
+// إخفاء القائمة في صفحة تسجيل الدخول
+(function() {
+    var mobileNav = document.getElementById('mobileNav');
+    if (mobileNav) {
+        // إخفاء في البداية
+        mobileNav.style.display = 'none';
+        
+        // مراقبة ظهور Dashboard
+        var observer = new MutationObserver(function() {
+            var loginPage = document.getElementById('loginPage');
+            if (loginPage && !loginPage.classList.contains('hidden')) {
+                mobileNav.style.display = 'none';
+            } else {
+                mobileNav.style.display = 'block';
+            }
+        });
+        
+        var loginPage = document.getElementById('loginPage');
+        if (loginPage) {
+            observer.observe(loginPage, { attributes: true, attributeFilter: ['class'] });
+        }
+    }
+})();
 console.log('✅ All fixes applied');
