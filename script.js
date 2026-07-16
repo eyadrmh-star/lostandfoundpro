@@ -4230,38 +4230,37 @@ async function notifyMatchOwner(userEmail, userName, description, city, type) {
     
     console.log('✅ تم إرسال إشعار + إيميل لصاحب البلاغ');
 }
-// عرض اسم المستخدم في Dashboard
-function updateDashboardUserName(user) {
-  if (!user) return;
+// عرض اسم المستخدم في Dashboard - حل مباشر
+function showUserName() {
+  var email = null;
+  var user = firebase.auth().currentUser;
+  if (user && user.email) {
+    email = user.email;
+  } else {
+    email = localStorage.getItem('loggedInEmail');
+  }
   
-  firebase.firestore().collection('users').doc(user.uid).get()
-    .then(function(doc) {
-      var name = 'مستخدم';
-      if (doc.exists && doc.data().name) {
-        name = doc.data().name;
-      } else if (user.displayName) {
-        name = user.displayName;
-      }
-      
-      var el = document.getElementById('dashboardUserName');
-      if (el) {
-        el.textContent = '🤵 ' + name;
-        el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
-      }
-    })
-    .catch(function() {
-      var el = document.getElementById('dashboardUserName');
-      if (el) {
-        el.textContent = '🤵 ' + (user.displayName || user.email);
-        el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
+  if (!email) return;
+  
+  firebase.firestore().collection('users').where('email', '==', email).get()
+    .then(function(snap) {
+      if (!snap.empty) {
+        snap.forEach(function(doc) {
+          var el = document.getElementById('dashboardUserName');
+          if (el) {
+            el.textContent = '🤵 ' + doc.data().name;
+            el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
+          }
+        });
       }
     });
 }
 
-// استدعاء الدالة عند تغير حالة المستخدم
-firebase.auth().onAuthStateChanged(function(user) {
-  if (user) {
-    updateDashboardUserName(user);
+var observer = new MutationObserver(function() {
+  var dash = document.getElementById('dashboardPage');
+  if (dash && !dash.classList.contains('hidden')) {
+    showUserName();
   }
 });
+observer.observe(document.body, { childList: true, subtree: true });
 console.log('✅ All fixes applied');
