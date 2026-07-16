@@ -1443,43 +1443,102 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 function logoutAdmin() {
+    // إخفاء كل الصفحات فوراً
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('dashboardPage').style.display = 'none';
+    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('mainApp').style.display = 'none';
+    
+    // إظهار صفحة تسجيل الدخول
+    var loginPage = document.getElementById('loginPage');
+    loginPage.style.display = 'flex';
+    loginPage.style.flexDirection = 'row-reverse';
+    loginPage.classList.remove('hidden');
+    loginPage.style.visibility = 'visible';
+    loginPage.style.opacity = '1';
+    
+    // ضبط تنسيق الخريطة والفورم
+    var hero = document.querySelector('.login-hero');
+    var loginContainer = document.querySelector('.login-container');
+    if (hero && loginContainer) {
+        hero.style.flex = '1';
+        hero.style.display = 'block';
+        loginContainer.style.flex = '1';
+        loginContainer.style.display = 'flex';
+        loginContainer.style.overflowY = 'auto';
+    }
+    
+    // إرجاع الخريطة للأردن
+    setTimeout(function() {
+        if (typeof publicMap !== 'undefined' && publicMap) {
+            publicMap.setView([31.95, 35.91], 7);
+            setTimeout(function() {
+                publicMap.invalidateSize();
+            }, 300);
+        }
+    }, 500);
+    
+    // تسجيل الخروج
     firebase.auth().signOut().then(function() {
         isAdmin = false;
         currentUser = null;
-        document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('loginPage').classList.remove('hidden');
-        document.getElementById('loginPage').style.display = 'block';
         showToast(t('logout'));
     }).catch(function() {
         isAdmin = false;
         currentUser = null;
-        document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('loginPage').classList.remove('hidden');
-        document.getElementById('loginPage').style.display = 'block';
         showToast(t('logout'));
     });
 }
 
 function logoutUser() {
+    // إخفاء كل الصفحات فوراً
+    document.getElementById('dashboardPage').style.display = 'none';
+    document.getElementById('dashboardPage').classList.add('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('adminPanel').style.display = 'none';
+    
+    // إظهار صفحة تسجيل الدخول
+    var loginPage = document.getElementById('loginPage');
+    loginPage.style.display = 'flex';
+    loginPage.style.flexDirection = 'row-reverse';
+    loginPage.classList.remove('hidden');
+    loginPage.style.visibility = 'visible';
+    loginPage.style.opacity = '1';
+    
+    // ضبط تنسيق الخريطة والفورم
+    var hero = document.querySelector('.login-hero');
+    var loginContainer = document.querySelector('.login-container');
+    if (hero && loginContainer) {
+        hero.style.flex = '1';
+        hero.style.display = 'block';
+        loginContainer.style.flex = '1';
+        loginContainer.style.display = 'flex';
+        loginContainer.style.overflowY = 'auto';
+    }
+    
+    // إرجاع الخريطة للأردن
+    setTimeout(function() {
+        if (typeof publicMap !== 'undefined' && publicMap) {
+            publicMap.setView([31.95, 35.91], 7);
+            setTimeout(function() {
+                publicMap.invalidateSize();
+            }, 300);
+        }
+    }, 500);
+    
+    // تسجيل الخروج
     firebase.auth().signOut().then(function() {
         currentUser = null;
-        document.getElementById('dashboardPage').classList.add('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('loginPage').classList.remove('hidden');
-        document.getElementById('loginPage').style.display = 'block';
         showToast(t('logout'));
     }).catch(function() {
         currentUser = null;
-        document.getElementById('dashboardPage').classList.add('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('loginPage').classList.remove('hidden');
-        document.getElementById('loginPage').style.display = 'block';
         showToast(t('logout'));
     });
 }
-
 function showRegisterForm() {
     document.getElementById('registerForm').style.display = 'block';
     document.getElementById('orgRegisterForm').style.display = 'none';
