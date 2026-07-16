@@ -4137,27 +4137,43 @@ document.getElementById('submitRegisterBtn')?.addEventListener('click', function
         return;
     }
     
-    generatedCode = generateVerificationCode();
-    pendingVerificationEmail = email;
-    
-    sessionStorage.setItem('regName', name);
-    sessionStorage.setItem('regEmail', email);
-    sessionStorage.setItem('regPwd', pwd);
-    sessionStorage.setItem('regCode', generatedCode);
-    
-    // إرسال الكود عبر EmailJS
-    emailjs.send("service_dv4y1vo", "template_67rp9la", {
-        to_email: email,
-        name: name,
-        code: generatedCode
-    }).then(function() {
-        showToast('📩 تم إرسال كود التفعيل إلى إيميلك', 'success');
-    }).catch(function() {
-        showToast('📩 كود التفعيل: ' + generatedCode, 'info');
+    // فحص إذا المستخدم موجود مسبقاً في pendingUsers
+    db.collection('pendingUsers').where('email', '==', email).get().then(function(snap) {
+        if (!snap.empty) {
+            showToast('⚠️ أنت مسجل مسبقاً! طلبك قيد المراجعة.', 'error');
+            return;
+        }
+        
+        // فحص إذا المستخدم موجود مسبقاً في users
+        db.collection('users').where('email', '==', email).get().then(function(snap2) {
+            if (!snap2.empty) {
+                showToast('⚠️ لديك حساب بالفعل! سجل دخولك.', 'error');
+                return;
+            }
+            
+            // متابعة التسجيل الطبيعي
+            generatedCode = generateVerificationCode();
+            pendingVerificationEmail = email;
+            
+            sessionStorage.setItem('regName', name);
+            sessionStorage.setItem('regEmail', email);
+            sessionStorage.setItem('regPwd', pwd);
+            sessionStorage.setItem('regCode', generatedCode);
+            
+            emailjs.send("service_dv4y1vo", "template_67rp9la", {
+                to_email: email,
+                name: name,
+                code: generatedCode
+            }).then(function() {
+                showToast('📩 تم إرسال كود التفعيل إلى إيميلك', 'success');
+            }).catch(function() {
+                showToast('📩 كود التفعيل: ' + generatedCode, 'info');
+            });
+            
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('verificationSection').style.display = 'block';
+        });
     });
-    
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('verificationSection').style.display = 'block';
 });
 
 document.getElementById('verifyCodeBtn')?.addEventListener('click', function() {
