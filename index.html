@@ -427,5 +427,21 @@ setTimeout(function() {
         <button onclick="document.getElementById('aboutPage').classList.add('hidden');document.getElementById('dashboardPage').classList.remove('hidden');" style="padding:10px 30px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">Back to Dashboard</button>
     </div>
 </div>
-
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      firebase.firestore().collection('users').doc(user.uid).get().then(function(doc) {
+        var el = document.getElementById('dashboardUserName');
+        if (el && doc.exists && doc.data().name) {
+          el.textContent = '🤵 ' + doc.data().name;
+          el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
+        }
+      }).catch(function(err) {
+        console.log('خطأ:', err);
+      });
+    }
+  });
+});
+</script>
 </body>
