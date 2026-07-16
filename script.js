@@ -4420,4 +4420,21 @@ function navigateTo(page) {
         }
     }
 })();
+// ========== إضافة القائمة السفلية تلقائياً ==========
+(function() {
+  if (window.innerWidth > 768) return;
+  
+  var navHTML = '<div class="mobile-bottom-nav" id="mobileNav" style="display:block; position:fixed; bottom:0; left:0; right:0; background:#1a237e; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2);">' +
+    '<div style="display:flex; justify-content:space-around; padding:8px 0;">' +
+    '<div onclick="navigateTo(\'dashboard\')" style="color:#ffd700; text-align:center; cursor:pointer;">' +
+    '<div style="font-size:22px;">🏠</div><div style="font-size:11px;">Home</div></div>' +
+    '<div onclick="navigateTo(\'addReport\')" style="color:white; text-align:center; cursor:pointer;">' +
+    '<div style="font-size:22px;">➕</div><div style="font-size:11px;">Add</div></div>' +
+    '<div onclick="navigateTo(\'profile\')" style="color:white; text-align:center; cursor:pointer;">' +
+    '<div style="font-size:22px;">👤</div><div style="font-size:11px;">Profile</div></div>' +
+    '</div></div>';
+  
+  document.body.insertAdjacentHTML('beforeend', navHTML);
+  document.body.style.paddingBottom = '70px';
+})();
 console.log('✅ All fixes applied');
