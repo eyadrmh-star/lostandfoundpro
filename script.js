@@ -1739,7 +1739,54 @@ window.refreshAdminPanel = async function() {
         <span style="color:#999;cursor:pointer;margin:0 8px;">closeAd</span>
     </div>`;
 
-    window.approveUser = async (id) => { const db=firebase.firestore(); const docRef=db.collection('pendingUsers').doc(id); const doc=await docRef.get(); if(doc.exists){ const data=doc.data(); data.approved=true; await db.collection('users').add(data); await docRef.delete(); alert('✅ Approved'); location.reload(); } };
+    window.approveUser = async (id) => {
+    const db = firebase.firestore();
+    const docRef = db.collection('pendingUsers').doc(id);
+    const doc = await docRef.get();
+    
+    if (doc.exists) {
+        const data = doc.data();
+        const userName = data.name || 'مستخدم';
+        const userEmail = data.email || '';
+        const userPhone = data.phone || '';
+        
+        data.approved = true;
+        await db.collection('users').add(data);
+        await docRef.delete();
+        
+        // 1. 🔔 إشعار داخل التطبيق
+        await db.collection('notifications').add({
+            recipientId: userEmail || userPhone,
+            msg: '🎉 مرحباً ' + userName + '! تم قبول طلب تسجيلك في Lost & Found Pro. يمكنك الآن استخدام التطبيق بكامل الميزات.\n\nWelcome ' + userName + '! Your registration has been approved.',
+            type: 'approved',
+            timestamp: new Date().toISOString(),
+            from: 'System',
+            read: false
+        });
+        
+        // 2. 📧 إيميل ترحيبي
+        if (userEmail && userEmail.includes('@')) {
+            emailjs.send("service_dv4y1vo", "template_gj5th5f", {
+                to_email: userEmail,
+                name: userName,
+                description: '🎉 مرحباً ' + userName + '!\n\nتم قبول طلب تسجيلك بنجاح! يمكنك الآن:\n📝 الإبلاغ عن المفقودات\n✅ الإبلاغ عن الموجودات\n🎯 التطابق التلقائي\n🗺️ الخريطة المباشرة\n\nWelcome! Your registration is approved.\n\n🌍 Lost & Found Pro',
+                city: 'Lost & Found Pro',
+                type: 'تسجيل',
+                reply_email: 'eyadrmh@gmail.com'
+            }).catch(function() {});
+        }
+        
+        // 3. 📱 واتساب
+        if (userPhone) {
+            var msg = '🎉 مرحباً ' + userName + '! تم قبول طلبك في Lost & Found Pro. أهلاً بك معنا! 🌍\n\nWelcome ' + userName + '! Your registration is approved.';
+            var link = 'https://wa.me/' + userPhone + '?text=' + encodeURIComponent(msg);
+            window.open(link, '_blank');
+        }
+        
+        alert('✅ Approved - Notification + Email + WhatsApp sent!');
+        location.reload();
+    }
+};
     window.rejectUser = async (id) => { const db=firebase.firestore(); await db.collection('pendingUsers').doc(id).delete(); alert('❌ Rejected'); location.reload(); };
     window.banUserFirestore = async (email) => { const db=firebase.firestore(); const snap=await db.collection('users').where('email','==',email).get(); if(!snap.empty){ const doc=snap.docs[0]; const data=doc.data(); await doc.ref.update({banned:!data.banned}); alert(data.banned?'✅ Unbanned':'🚫 Banned'); location.reload(); } };
     window.deleteUserFirestore = async (email) => { if(!confirm('Delete '+email+'?'))return; const db=firebase.firestore(); const snap=await db.collection('users').where('email','==',email).get(); for(const doc of snap.docs) await doc.ref.delete(); alert('✅ Deleted'); location.reload(); };
