@@ -318,35 +318,51 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // firebase-auth.js - Google Sign-In
-    async function firebaseGoogleLogin() {
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithRedirect(provider);
-      } catch (error) {
-        console.error("Google login error:", error.message);
-      }
-    }
-
-    auth.getRedirectResult().then(function(result) {
-      if (result.user) {
-        db.collection("users").doc(result.user.uid).set({
-          name: result.user.displayName || result.user.email,
-          email: result.user.email,
-          role: "user",
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
+    <script>
+// firebase-auth.js - Google Sign-In
+async function firebaseGoogleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  
+  if (window.innerWidth <= 768) {
+    // موبايل - popup
+    auth.signInWithPopup(provider).then(function(result) {
+      console.log('✅ Google login:', result.user.email);
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboardPage').classList.remove('hidden');
+      document.getElementById('dashboardPage').style.display = 'block';
     }).catch(function(error) {
-      console.error("Redirect error:", error.message);
+      console.error('❌', error.message);
     });
+  } else {
+    // كمبيوتر - redirect
+    auth.signInWithRedirect(provider);
+  }
+}
 
-// إضافة المستخدم للـ Firebase (بدون توجيه تلقائي)
+auth.getRedirectResult().then(function(result) {
+  if (result.user) {
+    db.collection("users").doc(result.user.uid).set({
+      name: result.user.displayName || result.user.email,
+      email: result.user.email,
+      role: "user",
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(function() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboardPage').classList.remove('hidden');
+      document.getElementById('dashboardPage').style.display = 'block';
+    });
+  }
+}).catch(function(error) {
+  console.error("Redirect error:", error.message);
+});
+
+// إضافة المستخدم للـ Firebase
 auth.onAuthStateChanged(function(user) {
-  // لا توجيه تلقائي - المستخدم يتحكم بالتنقل عبر الأزرار
   console.log('👤 حالة المستخدم:', user ? 'مسجل' : 'غير مسجل');
   
-  // تحديث currentUser إذا كان هناك مستخدم مسجل
   if (user) {
     db.collection('users').doc(user.uid).set({
       name: user.displayName || user.email,
