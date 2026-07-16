@@ -234,7 +234,7 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
                 <div class="phone-row"><select id="lostPhoneCode2" class="modern-select phone-code"></select><input id="lostPhone2" class="modern-input" data-t="phone2" placeholder="Phone 2"></div>
                 <input type="hidden" id="lostLat"><input type="hidden" id="lostLng">
                 <div class="map-row"><div id="lostSelectMap" class="mini-map"></div><button id="lostCurrentLocationBtn" class="loc-btn" data-t="currentLocation">📍</button></div>
-                <div class="btn-row"><button id="saveLostBtn" class="btn-save" data-t="save">💾 Save</button><button id="resetLostBtn" class="btn-reset" data-t="clearAll">🗑️ Clear All</button><button id="shareLostBtn" class="btn-share" data-t="share">📤 Share</button></div>
+                <div class="btn-row"><button id="saveLostBtn" class="btn-save" data-t="save">💾 Save</button></div>
                 <input type="text" id="searchLost" class="modern-input" data-t="searchLost" placeholder="Search lost items..."><div id="lostItemsList"></div>
             </div>
             <div class="report-section found-section">
@@ -251,7 +251,7 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
                 <div class="phone-row"><select id="foundPhoneCode2" class="modern-select phone-code"></select><input id="foundPhone2" class="modern-input" data-t="phone2" placeholder="Phone 2"></div>
                 <input type="hidden" id="foundLat"><input type="hidden" id="foundLng">
                 <div class="map-row"><div id="foundSelectMap" class="mini-map"></div><button id="foundCurrentLocationBtn" class="loc-btn" data-t="currentLocation">📍</button></div>
-                <div class="btn-row"><button id="saveFoundBtn" class="btn-save" data-t="save">💾 Save</button><button id="resetFoundBtn" class="btn-reset" data-t="clearAll">🗑️ Clear All</button><button id="matchBtn" class="btn-match" data-t="matchItems">🔍 Match</button><button id="shareFoundBtn" class="btn-share" data-t="share">📤 Share</button></div>
+                <div class="btn-row"><button id="saveFoundBtn" class="btn-save" data-t="save">💾 Save</button></div>
                 <input type="text" id="searchFound" class="modern-input" data-t="searchFound" placeholder="Search found items..."><div id="foundItemsList"></div><div id="matchResults"></div>
             </div>
         </div>
@@ -427,21 +427,4 @@ setTimeout(function() {
         <button onclick="document.getElementById('aboutPage').classList.add('hidden');document.getElementById('dashboardPage').classList.remove('hidden');" style="padding:10px 30px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">Back to Dashboard</button>
     </div>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-      firebase.firestore().collection('users').doc(user.uid).get().then(function(doc) {
-        var el = document.getElementById('dashboardUserName');
-        if (el && doc.exists && doc.data().name) {
-          el.textContent = '🤵 ' + doc.data().name;
-          el.style.cssText = 'font-size: 18px; font-weight: bold; color: red; margin-left: 10px; cursor: pointer;';
-        }
-      }).catch(function(err) {
-        console.log('خطأ:', err);
-      });
-    }
-  });
-});
-</script>
 </body>
