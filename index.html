@@ -427,4 +427,21 @@ setTimeout(function() {
         <button onclick="document.getElementById('aboutPage').classList.add('hidden');document.getElementById('dashboardPage').classList.remove('hidden');" style="padding:10px 30px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">Back to Dashboard</button>
     </div>
 </div>
+<!-- ========== القائمة السفلية للموبايل ========== -->
+<div class="mobile-bottom-nav" id="mobileNav">
+    <div class="nav-items">
+        <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" data-page="addReport" onclick="navigateTo('addReport')">
+            <span class="nav-icon">➕</span>
+            <span>Add</span>
+        </div>
+        <div class="nav-item" data-page="profile" onclick="navigateTo('profile')">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+        </div>
+    </div>
+</div>    
 </body>
