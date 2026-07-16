@@ -338,3 +338,59 @@ body.rtl-mode .premium-list { text-align: right; }
     visibility: visible !important;
     opacity: 1 !important;
 }
+/* ========== القائمة السفلية للموبايل ========== */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a237e;
+    z-index: 9999;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+}
+
+.mobile-bottom-nav .nav-items {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.mobile-bottom-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.mobile-bottom-nav .nav-item.active {
+    color: #ffd700;
+    background: rgba(255,255,255,0.15);
+}
+
+.mobile-bottom-nav .nav-item .nav-icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: block;
+    }
+    
+    body {
+        padding-bottom: 70px;
+    }
+    
+    .top-nav {
+        position: sticky;
+        top: 0;
+    }
+}
