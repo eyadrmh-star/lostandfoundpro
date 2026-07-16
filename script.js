@@ -1790,7 +1790,7 @@ window.refreshAdminPanel = async function() {
     window.rejectUser = async (id) => { const db=firebase.firestore(); await db.collection('pendingUsers').doc(id).delete(); alert('❌ Rejected'); location.reload(); };
     window.banUserFirestore = async (email) => { const db=firebase.firestore(); const snap=await db.collection('users').where('email','==',email).get(); if(!snap.empty){ const doc=snap.docs[0]; const data=doc.data(); await doc.ref.update({banned:!data.banned}); alert(data.banned?'✅ Unbanned':'🚫 Banned'); location.reload(); } };
     window.deleteUserFirestore = async (email) => { if(!confirm('Delete '+email+'?'))return; const db=firebase.firestore(); const snap=await db.collection('users').where('email','==',email).get(); for(const doc of snap.docs) await doc.ref.delete(); alert('✅ Deleted'); location.reload(); };
-    window.deleteItemFirestore = async (id,type) => { if(!confirm('Delete?'))return; const db=firebase.firestore(); const coll=type==='lost'?'lostItems':'foundItems'; await db.collection(coll).doc(id).delete(); alert('✅ Deleted'); location.reload(); };
+window.deleteItemFirestore = async (id,type) => { if(!confirm('Delete this report and all related data?'))return; const db=firebase.firestore(); const coll=type==='lost'?'lostItems':'foundItems'; await db.collection(coll).doc(id).delete(); const notifSnap = await db.collection('notifications').where('reportId', '==', id).get(); notifSnap.forEach(async doc => await doc.ref.delete()); const favSnap = await db.collection('favorites').where('reportId', '==', id).get(); favSnap.forEach(async doc => await doc.ref.delete()); alert('✅ Deleted completely!'); location.reload(); };
 
     console.log('✅ Full admin panel ready');
 };
