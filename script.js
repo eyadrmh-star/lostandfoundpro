@@ -1764,14 +1764,14 @@ window.refreshAdminPanel = async function() {
             read: false
         });
         
-        // 2. 📧 إيميل ترحيبي
+                // 2. 📧 إيميل ترحيبي
         if (userEmail && userEmail.includes('@')) {
             emailjs.send("service_dv4y1vo", "template_gj5th5f", {
                 to_email: userEmail,
                 name: userName,
-                description: '🎉 مرحباً ' + userName + '!\n\nتم قبول طلب تسجيلك بنجاح! يمكنك الآن:\n📝 الإبلاغ عن المفقودات\n✅ الإبلاغ عن الموجودات\n🎯 التطابق التلقائي\n🗺️ الخريطة المباشرة\n\nWelcome! Your registration is approved.\n\n🌍 Lost & Found Pro',
-                city: 'Lost & Found Pro',
-                type: 'تسجيل',
+                description: 'يسعدنا انضمامك إلى Lost & Found Pro! 🌍\n\nيمكنك الآن:\n📝 الإبلاغ عن المفقودات\n✅ الإبلاغ عن الموجودات\n🎯 التطابق التلقائي\n🗺️ الخريطة المباشرة\n\nرابط التطبيق:\n👉 https://lostandfoundpro.vercel.app\n\nWelcome ' + userName + '!',
+                city: 'Worldwide',
+                type: 'تسجيل جديد',
                 reply_email: 'eyadrmh@gmail.com'
             }).catch(function() {});
         }
