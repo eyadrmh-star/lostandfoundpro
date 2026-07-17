@@ -822,13 +822,13 @@ async function updateDashboardMap() {
         bannedUsers.push(data.email || data.phone);
     });
     
-    var lostIconNormal = L.divIcon({className:'', html:"<div style='background:#e74c3c;color:white;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:bold;'>L</div>", iconSize:[24,24], popupAnchor:[0,-12]});
-    var lostIconGlow = L.divIcon({className:'', html:"<div style='background:#e74c3c;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #e74c3c;'>L</div>", iconSize:[28,28], popupAnchor:[0,-14]});
-    var foundIconNormal = L.divIcon({className:'', html:"<div style='background:#27ae60;color:white;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:bold;'>F</div>", iconSize:[24,24], popupAnchor:[0,-12]});
-    var foundIconGlow = L.divIcon({className:'', html:"<div style='background:#27ae60;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #27ae60;'>F</div>", iconSize:[28,28], popupAnchor:[0,-14]});
-    var rewardIconGlow = L.divIcon({className:'', html:"<div style='background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:20px;animation: pulse 1s infinite;box-shadow: 0 0 14px #f0a500;'>$</div>", iconSize:[34,34], popupAnchor:[0,-17]});
-    var rewardIconNormal = L.divIcon({className:'', html:"<div style='background:#f0a500;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:18px;'>$</div>", iconSize:[30,30], popupAnchor:[0,-15]});
-    var matchIcon = L.divIcon({className:'', html:"<div style='background:#8e44ad;color:white;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:bold;'>M</div>", iconSize:[24,24], popupAnchor:[0,-12]});
+    var lostIconNormal = L.divIcon({className:'', html:"<div style='background:#e74c3c;color:white;border-radius:50%;width:40px;height:40px;text-align:center;line-height:40px;font-weight:bold;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,0.3);'>L</div>", iconSize:[40,40], popupAnchor:[0,-20]});
+var lostIconGlow = L.divIcon({className:'', html:"<div style='background:#e74c3c;color:white;border-radius:50%;width:44px;height:44px;text-align:center;line-height:44px;font-weight:bold;font-size:20px;animation:pulse 2s infinite;box-shadow:0 0 15px #e74c3c;'>L</div>", iconSize:[44,44], popupAnchor:[0,-22]});
+var foundIconNormal = L.divIcon({className:'', html:"<div style='background:#27ae60;color:white;border-radius:50%;width:40px;height:40px;text-align:center;line-height:40px;font-weight:bold;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,0.3);'>F</div>", iconSize:[40,40], popupAnchor:[0,-20]});
+var foundIconGlow = L.divIcon({className:'', html:"<div style='background:#27ae60;color:white;border-radius:50%;width:44px;height:44px;text-align:center;line-height:44px;font-weight:bold;font-size:20px;animation:pulse 2s infinite;box-shadow:0 0 15px #27ae60;'>F</div>", iconSize:[44,44], popupAnchor:[0,-22]});
+var rewardIconGlow = L.divIcon({className:'', html:"<div style='background:#f0a500;color:white;border-radius:50%;width:50px;height:50px;text-align:center;line-height:50px;font-weight:bold;font-size:24px;animation:pulse 1s infinite;box-shadow:0 0 20px #f0a500;'>$</div>", iconSize:[50,50], popupAnchor:[0,-25]});
+var rewardIconNormal = L.divIcon({className:'', html:"<div style='background:#f0a500;color:white;border-radius:50%;width:46px;height:46px;text-align:center;line-height:46px;font-weight:bold;font-size:22px;box-shadow:0 3px 12px rgba(0,0,0,0.3);'>$</div>", iconSize:[46,46], popupAnchor:[0,-23]});
+var matchIcon = L.divIcon({className:'', html:"<div style='background:#8e44ad;color:white;border-radius:50%;width:42px;height:42px;text-align:center;line-height:42px;font-weight:bold;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,0.3);'>M</div>", iconSize:[42,42], popupAnchor:[0,-21]});
 
     let allItems = [];
     foundArray.forEach(item => { if (item.lat && item.lng && !bannedUsers.includes(item.userEmail)) allItems.push({...item, itemType: 'found'}); });
@@ -872,7 +872,7 @@ async function updateDashboardMap() {
             let marker = L.marker([baseLat + offsetLat, baseLng + offsetLng], {icon: icon}).addTo(dashboardMap);
             let rewardText = isReward ? '<br>💰 $' + item.reward.moneyAmount : '';
             let typeLabel = item.itemType === 'lost' ? '🔴 Lost' : '✅ Found';
-            marker.bindPopup(`<b>${typeLabel}:</b> ${escapeHtml(item.desc)}<br><small>📍 ${item.city} | ${timeAgo(item.timestamp)}</small>${isMatched ? '<br><span style="color:#8e44ad;font-weight:bold;">🎯 Matched!</span>' : ''}${rewardText}`);
+            marker.bindPopup(`<div style="font-size:24px;line-height:2;min-width:350px;padding:10px;"><b>${typeLabel}:</b> ${escapeHtml(item.desc)}<br><small style="font-size:20px;">👤 ${escapeHtml(item.name || 'Unknown')}<br>📍 ${item.city || 'N/A'}${item.country ? ', ' + item.country : ''}<br>📅 ${item.date || 'N/A'}<br>🕐 ${timeAgo(item.timestamp)}<br>🏷 ${item.category || 'other'}</small>${isReward ? '<br><span style="color:#f0a500;font-weight:bold;font-size:22px;">💰 $' + item.reward.moneyAmount + '</span>' : ''}${isMatched ? '<br><span style="color:#8e44ad;font-weight:bold;font-size:22px;">🎯 Matched!</span>' : ''}<br><small style="font-size:18px;">👁️ ${reportViews[item.id] || 0} views</small></div>`);
         });
     });
     
@@ -2047,18 +2047,18 @@ function initPublicMap() {
 function renderPublicMapItems(bannedUsers) {
     var lostIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #e74c3c;">L</div>',
-        iconSize: [28, 28], popupAnchor: [0, -14]
+        html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:44px;height:44px;text-align:center;line-height:44px;font-weight:bold;font-size:20px;animation:pulse 2s infinite;box-shadow:0 0 15px #e74c3c;">L</div>',
+        iconSize: [44, 44], popupAnchor: [0, -22]
     });
     var foundIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#27ae60;color:white;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-weight:bold;font-size:16px;animation: pulse 2s infinite;box-shadow: 0 0 8px #27ae60;">F</div>',
-        iconSize: [28, 28], popupAnchor: [0, -14]
+        html: '<div style="background:#27ae60;color:white;border-radius:50%;width:44px;height:44px;text-align:center;line-height:44px;font-weight:bold;font-size:20px;animation:pulse 2s infinite;box-shadow:0 0 15px #27ae60;">F</div>',
+        iconSize: [44, 44], popupAnchor: [0, -22]
     });
     var rewardIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:20px;animation: pulse 1s infinite;box-shadow: 0 0 14px #f0a500;">$</div>',
-        iconSize: [34, 34], popupAnchor: [0, -17]
+        html: '<div style="background:#f0a500;color:white;border-radius:50%;width:50px;height:50px;text-align:center;line-height:50px;font-weight:bold;font-size:24px;animation:pulse 1s infinite;box-shadow:0 0 20px #f0a500;">$</div>',
+        iconSize: [50, 50], popupAnchor: [0, -25]
     });
 
     let allItems = [...lostArray.map(i => ({...i, itemType: 'lost'})), ...foundArray.map(i => ({...i, itemType: 'found'}))];
@@ -2110,7 +2110,7 @@ function renderPublicMapItems(bannedUsers) {
             let icon = item.reward?.money ? rewardIcon : (item.itemType === 'lost' ? lostIcon : foundIcon);
             L.marker([baseLat + offsetLat, baseLng + offsetLng], {icon: icon})
                 .addTo(publicMap)
-                .bindPopup('<b>' + escapeHtml(item.desc).substring(0, 30) + '...</b><br><small>' + item.city + '</small>' + (item.reward?.money ? '<br>💰 $' + item.reward.moneyAmount : ''));
+                ..bindPopup('<div style="font-size:24px;line-height:2;min-width:350px;padding:10px;"><b>' + (item.itemType === 'lost' ? '🔴 Lost' : '✅ Found') + ':</b> ' + escapeHtml(item.desc) + '<br><small style="font-size:20px;">👤 ' + escapeHtml(item.name || 'Unknown') + '<br>📍 ' + (item.city || 'N/A') + (item.country ? ', ' + item.country : '') + '<br>📅 ' + (item.date || 'N/A') + '<br>🕐 ' + timeAgo(item.timestamp) + '<br>🏷 ' + (item.category || 'other') + '</small>' + (item.reward?.money ? '<br><span style="color:#f0a500;font-weight:bold;font-size:22px;">💰 $' + item.reward.moneyAmount + '</span>' : '') + '<br><small style="font-size:18px;">👁️ ' + (reportViews[item.id] || 0) + ' views</small></div>');
         });
     });
     
