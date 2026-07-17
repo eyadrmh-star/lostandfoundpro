@@ -2110,7 +2110,7 @@ function renderPublicMapItems(bannedUsers) {
             let icon = item.reward?.money ? rewardIcon : (item.itemType === 'lost' ? lostIcon : foundIcon);
             L.marker([baseLat + offsetLat, baseLng + offsetLng], {icon: icon})
                 .addTo(publicMap)
-                ..bindPopup('<div style="font-size:24px;line-height:2;min-width:350px;padding:10px;"><b>' + (item.itemType === 'lost' ? '🔴 Lost' : '✅ Found') + ':</b> ' + escapeHtml(item.desc) + '<br><small style="font-size:20px;">👤 ' + escapeHtml(item.name || 'Unknown') + '<br>📍 ' + (item.city || 'N/A') + (item.country ? ', ' + item.country : '') + '<br>📅 ' + (item.date || 'N/A') + '<br>🕐 ' + timeAgo(item.timestamp) + '<br>🏷 ' + (item.category || 'other') + '</small>' + (item.reward?.money ? '<br><span style="color:#f0a500;font-weight:bold;font-size:22px;">💰 $' + item.reward.moneyAmount + '</span>' : '') + '<br><small style="font-size:18px;">👁️ ' + (reportViews[item.id] || 0) + ' views</small></div>');
+                .bindPopup('<div style="font-size:24px;line-height:2;min-width:350px;padding:10px;"><b>' + (item.itemType === 'lost' ? '🔴 Lost' : '✅ Found') + ':</b> ' + escapeHtml(item.desc) + '<br><small style="font-size:20px;">👤 ' + escapeHtml(item.name || 'Unknown') + '<br>📍 ' + (item.city || 'N/A') + (item.country ? ', ' + item.country : '') + '<br>📅 ' + (item.date || 'N/A') + '<br>🕐 ' + timeAgo(item.timestamp) + '<br>🏷 ' + (item.category || 'other') + '</small>' + (item.reward?.money ? '<br><span style="color:#f0a500;font-weight:bold;font-size:22px;">💰 $' + item.reward.moneyAmount + '</span>' : '') + '<br><small style="font-size:18px;">👁️ ' + (reportViews[item.id] || 0) + ' views</small></div>');
         });
     });
     
