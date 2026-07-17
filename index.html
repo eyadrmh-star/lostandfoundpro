@@ -314,11 +314,12 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
       appId: "1:401878871280:web:41dc64b460079664d4e635"
     };
 
-    firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+</script>
 
-    <script>
+<script>
 // firebase-auth.js - Google Sign-In
 async function firebaseGoogleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
