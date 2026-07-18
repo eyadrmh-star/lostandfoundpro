@@ -394,3 +394,14 @@ body.rtl-mode .premium-list { text-align: right; }
         top: 0;
     }
 }
+/* تصغير أزرار البطاقات */
+.saved-item button,
+.saved-item .btn,
+.saved-item .btn-sm,
+#dashLost button,
+#dashFound button,
+#dashMatches button {
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+}
