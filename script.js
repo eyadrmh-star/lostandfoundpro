@@ -3429,6 +3429,9 @@ personImg.style.cssText = 'height:300px;width:110%;margin-left:-5%;background-im
         }
         
         console.log('Login layout applied');
+        setTimeout(function() {
+    document.getElementById('loginPage').style.opacity = '1';
+}, 250);
     }
 });
 // ========================================
