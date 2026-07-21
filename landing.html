@@ -23,22 +23,21 @@
         .hero p { font-size: 18px; opacity: 0.9; margin-bottom: 20px; }
         .btn-start { background: #f0a500; color: #1a237e; padding: 15px 40px; font-size: 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; transition: all 0.3s; }
         .btn-start:hover { background: #ffc107; transform: scale(1.05); }
-        .stats-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 30px 20px; max-width: 900px; margin: -20px auto 0; }
+        .stats-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 30px 20px; max-width: 900px; margin: 0 auto; }
         .stat-box { background: white; border-radius: 16px; padding: 20px; text-align: center; flex: 1; min-width: 130px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .stat-box .num { font-size: 32px; font-weight: bold; color: #1a237e; }
         .stat-box .label { font-size: 14px; color: #666; margin-top: 5px; }
         .stat-box.lost .num { color: #e74c3c; }
         .stat-box.found .num { color: #27ae60; }
         .stat-box.match .num { color: #8e44ad; }
-        .map-section { max-width: 900px; margin: 30px auto; padding: 0 20px; }
-        .map-section h2 { text-align: center; color: #1a237e; margin-bottom: 15px; }
-        #landingMap { width: 100%; height: 350px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .map-section { max-width: 100%; margin: 0; padding: 0; }
+        #landingMap { width: 100%; height: 550px; border-radius: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 50px 20px; max-width: 900px; margin: 0 auto; }
         .step { text-align: center; flex: 1; min-width: 200px; }
         .step-icon { font-size: 50px; margin-bottom: 15px; }
         .step h3 { color: #1a237e; margin-bottom: 10px; }
         .step p { color: #666; }
-        .footer { background: #1a237e; color: white; text-align: center; padding: 30px 20px; margin-top: 40px; }
+        .footer { background: #1a237e; color: white; text-align: center; padding: 30px 20px; margin-top: 0; }
         .footer a { color: #f0a500; text-decoration: none; margin: 0 10px; }
         .lang-bar { background: #0d1642; color: white; padding: 8px 20px; text-align: center; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .lang-bar select { padding: 5px 10px; border-radius: 20px; border: 1px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; }
@@ -67,7 +66,6 @@
     </div>
 
     <div class="map-section">
-        <h2>🗺️ Live Global Activity</h2>
         <div id="landingMap"></div>
     </div>
 
@@ -126,8 +124,8 @@
         }
         
         const translations = {
-            en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", mapTitle: "🗺️ Live Global Activity", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
-            ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", mapTitle: "🗺️ نشاط عالمي مباشر", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
+            en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
+            ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
         };
 
         function changeLang(lang) {
@@ -138,7 +136,6 @@
             document.getElementById('statLost').nextElementSibling.textContent = t.statLost;
             document.getElementById('statFound').nextElementSibling.textContent = t.statFound;
             document.getElementById('statMatch').nextElementSibling.textContent = t.statMatch;
-            document.querySelector('.map-section h2').textContent = t.mapTitle;
             document.querySelectorAll('.step h3')[0].textContent = t.step1Title;
             document.querySelectorAll('.step h3')[1].textContent = t.step2Title;
             document.querySelectorAll('.step h3')[2].textContent = t.step3Title;
