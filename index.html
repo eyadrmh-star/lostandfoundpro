@@ -522,5 +522,44 @@ setTimeout(function() {
             <span>Profile</span>
         </div>
     </div>
-</div>    
+</div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (lostSelectMap) {
+            lostSelectMap.off('click');
+            lostSelectMap.on('click', e => {
+                if (lostMarker) lostSelectMap.removeLayer(lostMarker);
+                lostMarker = L.circleMarker(e.latlng, {
+                    radius: 10,
+                    fillColor: '#e74c3c',
+                    color: '#fff',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(lostSelectMap);
+                document.getElementById('lostLat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('lostLng').value = e.latlng.lng.toFixed(6);
+            });
+        }
+        if (foundSelectMap) {
+            foundSelectMap.off('click');
+            foundSelectMap.on('click', e => {
+                if (foundMarker) foundSelectMap.removeLayer(foundMarker);
+                foundMarker = L.circleMarker(e.latlng, {
+                    radius: 10,
+                    fillColor: '#27ae60',
+                    color: '#fff',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(foundSelectMap);
+                document.getElementById('foundLat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('foundLng').value = e.latlng.lng.toFixed(6);
+            });
+        }
+        console.log('✅ Circle markers ready');
+    }, 2000);
+});
+</script>
 </body>
