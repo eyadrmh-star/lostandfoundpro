@@ -526,6 +526,29 @@ setTimeout(function() {
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
+        // Fix map containers
+        let lostSection = document.querySelector('.lost-section');
+        let lostMapEl = document.getElementById('lostSelectMap');
+        if (lostSection && lostMapEl) {
+            lostSection.style.overflow = 'visible';
+            lostMapEl.style.height = '350px';
+            lostMapEl.style.width = '100%';
+            lostMapEl.style.position = 'relative';
+            lostMapEl.style.zIndex = '1';
+            if (lostSelectMap) lostSelectMap.invalidateSize();
+        }
+        let foundSection = document.querySelector('.found-section');
+        let foundMapEl = document.getElementById('foundSelectMap');
+        if (foundSection && foundMapEl) {
+            foundSection.style.overflow = 'visible';
+            foundMapEl.style.height = '350px';
+            foundMapEl.style.width = '100%';
+            foundMapEl.style.position = 'relative';
+            foundMapEl.style.zIndex = '1';
+            if (foundSelectMap) foundSelectMap.invalidateSize();
+        }
+        
+        // Red circle marker for lost
         if (lostSelectMap) {
             lostSelectMap.off('click');
             lostSelectMap.on('click', e => {
@@ -542,6 +565,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('lostLng').value = e.latlng.lng.toFixed(6);
             });
         }
+        
+        // Green circle marker for found
         if (foundSelectMap) {
             foundSelectMap.off('click');
             foundSelectMap.on('click', e => {
@@ -558,7 +583,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('foundLng').value = e.latlng.lng.toFixed(6);
             });
         }
-        console.log('✅ Circle markers ready');
+        console.log('✅ Maps fixed + circle markers ready');
     }, 2000);
 });
 </script>
