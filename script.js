@@ -896,7 +896,14 @@ function initLostMap() {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(lostSelectMap);
     lostSelectMap.on('click', e => {
         if (lostMarker) lostSelectMap.removeLayer(lostMarker);
-        lostMarker = L.marker(e.latlng).addTo(lostSelectMap);
+        lostMarker = L.marker(e.latlng, {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">📍</div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(lostSelectMap);
         document.getElementById('lostLat').value = e.latlng.lat.toFixed(6);
         document.getElementById('lostLng').value = e.latlng.lng.toFixed(6);
     });
@@ -908,7 +915,14 @@ function initFoundMap() {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(foundSelectMap);
     foundSelectMap.on('click', e => {
         if (foundMarker) foundSelectMap.removeLayer(foundMarker);
-        foundMarker = L.marker(e.latlng).addTo(foundSelectMap);
+        foundMarker = L.marker(e.latlng, {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:#27ae60;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">📍</div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(foundSelectMap);
         document.getElementById('foundLat').value = e.latlng.lat.toFixed(6);
         document.getElementById('foundLng').value = e.latlng.lng.toFixed(6);
     });
