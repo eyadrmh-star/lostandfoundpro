@@ -968,7 +968,7 @@ async function saveLost() {
             record: document.querySelector('#lostSection .notifyRecord')?.checked || false
         };
         
-        let images = [], files = document.getElementById('foundImages').files;
+        let images = [], files = document.getElementById('lostImages').files;
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 if (files && files.length > 0) {
     for (let file of files) {
