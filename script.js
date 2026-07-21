@@ -890,8 +890,30 @@ async function refreshDataFromFirestore() {
     lostArray = lSnap.docs.map(d => d.data());
     updateDashboardStats();
 }
-function initLostMap() { if (lostSelectMap) return; lostSelectMap = L.map('lostSelectMap').setView([30, 0], 2); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(lostSelectMap); lostSelectMap.on('click', e => { if (lostMarker) lostSelectMap.removeLayer(lostMarker); lostMarker = L.marker(e.latlng).addTo(lostSelectMap); document.getElementById('lostLat').value = e.latlng.lat.toFixed(6); document.getElementById('lostLng').value = e.latlng.lng.toFixed(6); }); }
-function initFoundMap() { if (foundSelectMap) return; foundSelectMap = L.map('foundSelectMap').setView([30, 0], 2); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(foundSelectMap); foundSelectMap.on('click', e => { if (foundMarker) foundSelectMap.removeLayer(foundMarker); foundMarker = L.marker(e.latlng).addTo(foundSelectMap); document.getElementById('foundLat').value = e.latlng.lat.toFixed(6); document.getElementById('foundLng').value = e.latlng.lng.toFixed(6); }); }
+function initLostMap() {
+    if (lostSelectMap) return;
+    lostSelectMap = L.map('lostSelectMap').setView([30, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(lostSelectMap);
+    lostSelectMap.on('click', e => {
+        if (lostMarker) lostSelectMap.removeLayer(lostMarker);
+        lostMarker = L.marker(e.latlng).addTo(lostSelectMap);
+        document.getElementById('lostLat').value = e.latlng.lat.toFixed(6);
+        document.getElementById('lostLng').value = e.latlng.lng.toFixed(6);
+    });
+    setTimeout(() => lostSelectMap.invalidateSize(), 500);
+}
+function initFoundMap() {
+    if (foundSelectMap) return;
+    foundSelectMap = L.map('foundSelectMap').setView([30, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(foundSelectMap);
+    foundSelectMap.on('click', e => {
+        if (foundMarker) foundSelectMap.removeLayer(foundMarker);
+        foundMarker = L.marker(e.latlng).addTo(foundSelectMap);
+        document.getElementById('foundLat').value = e.latlng.lat.toFixed(6);
+        document.getElementById('foundLng').value = e.latlng.lng.toFixed(6);
+    });
+    setTimeout(() => foundSelectMap.invalidateSize(), 500);
+}
 
 // ========== تعبئة الدول والمدن ==========
 function fillPhoneCodes() { document.querySelectorAll('.phone-code').forEach(sel => { sel.innerHTML = '<option value="">--</option>'; geoData.forEach(c => sel.add(new Option(c.name + ' (' + c.code + ')', c.code))); }); }
