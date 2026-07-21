@@ -897,11 +897,13 @@ function initLostMap() {
     lostSelectMap.on('click', e => {
         if (lostMarker) lostSelectMap.removeLayer(lostMarker);
         lostMarker = L.marker(e.latlng, {
-            icon: L.divIcon({
-                className: '',
-                html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">📍</div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
             })
         }).addTo(lostSelectMap);
         document.getElementById('lostLat').value = e.latlng.lat.toFixed(6);
@@ -916,11 +918,13 @@ function initFoundMap() {
     foundSelectMap.on('click', e => {
         if (foundMarker) foundSelectMap.removeLayer(foundMarker);
         foundMarker = L.marker(e.latlng, {
-            icon: L.divIcon({
-                className: '',
-                html: '<div style="background:#27ae60;color:white;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-weight:bold;font-size:12px;">📍</div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
             })
         }).addTo(foundSelectMap);
         document.getElementById('foundLat').value = e.latlng.lat.toFixed(6);
