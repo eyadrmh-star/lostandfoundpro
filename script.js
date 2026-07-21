@@ -914,7 +914,42 @@ function initFoundMap() {
     });
     setTimeout(() => foundSelectMap.invalidateSize(), 500);
 }
+// Auto-center map when city is selected
+document.getElementById('lostCity')?.addEventListener('change', function() {
+    let cityName = this.options[this.selectedIndex]?.text;
+    let country = document.getElementById('lostCountry').value;
+    if (cityName && cityName !== '-- Select City --' && lostSelectMap) {
+        fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&country=${encodeURIComponent(country)}&format=json&limit=1`)
+        .then(r => r.json()).then(data => {
+            if (data[0]) {
+                let lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
+                lostSelectMap.setView([lat, lon], 13);
+                if (lostMarker) lostSelectMap.removeLayer(lostMarker);
+                lostMarker = L.marker([lat, lon]).addTo(lostSelectMap);
+                document.getElementById('lostLat').value = lat.toFixed(6);
+                document.getElementById('lostLng').value = lon.toFixed(6);
+            }
+        });
+    }
+});
 
+document.getElementById('foundCity')?.addEventListener('change', function() {
+    let cityName = this.options[this.selectedIndex]?.text;
+    let country = document.getElementById('foundCountry').value;
+    if (cityName && cityName !== '-- Select City --' && foundSelectMap) {
+        fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&country=${encodeURIComponent(country)}&format=json&limit=1`)
+        .then(r => r.json()).then(data => {
+            if (data[0]) {
+                let lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
+                foundSelectMap.setView([lat, lon], 13);
+                if (foundMarker) foundSelectMap.removeLayer(foundMarker);
+                foundMarker = L.marker([lat, lon]).addTo(foundSelectMap);
+                document.getElementById('foundLat').value = lat.toFixed(6);
+                document.getElementById('foundLng').value = lon.toFixed(6);
+            }
+        });
+    }
+});
 // ========== تعبئة الدول والمدن ==========
 function fillPhoneCodes() { document.querySelectorAll('.phone-code').forEach(sel => { sel.innerHTML = '<option value="">--</option>'; geoData.forEach(c => sel.add(new Option(c.name + ' (' + c.code + ')', c.code))); }); }
 function initCountries() { document.querySelectorAll('.country-select').forEach(sel => { geoData.forEach(c => sel.add(new Option(c.name, c.name))); }); function fillCities(sc, tc) { let country = sc.value; let cities = geoData.find(c => c.name === country)?.cities || []; let cs = document.getElementById(tc); if (cs) { cs.innerHTML = '<option value="">-- Select City --</option>'; cities.forEach(c => cs.add(new Option(c, c))); } } let lc = document.getElementById('lostCountry'), fc = document.getElementById('foundCountry'); if (lc) { lc.onchange = () => fillCities(lc, 'lostCity'); fillCities(lc, 'lostCity'); } if (fc) { fc.onchange = () => fillCities(fc, 'foundCity'); fillCities(fc, 'foundCity'); } fillPhoneCodes(); }
