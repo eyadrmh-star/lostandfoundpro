@@ -526,6 +526,22 @@ setTimeout(function() {
 </div>
 
 <script>
+// تفعيل الخرائط عند الضغط على Add Report
+document.getElementById('dashboardAddReportBtn').addEventListener('click', function() {
+    setTimeout(function() {
+        if (typeof initLostMap === 'function') initLostMap();
+        if (typeof initFoundMap === 'function') initFoundMap();
+    }, 500);
+});
+
+document.getElementById('nearMeNewBtn')?.addEventListener('click', function() {
+    setTimeout(function() {
+        if (typeof initLostMap === 'function') initLostMap();
+        if (typeof initFoundMap === 'function') initFoundMap();
+    }, 500);
+});
+
+// علامات الخرائط
 setTimeout(function() {
     if (typeof lostSelectMap !== 'undefined' && lostSelectMap) {
         lostSelectMap.off('click');
