@@ -506,7 +506,8 @@ setTimeout(function() {
         <button onclick="document.getElementById('aboutPage').classList.add('hidden');document.getElementById('dashboardPage').classList.remove('hidden');" style="padding:10px 30px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">Back to Dashboard</button>
     </div>
 </div>
-    <!-- ========== القائمة السفلية للموبايل ========== -->
+
+<!-- ========== القائمة السفلية للموبايل ========== -->
 <div class="mobile-bottom-nav" id="mobileNav">
     <div class="nav-items">
         <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
@@ -523,41 +524,41 @@ setTimeout(function() {
         </div>
     </div>
 </div>
+
 <script>
 setTimeout(function() {
-    document.querySelectorAll('#lostSelectMap, #foundSelectMap').forEach(map => {
-        map.style.overflow = 'hidden';
-        map.style.touchAction = 'none';
-    });
-    document.querySelectorAll('.lost-section, .found-section').forEach(sec => {
-        sec.style.overflow = 'visible';
-        sec.style.maxHeight = 'none';
-    });
-    var rc = document.querySelector('.report-container');
-    if (rc) rc.style.overflow = 'visible';
-    
-    if (lostSelectMap) { lostSelectMap.invalidateSize(); lostSelectMap.setView([31.95, 35.91], 6); }
-    if (foundSelectMap) { foundSelectMap.invalidateSize(); foundSelectMap.setView([31.95, 35.91], 6); }
-    
-    if (lostSelectMap) {
+    if (typeof lostSelectMap !== 'undefined' && lostSelectMap) {
         lostSelectMap.off('click');
-        lostSelectMap.on('click', e => {
-            if (lostMarker) lostSelectMap.removeLayer(lostMarker);
-            lostMarker = L.circleMarker(e.latlng, { radius: 10, fillColor: '#e74c3c', color: '#fff', weight: 3, opacity: 1, fillOpacity: 0.9 }).addTo(lostSelectMap);
+        lostSelectMap.on('click', function(e) {
+            if (window._lm) lostSelectMap.removeLayer(window._lm);
+            window._lm = L.marker(e.latlng, {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                })
+            }).addTo(lostSelectMap);
             document.getElementById('lostLat').value = e.latlng.lat.toFixed(6);
             document.getElementById('lostLng').value = e.latlng.lng.toFixed(6);
         });
     }
-    if (foundSelectMap) {
+    if (typeof foundSelectMap !== 'undefined' && foundSelectMap) {
         foundSelectMap.off('click');
-        foundSelectMap.on('click', e => {
-            if (foundMarker) foundSelectMap.removeLayer(foundMarker);
-            foundMarker = L.circleMarker(e.latlng, { radius: 10, fillColor: '#27ae60', color: '#fff', weight: 3, opacity: 1, fillOpacity: 0.9 }).addTo(foundSelectMap);
+        foundSelectMap.on('click', function(e) {
+            if (window._fm) foundSelectMap.removeLayer(window._fm);
+            window._fm = L.marker(e.latlng, {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                })
+            }).addTo(foundSelectMap);
             document.getElementById('foundLat').value = e.latlng.lat.toFixed(6);
             document.getElementById('foundLng').value = e.latlng.lng.toFixed(6);
         });
     }
-    console.log('✅ All maps fixed');
-}, 5000);
+}, 3000);
 </script>
 </body>
