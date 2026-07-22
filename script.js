@@ -2851,33 +2851,23 @@ setInterval(function() {
         });
     });
 }, 3000);
-// ========== إصلاح الخرائط ==========
-setTimeout(function() {
-    if (document.getElementById('lostSelectMap') && typeof L !== 'undefined' && !lostSelectMap) {
-        lostSelectMap = L.map('lostSelectMap').setView([31.95, 35.91], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(lostSelectMap);
+// ========== إصلاح الخرائط النهائي ==========
+(function() {
+    function fixMaps() {
+        ['lostSelectMap', 'foundSelectMap'].forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m) {
+                m.style.cssText = 'width:100%!important;max-width:100%!important;height:300px!important;overflow:hidden!important;border-radius:12px!important;margin:8px 0!important;box-sizing:border-box!important;';
+            }
+        });
+        setTimeout(function() {
+            if (typeof lostSelectMap !== 'undefined' && lostSelectMap) lostSelectMap.invalidateSize();
+            if (typeof foundSelectMap !== 'undefined' && foundSelectMap) foundSelectMap.invalidateSize();
+        }, 300);
     }
-    if (document.getElementById('foundSelectMap') && typeof L !== 'undefined' && !foundSelectMap) {
-        foundSelectMap = L.map('foundSelectMap').setView([31.95, 35.91], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(foundSelectMap);
-    }
-    if (document.getElementById('publicMap') && typeof L !== 'undefined' && !publicMap) {
-        publicMap = L.map('publicMap').setView([31.95, 35.91], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(publicMap);
-    }
-    if (document.getElementById('dashboardMap') && typeof L !== 'undefined' && !dashboardMap) {
-        dashboardMap = L.map('dashboardMap').setView([31.95, 35.91], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(dashboardMap);
-    }
-}, 2000);
+    setTimeout(fixMaps, 500);
+    setTimeout(fixMaps, 2000);
+})();
 // ========== تحميل Lost & Found من Firestore للداشبورد مع Pagination ==========
 let lastLostDoc = null, lastFoundDoc = null;
 const PAGE_SIZE = 20;
