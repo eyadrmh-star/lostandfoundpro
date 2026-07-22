@@ -890,57 +890,70 @@ async function refreshDataFromFirestore() {
     lostArray = lSnap.docs.map(d => d.data());
     updateDashboardStats();
 }
+// ========== دوال الخرائط الجديدة ==========
 function initLostMap() {
     if (lostSelectMap) return;
-    lostSelectMap = L.map('lostSelectMap').setView([30, 0], 2);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(lostSelectMap);
-    lostSelectMap.on('click', e => {
+    var el = document.getElementById('lostSelectMap');
+    if (!el) return;
+    
+    lostSelectMap = L.map('lostSelectMap', { attributionControl: false }).setView([31.95, 35.91], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(lostSelectMap);
+    
+    lostSelectMap.on('click', function(e) {
         if (lostMarker) lostSelectMap.removeLayer(lostMarker);
         lostMarker = L.marker(e.latlng, {
             icon: L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
                 iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+                iconAnchor: [12, 41]
             })
         }).addTo(lostSelectMap);
         document.getElementById('lostLat').value = e.latlng.lat.toFixed(6);
         document.getElementById('lostLng').value = e.latlng.lng.toFixed(6);
     });
-    setTimeout(() => lostSelectMap.invalidateSize(), 500);
+    
+    lostSelectMap.whenReady(function() {
+        lostSelectMap.invalidateSize();
+    });
 }
+
 function initFoundMap() {
     if (foundSelectMap) return;
-    foundSelectMap = L.map('foundSelectMap').setView([30, 0], 2);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(foundSelectMap);
-    foundSelectMap.on('click', e => {
+    var el = document.getElementById('foundSelectMap');
+    if (!el) return;
+    
+    foundSelectMap = L.map('foundSelectMap', { attributionControl: false }).setView([31.95, 35.91], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(foundSelectMap);
+    
+    foundSelectMap.on('click', function(e) {
         if (foundMarker) foundSelectMap.removeLayer(foundMarker);
         foundMarker = L.marker(e.latlng, {
             icon: L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
                 iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+                iconAnchor: [12, 41]
             })
         }).addTo(foundSelectMap);
         document.getElementById('foundLat').value = e.latlng.lat.toFixed(6);
         document.getElementById('foundLng').value = e.latlng.lng.toFixed(6);
     });
-    setTimeout(() => foundSelectMap.invalidateSize(), 500);
+    
+    foundSelectMap.whenReady(function() {
+        foundSelectMap.invalidateSize();
+    });
 }
+
 // Auto-center map when city is selected
 document.getElementById('lostCity')?.addEventListener('change', function() {
-    let cityName = this.options[this.selectedIndex]?.text;
-    let country = document.getElementById('lostCountry').value;
+    var cityName = this.options[this.selectedIndex]?.text;
+    var country = document.getElementById('lostCountry').value;
     if (cityName && cityName !== '-- Select City --' && lostSelectMap) {
-        fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&country=${encodeURIComponent(country)}&format=json&limit=1`)
-        .then(r => r.json()).then(data => {
+        fetch('https://nominatim.openstreetmap.org/search?city=' + encodeURIComponent(cityName) + '&country=' + encodeURIComponent(country) + '&format=json&limit=1')
+        .then(function(r) { return r.json(); }).then(function(data) {
             if (data[0]) {
-                let lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
+                var lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
                 lostSelectMap.setView([lat, lon], 13);
                 if (lostMarker) lostSelectMap.removeLayer(lostMarker);
                 lostMarker = L.marker([lat, lon]).addTo(lostSelectMap);
@@ -952,13 +965,13 @@ document.getElementById('lostCity')?.addEventListener('change', function() {
 });
 
 document.getElementById('foundCity')?.addEventListener('change', function() {
-    let cityName = this.options[this.selectedIndex]?.text;
-    let country = document.getElementById('foundCountry').value;
+    var cityName = this.options[this.selectedIndex]?.text;
+    var country = document.getElementById('foundCountry').value;
     if (cityName && cityName !== '-- Select City --' && foundSelectMap) {
-        fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&country=${encodeURIComponent(country)}&format=json&limit=1`)
-        .then(r => r.json()).then(data => {
+        fetch('https://nominatim.openstreetmap.org/search?city=' + encodeURIComponent(cityName) + '&country=' + encodeURIComponent(country) + '&format=json&limit=1')
+        .then(function(r) { return r.json(); }).then(function(data) {
             if (data[0]) {
-                let lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
+                var lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
                 foundSelectMap.setView([lat, lon], 13);
                 if (foundMarker) foundSelectMap.removeLayer(foundMarker);
                 foundMarker = L.marker([lat, lon]).addTo(foundSelectMap);
