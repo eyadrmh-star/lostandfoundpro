@@ -1,18 +1,27 @@
 {
-  "background_color": "#f5f6fa",
-  "description": "Global platform for finding lost items. Report lost or found items and connect with others.",
-  "dir": "ltr",
-  "display": "standalone",
   "name": "Lost & Found Pro",
-  "orientation": "portrait",
-  "scope": "/",
   "short_name": "Lost & Found",
+  "description": "Global platform for finding lost items. Report lost or found items and connect with others.",
   "start_url": "landing.html",
+  "display": "standalone",
+  "background_color": "#f5f6fa",
   "theme_color": "#1a237e",
+  "orientation": "portrait",
+  "dir": "ltr",
   "lang": "en",
+  "scope": "/",
   "id": "com.lostfound.pro",
-  "categories": [
-    "social",
-    "utilities"
+  "categories": ["social", "utilities"],
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/709/709722.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/709/709722.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
