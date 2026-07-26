@@ -881,7 +881,19 @@ var matchIcon = L.divIcon({className:'', html:"<div style='background:#8e44ad;co
 setTimeout(function() {
     if (dashboardMap) dashboardMap.invalidateSize();
 }, 500);
+        // ===== إصلاح ظهور النص في popup =====
+    setTimeout(function() {
+        document.querySelectorAll('#dashboardMap .leaflet-popup-content').forEach(function(el) {
+            el.style.minWidth = '250px';
+            el.style.padding = '15px';
+            el.style.fontSize = '15px';
+            el.style.maxHeight = '400px';
+            el.style.overflowY = 'auto';
+        });
+        console.log('✅ تم إصلاح popup في خريطة الداشبورد');
+    }, 600);
 }
+
 async function refreshDataFromFirestore() {
     const db = firebase.firestore();
     let fSnap = await db.collection('foundItems').get();
