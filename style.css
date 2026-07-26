@@ -405,12 +405,3 @@ body.rtl-mode .premium-list { text-align: right; }
     padding: 6px 12px !important;
     border-radius: 20px !important;
 }
-/* ===== إصلاح ظهور نصوص خريطة الداشبورد ===== */
-#dashboardMap .leaflet-popup-content {
-    min-width: 250px !important;
-    padding: 15px !important;
-    font-size: 15px !important;
-    max-height: 400px !important;
-    overflow-y: auto !important;
-}
-
