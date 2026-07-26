@@ -4547,4 +4547,179 @@ function navigateTo(page) {
   document.body.insertAdjacentHTML('beforeend', navHTML);
   document.body.style.paddingBottom = '70px';
 })();
+// ==========================================
+//  نظام النوافذ المنبثقة للخريطة (بدل popup)
+// ==========================================
+
+// إنشاء النافذة المنبثقة
+function createReportModal() {
+    // حذف النافذة القديمة إذا كانت موجودة
+    let oldModal = document.getElementById('customReportModal');
+    if (oldModal) oldModal.remove();
+    
+    let modal = document.createElement('div');
+    modal.id = 'customReportModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        max-width: 420px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        z-index: 99999;
+        display: none;
+        border: 3px solid #1a237e;
+    `;
+    
+    modal.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 id="modalTitle" style="margin:0;color:#1a237e;font-size:18px;">📋 Report Details</h3>
+            <button id="closeModalBtn" style="background:#e74c3c;color:white;border:none;border-radius:50%;width:35px;height:35px;font-size:20px;cursor:pointer;transition:0.3s;">✕</button>
+        </div>
+        <div id="modalContent" style="font-size:14px;line-height:1.6;"></div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // إغلاق النافذة
+    document.getElementById('closeModalBtn').onclick = function() {
+        document.getElementById('customReportModal').style.display = 'none';
+    };
+    
+    // إغلاق بالضغط خارج النافذة
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+// دالة لعرض البلاغ في النافذة
+function showReportInModal(reportData) {
+    let modal = document.getElementById('customReportModal');
+    let content = document.getElementById('modalContent');
+    let title = document.getElementById('modalTitle');
+    
+    if (!modal || !content) {
+        createReportModal();
+        modal = document.getElementById('customReportModal');
+        content = document.getElementById('modalContent');
+        title = document.getElementById('modalTitle');
+    }
+    
+    title.textContent = '📋 ' + (reportData.type === 'lost' ? 'Lost Item' : 'Found Item');
+    
+    let imgHTML = '';
+    if (reportData.images && reportData.images[0]) {
+        imgHTML = `<div style="text-align:center;margin-bottom:10px;"><img src="${reportData.images[0]}" style="max-width:100%;max-height:150px;border-radius:10px;object-fit:cover;"></div>`;
+    }
+    
+    let rewardHTML = '';
+    if (reportData.reward && reportData.reward.money && reportData.reward.moneyAmount) {
+        rewardHTML = `<div style="background:#fef3e0;padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:bold;color:#d68910;">💰 Reward: $${reportData.reward.moneyAmount}</div>`;
+    }
+    
+    let matchedHTML = '';
+    if (reportData.type === 'lost') {
+        let matched = foundArray.some(f => f.city === reportData.city && isSimilar(reportData.desc, f.desc));
+        if (matched) matchedHTML = `<div style="background:#f3e8ff;padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:bold;color:#8e44ad;">🎯 Matched!</div>`;
+    }
+    
+    content.innerHTML = `
+        ${imgHTML}
+        <div style="font-size:16px;font-weight:bold;margin-bottom:6px;">${reportData.desc}</div>
+        ${rewardHTML}
+        ${matchedHTML}
+        <div style="margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
+                <span style="color:#666;">👤 Reporter</span>
+                <span style="font-weight:500;">${reportData.name || 'Unknown'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
+                <span style="color:#666;">📍 Location</span>
+                <span style="font-weight:500;">${reportData.city || 'N/A'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
+                <span style="color:#666;">📅 Date</span>
+                <span style="font-weight:500;">${reportData.date || 'N/A'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
+                <span style="color:#666;">🏷 Category</span>
+                <span style="font-weight:500;">${reportData.category || 'other'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                <span style="color:#666;">🕐 Reported</span>
+                <span style="font-weight:500;">${reportData.timestamp ? timeAgo(reportData.timestamp) : 'N/A'}</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button onclick="sendMessageToReporter(${reportData.id}, '${reportData.type}', '${reportData.name || 'Unknown'}', '${reportData.userEmail || ''}')" style="flex:1;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">📨 Message</button>
+            <button onclick="copyToClipboard('${window.location.origin}${window.location.pathname}?report=${reportData.type}-${reportData.id}')" style="flex:1;padding:8px;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;">🔗 Share</button>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+// تعديل دالة updateDashboardMap عشان تستخدم النافذة المنبثقة
+let originalUpdateDashboardMap = updateDashboardMap;
+
+updateDashboardMap = async function() {
+    await originalUpdateDashboardMap();
+    
+    // إنشاء النافذة
+    createReportModal();
+    
+    // تعديل سلوك الضغط على الماركرات
+    setTimeout(function() {
+        document.querySelectorAll('#dashboardMap .leaflet-marker-icon').forEach(function(marker) {
+            marker.parentElement.onclick = function(e) {
+                e.stopPropagation();
+                let popupContent = document.querySelector('#dashboardMap .leaflet-popup-content');
+                if (popupContent) {
+                    // استخراج البيانات من الـ popup
+                    let desc = popupContent.querySelector('b')?.textContent || '';
+                    let smalls = popupContent.querySelectorAll('small');
+                    let name = 'Unknown', city = 'N/A', date = 'N/A', category = 'other';
+                    smalls.forEach(function(s) {
+                        let text = s.textContent;
+                        if (text.includes('👤')) name = text.replace('👤', '').trim();
+                        if (text.includes('📍')) city = text.replace('📍', '').trim();
+                        if (text.includes('📅')) date = text.replace('📅', '').trim();
+                        if (text.includes('🏷')) category = text.replace('🏷', '').trim();
+                    });
+                    
+                    // البحث عن البلاغ في المصفوفات
+                    let allReports = [...lostArray.map(i => ({...i, type: 'lost'})), ...foundArray.map(i => ({...i, type: 'found'}))];
+                    let report = allReports.find(i => i.desc === desc.replace('🔴 Lost:', '').replace('✅ Found:', '').trim());
+                    
+                    if (report) {
+                        showReportInModal(report);
+                    } else {
+                        // إذا ما لقينا البلاغ، نعرض البيانات الموجودة
+                        showReportInModal({
+                            id: Date.now(),
+                            desc: desc.replace('🔴 Lost:', '').replace('✅ Found:', '').trim(),
+                            name: name,
+                            city: city,
+                            date: date,
+                            category: category,
+                            type: desc.includes('Lost') ? 'lost' : 'found',
+                            images: [],
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                }
+            };
+        });
+    }, 800);
+};
+
+console.log('✅ نظام النوافذ المنبثقة جاهز!');
 console.log('✅ All fixes applied');
