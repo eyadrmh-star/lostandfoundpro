@@ -406,35 +406,3 @@ body.rtl-mode .premium-list { text-align: right; }
     border-radius: 20px !important;
 }
 
-/* ===== إصلاح ظهور نصوص الخريطة ===== */
-.leaflet-popup-content {
-    min-width: 250px !important;
-    padding: 15px !important;
-    font-size: 15px !important;
-    max-height: 400px !important;
-    overflow-y: auto !important;
-}
-
-.leaflet-popup-content-wrapper {
-    border-radius: 12px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
-}
-
-.leaflet-popup-content img {
-    max-width: 100% !important;
-    max-height: 120px !important;
-    border-radius: 8px !important;
-    margin-bottom: 8px !important;
-}
-
-.leaflet-popup-content b {
-    display: block !important;
-    margin-bottom: 4px !important;
-    color: #1a237e !important;
-}
-
-.leaflet-popup-content small {
-    display: block !important;
-    font-size: 12px !important;
-    color: #555 !important;
-}
