@@ -4852,3 +4852,6 @@ window.updateDashboardMap = async function() {
 
 console.log('✅ نظام النوافذ المنبثقة جاهز!');
 console.log('✅ All fixes applied');
+
+// ===== إغلاق الدوال =====
+}
