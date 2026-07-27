@@ -204,6 +204,7 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
                 <button class="btn-icon" id="dashboardProfileBtn" title="Profile">👤</button>
                 <button class="btn-icon" id="dashboardDarkModeBtn" title="Dark Mode">🌙</button>
                 <button class="btn-sm" id="dashboardAddReportBtn" data-t="addNewReport">➕ Add New Report</button>
+                <button class="btn-sm" style="background:#25D366;color:white;" onclick="shareAppOnWhatsApp()">📱 Share App</button>
                 <button class="btn-sm btn-purple" id="dashboardAdminBtn" data-t="adminPanel">👑 Admin Panel</button>
                 <button class="btn-sm" id="dashboardAboutBtn">ℹ️ About</button>
                 <button class="btn-sm btn-red" id="dashboardLogoutBtn" data-t="logout">🚪 Logout</button>
@@ -355,7 +356,7 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
     </div>
 
     <!-- شريط الإعلانات -->
-    <div class="ad-bar" id="adBar"><span>🔍 <strong>Lost & Found Pro</strong> - <span data-t="helpUs">Help us continue</span></span><a href="#" id="showPremiumModal" class="ad-link" data-t="premium">⭐ Subscribe Premium</a><button class="ad-donate" id="donateBtn" data-t="donate">❤️ Donate</button><button id="closeAdBar" class="ad-close" data-t="closeAd">✖ Close</button></div>
+    <div class="ad-bar" id="adBar"><span>🔍 <strong>Lost & Found Pro</strong> - <span data-t="helpUs">Help us continue</span></span><a href="#" id="showPremiumModal" class="ad-link" data-t="premium">⭐ Subscribe Premium</a><button class="ad-donate" id="donateBtn" data-t="donate">❤️ Donate</button><button onclick="shareAppOnWhatsApp()" style="background:#25D366;color:white;border:none;padding:6px 14px;border-radius:40px;font-weight:bold;cursor:pointer;font-size:11px;">📱 Share</button><button id="closeAdBar" class="ad-close" data-t="closeAd">✖ Close</button></div>
 
     <!-- نافذة Premium -->
     <div id="premiumModal" class="modal-overlay" style="display:none;"><div class="modal-box premium-box"><h2 style="color:#f0a500;">⭐ <span data-t="premium">Premium Package</span></h2><ul class="premium-list"><li data-t="unlimitedReports">✅ Unlimited reports</li><li data-t="instantNotifications">✅ Instant match notifications</li><li data-t="topReports">✅ Your reports appear on top</li><li data-t="removeAds">✅ Remove ads</li></ul><p class="premium-price" data-t="subscribeMonthly">$4.99 / month</p><button id="subscribePremiumBtn" class="btn-save" data-t="subscribeNow">Subscribe now (simulated)</button><button class="btn-reset" onclick="document.getElementById('premiumModal').style.display='none'" data-t="close">Close</button></div></div>
@@ -503,10 +504,11 @@ setTimeout(function() {
         <p>💳 Orange Money: <b>+962775388520</b></p>
         <p>👤 EYAD RAJAB MOHAMMAD AL HIAREY</p>
         <br>
+        <button onclick="shareAppOnWhatsApp()" style="background:#25D366;color:white;padding:10px 30px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">📱 Share App on WhatsApp</button>
+        <br><br>
         <button onclick="document.getElementById('aboutPage').classList.add('hidden');document.getElementById('dashboardPage').classList.remove('hidden');" style="padding:10px 30px;background:#1a237e;color:white;border:none;border-radius:8px;cursor:pointer;">Back to Dashboard</button>
     </div>
 </div>
-
 <!-- ========== القائمة السفلية للموبايل ========== -->
 <div class="mobile-bottom-nav" id="mobileNav">
     <div class="nav-items">
