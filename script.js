@@ -4553,7 +4553,27 @@ function navigateTo(page) {
 })();
 // 📱 مشاركة التطبيق عبر واتساب
 function shareAppOnWhatsApp() {
-    var msg = encodeURIComponent('🌍 *Lost & Found Pro*\n\nاعثر على ما فقدته حول العالم!\n\n📝 أبلغ عن مفقود\n✅ أبلغ عن موجود\n🎯 تطابق تلقائي\n🗺️ خريطة مباشرة\n\n🔗 https://lostandfoundpro.vercel.app\n📘 https://web.facebook.com/LostFoundProworldwide');
+    var msg = encodeURIComponent(
+        '🌍 *Lost & Found Pro*\n\n' +
+        'Find what you lost worldwide!\n\n' +
+        '📝 Report Lost Items\n' +
+        '✅ Report Found Items\n' +
+        '🎯 Automatic Matching\n' +
+        '🗺️ Live Global Map\n' +
+        '🔔 Instant Notifications\n\n' +
+        '🔗 https://lostandfoundpro.vercel.app\n' +
+        '📘 https://web.facebook.com/LostFoundProworldwide\n\n' +
+        '---\n\n' +
+        '🌍 *Lost & Found Pro*\n\n' +
+        'اعثر على ما فقدته حول العالم!\n\n' +
+        '📝 الإبلاغ عن المفقودات\n' +
+        '✅ الإبلاغ عن الموجودات\n' +
+        '🎯 التطابق التلقائي\n' +
+        '🗺️ خريطة عالمية مباشرة\n' +
+        '🔔 إشعارات فورية\n\n' +
+        '🔗 https://lostandfoundpro.vercel.app\n' +
+        '📘 https://web.facebook.com/LostFoundProworldwide'
+    );
     window.open('https://wa.me/?text=' + msg, '_blank');
 }
 console.log('✅ All fixes applied');
