@@ -3284,6 +3284,22 @@ document.getElementById('submitRegisterBtn').onclick = function() {
         return;
     }
     
+    // 🆕 Send welcome email immediately after registration
+    if (email.includes('@')) {
+        emailjs.send("service_dv4y1vo", "template_gj5th5f", {
+            to_email: email,
+            name: name,
+            description: 'Hello ' + name + ',\n\nThank you for registering with Lost & Found Pro! 🌍\n\nYour request is now under review and will be approved within 24 hours.\n\nAfter activation you can:\n📝 Report lost items\n✅ Report found items\n🎯 Automatic matching\n🗺️ Live map\n🔔 Instant notifications\n\n🔗 App link: https://lostandfoundpro.vercel.app\n\n---\n\nمرحباً ' + name + '،\n\nشكراً لتسجيلك في Lost & Found Pro! 🌍\n\nطلبك الآن قيد المراجعة وسيتم تفعيله خلال 24 ساعة.\n\nبعد التفعيل يمكنك:\n📝 الإبلاغ عن المفقودات\n✅ الإبلاغ عن الموجودات\n🎯 التطابق التلقائي\n🗺️ الخريطة المباشرة\n🔔 إشعارات فورية\n\n🔗 رابط التطبيق: https://lostandfoundpro.vercel.app',
+            city: 'Worldwide',
+            type: 'New Registration - تسجيل جديد',
+            reply_email: 'eyadrmh@gmail.com'
+        }).then(function() {
+            console.log('✅ Welcome email sent to:', email);
+        }).catch(function(error) {
+            console.log('⚠️ Email error:', error);
+        });
+    }
+    
     firebase.firestore().collection('pendingUsers').add({
         name: name,
         email: email,
