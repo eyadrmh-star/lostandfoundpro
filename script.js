@@ -4399,14 +4399,58 @@ document.getElementById('confirmResetBtn')?.addEventListener('click', async func
 // ========== إشعارات البريد الإلكتروني ==========
 async function sendMatchEmail(userEmail, userName, description, city, type) {
     try {
+        const matchTypeEN = type === 'lost' ? 'Found' : 'Lost';
+        const matchTypeAR = type === 'lost' ? 'موجود' : 'مفقود';
+        
+        const emailBody = `
+🌍 Lost & Found Pro
+━━━━━━━━━━━━━━━━━━━━
+
+Hello ${userName || 'User'},
+
+🎯 A match has been found with your report!
+
+📝 Your report: ${description}
+
+📍 City: ${city}
+
+🔗 Matched with: ${matchTypeEN} report
+
+💡 Open the app to view details and contact the other person:
+
+🔗 https://lostandfoundpro.vercel.app
+
+━━━━━━━━━━━━━━━━━━━━
+
+مرحباً ${userName || 'مستخدم'}،
+
+🎯 تم العثور على تطابق مع بلاغك!
+
+📝 وصف بلاغك: ${description}
+
+📍 المدينة: ${city}
+
+🔗 تطابق مع بلاغ: ${matchTypeAR}
+
+💡 لعرض التفاصيل الكاملة والتواصل مع صاحب البلاغ، يرجى فتح التطبيق:
+
+🔗 https://lostandfoundpro.vercel.app
+
+━━━━━━━━━━━━━━━━━━━━
+🌟 Lost & Found Pro - Find it, Report it, Get it back
+📘 https://web.facebook.com/LostFoundProworldwide
+📱 WhatsApp: +962775388520
+        `.trim();
+
         await emailjs.send("service_dv4y1vo", "template_gj5th5f", {
             to_email: userEmail,
             name: userName || "مستخدم",
-            description: description,
+            description: emailBody,
             city: city,
-            type: type === 'lost' ? 'مفقود' : 'موجود',
+            type: matchTypeAR,
             reply_email: "eyadrmh@gmail.com"
         });
+        
         console.log('✅ تم إرسال إشعار الإيميل إلى:', userEmail);
     } catch (error) {
         console.log('⚠️ خطأ في إرسال الإيميل:', error);
