@@ -1791,6 +1791,7 @@ window.refreshAdminPanel = async function() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:10px;background:#fff3e0;border-radius:12px;flex-wrap:wrap;gap:6px;">
             <span><strong>${r.desc||'No desc'}</strong><br><small>👤 ${r.userEmail||''} | 📍 ${r.city||''} | ${r.type||''}</small></span>
             <div style="display:flex;gap:6px;">
+            <button onclick="window._viewPendingReport('${r.id}')" style="padding:6px 12px;background:#3498db;color:white;border:none;border-radius:5px;cursor:pointer;">👁️ View</button>
                 <button onclick="window._approvePendingReport('${r.id}')" style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:5px;cursor:pointer;">✅ Approve</button>
                 <button onclick="window._deletePendingReport('${r.id}')" style="padding:6px 12px;background:#e74c3c;color:white;border:none;border-radius:5px;cursor:pointer;">🗑️ Delete</button>
             </div>
@@ -4620,4 +4621,35 @@ function shareAppOnWhatsApp() {
     );
     window.open('https://wa.me/?text=' + msg, '_blank');
 }
+window._viewPendingReport = async function(id) {
+    const db = firebase.firestore();
+    const snap = await db.collection('pendingReports').where('id', '==', parseInt(id)).get();
+    if (snap.empty) return alert('Report not found');
+    snap.forEach(doc => {
+        let d = doc.data();
+        let imgs = (d.images||[]).map(i => `<img src="${i}" style="max-width:100%;max-height:200px;border-radius:8px;margin:4px;">`).join('');
+        Swal.fire({
+            title: (d.type==='lost'?'🔴 Lost':'🟢 Found') + ' Report',
+            html: `<div style="text-align:left;line-height:2;">
+                <b>📝 Desc:</b> ${d.desc||'-'}<br>
+                <b>📍 City:</b> ${d.city||'-'}<br>
+                <b>📅 Date:</b> ${d.date||'-'}<br>
+                <b>👤 Reporter:</b> ${d.userEmail||'-'}<br>
+                <b>🏷 Category:</b> ${d.category||'other'}<br>
+                <b>📞 Phone1:</b> ${d.phone1||'-'}<br>
+                <b>📞 Phone2:</b> ${d.phone2||'-'}<br>
+                <b>💰 Reward:</b> ${d.reward?.money?'$'+d.reward.moneyAmount:'No'}<br>
+                ${imgs?`<br><b>📷 Images:</b><br><div style="display:flex;flex-wrap:wrap;gap:6px;">${imgs}</div>`:''}
+            </div>`,
+            width: 600,
+            showCancelButton: true,
+            confirmButtonText: '✅ Approve',
+            cancelButtonText: '🗑️ Delete',
+            showCloseButton: true
+        }).then(res => {
+            if(res.isConfirmed) window._approvePendingReport(id);
+            else if(res.dismiss===Swal.DismissReason.cancel) window._deletePendingReport(id);
+        });
+    });
+};
 console.log('✅ All fixes applied');
