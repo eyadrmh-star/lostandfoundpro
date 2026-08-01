@@ -25,13 +25,15 @@
         .hero p { font-size: 18px; opacity: 0.9; margin-bottom: 20px; }
         .btn-start { background: #f0a500; color: #1a237e; padding: 15px 40px; font-size: 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; transition: all 0.3s; }
         .btn-start:hover { background: #ffc107; transform: scale(1.05); }
-        .stats-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 30px 20px; max-width: 900px; margin: 0 auto; }
+        .stats-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 30px 20px; max-width: 1100px; margin: 0 auto; }
         .stat-box { background: white; border-radius: 16px; padding: 20px; text-align: center; flex: 1; min-width: 130px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .stat-box .num { font-size: 32px; font-weight: bold; color: #1a237e; }
         .stat-box .label { font-size: 14px; color: #666; margin-top: 5px; }
         .stat-box.lost .num { color: #e74c3c; }
         .stat-box.found .num { color: #27ae60; }
         .stat-box.match .num { color: #8e44ad; }
+        .stat-box.visitors { border-top: 3px solid #1a237e; }
+        .stat-box.visitors .num { color: #1a237e; }
         .map-section { max-width: 100%; margin: 0; padding: 0; }
         #landingMap { width: 100%; height: 550px; border-radius: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 50px 20px; max-width: 900px; margin: 0 auto; }
@@ -61,10 +63,12 @@
         <a href="index.html" class="btn-start">🚀 Get Started Free</a>
     </div>
 
+    <!-- ✅ تم تعديل هذا القسم - إضافة بطاقة الزوار -->
     <div class="stats-bar">
         <div class="stat-box lost"><div class="num" id="statLost">...</div><div class="label">📦 Lost Items</div></div>
         <div class="stat-box found"><div class="num" id="statFound">...</div><div class="label">✅ Found Items</div></div>
         <div class="stat-box match"><div class="num" id="statMatch">...</div><div class="label">🎯 Matches Made</div></div>
+        <div class="stat-box visitors"><div class="num" id="statVisitors">...</div><div class="label">👁️ Visitors</div></div>
     </div>
 
     <div class="map-section">
@@ -100,12 +104,25 @@
             .then(function() { console.log('SW Registered'); });
         }
         
+        // ✅ دالة زيادة عداد الزوار
+        async function incrementVisitor() {
+            await db.collection('stats').doc('visitors').set({
+                count: firebase.firestore.FieldValue.increment(1)
+            }, { merge: true });
+        }
+
+        // ✅ تم تعديل هذه الدالة - إضافة جلب عدد الزوار
         async function loadStats() {
             const lostSnap = await db.collection('lostItems').get();
             const foundSnap = await db.collection('foundItems').get();
             document.getElementById('statLost').textContent = lostSnap.size;
             document.getElementById('statFound').textContent = foundSnap.size;
             document.getElementById('statMatch').textContent = Math.min(lostSnap.size, foundSnap.size);
+            
+            // ✅ جلب عدد الزوار
+            const visitorDoc = await db.collection('stats').doc('visitors').get();
+            const count = visitorDoc.exists ? visitorDoc.data().count || 0 : 0;
+            document.getElementById('statVisitors').textContent = count.toLocaleString();
         }
         
         function initMap() {
@@ -139,8 +156,8 @@
 }
 
 const translations = {
-    en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
-    ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
+    en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", statVisitors: "👁️ Visitors", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
+    ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", statVisitors: "👁️ زوار", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
 };
         function changeLang(lang) {
             const t = translations[lang];
@@ -150,6 +167,7 @@ const translations = {
             document.getElementById('statLost').nextElementSibling.textContent = t.statLost;
             document.getElementById('statFound').nextElementSibling.textContent = t.statFound;
             document.getElementById('statMatch').nextElementSibling.textContent = t.statMatch;
+            document.getElementById('statVisitors').nextElementSibling.textContent = t.statVisitors;
             document.querySelectorAll('.step h3')[0].textContent = t.step1Title;
             document.querySelectorAll('.step h3')[1].textContent = t.step2Title;
             document.querySelectorAll('.step h3')[2].textContent = t.step3Title;
@@ -163,7 +181,8 @@ const translations = {
             document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         }
         
-        loadStats();
+        // ✅ تشغيل العداد ثم تحميل الإحصائيات
+        incrementVisitor().then(() => loadStats());
         setTimeout(initMap, 500);
     </script>
 </body>
