@@ -2,6 +2,11 @@
 <!-- © 2025 Lost & Found Worldwide (L&F). All rights reserved. See LICENSE. -->
 <html lang="en" dir="ltr">
 <head>
+    <script>
+      if (window.location.hostname === 'lostandfoundpro.vercel.app') {
+        window.location.replace('https://lostandfoundpro.com' + window.location.pathname);
+      }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Lost & Found Pro - Global Edition</title>
@@ -9,8 +14,8 @@
     <!-- Open Graph - فيسبوك، واتساب، تويتر، لينكدإن -->
     <meta property="og:title" content="Lost & Found Pro - اعثر على ما فقدته">
     <meta property="og:description" content="منصة عالمية للعثور على المفقودات. أبلغ عن مفقود أو موجود وتواصل مع الآخرين.">
-    <meta property="og:image" content="https://yourdomain.com/logo.png">
-    <meta property="og:url" content="https://yourdomain.com">
+    <meta property="og:image" content="https://lostandfoundpro.com/logo.png">
+    <meta property="og:url" content="https://lostandfoundpro.com">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Lost & Found Worldwide (L&F)">
     
@@ -18,12 +23,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Lost & Found Pro">
     <meta name="twitter:description" content="منصة عالمية للعثور على المفقودات">
-    <meta name="twitter:image" content="https://yourdomain.com/logo.png">
-    
-    <link rel="stylesheet" href="style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Lost & Found Pro - Global Edition</title>
+    <meta name="twitter:image" content="https://lostandfoundpro.com/logo.png">
     
     <link rel="stylesheet" href="style.css">
     
@@ -76,7 +76,6 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
         padding: 30px !important;
     }
     
-    /* تصغير أزرار البطاقات */
     .saved-item button,
     .saved-item .btn,
     .saved-item .btn-sm,
@@ -366,7 +365,6 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
     <script>
-    // firebase-config.js
     const firebaseConfig = {
       apiKey: "AIzaSyCeC8-ZrmsBNG4qx-hydqekrrqA29wTz0A",
       authDomain: "lostandfoundpro-9a14d.firebaseapp.com",
@@ -382,13 +380,11 @@ emailjs.init("jtjaVDX_i8iU5UsCY");
 </script>
 
 <script>
-// firebase-auth.js - Google Sign-In
 async function firebaseGoogleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   
   if (window.innerWidth <= 768) {
-    // موبايل - popup
     auth.signInWithPopup(provider).then(function(result) {
       console.log('✅ Google login:', result.user.email);
       document.getElementById('loginPage').classList.add('hidden');
@@ -399,7 +395,6 @@ async function firebaseGoogleLogin() {
       console.error('❌', error.message);
     });
   } else {
-    // كمبيوتر - redirect
     auth.signInWithRedirect(provider);
   }
 }
@@ -422,7 +417,6 @@ auth.getRedirectResult().then(function(result) {
   console.error("Redirect error:", error.message);
 });
 
-// إضافة المستخدم للـ Firebase
 auth.onAuthStateChanged(function(user) {
   console.log('👤 حالة المستخدم:', user ? 'مسجل' : 'غير مسجل');
   
@@ -453,7 +447,6 @@ auth.onAuthStateChanged(function(user) {
 <script src="script.js"></script>
 
 <script>
-// تحميل pendingUsers من Firestore تلقائياً
 setTimeout(function() {
   if (typeof db !== 'undefined' && document.getElementById('pendingUsersList')) {
     db.collection('pendingUsers').get().then(function(snapshot) {
@@ -469,7 +462,6 @@ setTimeout(function() {
 </script>
 
 <script>
-// إظهار صفحة تسجيل الدخول فقط
 (function() {
     var allPages = ['loginPage', 'dashboardPage', 'mainApp', 'notificationsPage', 'profilePage', 'adminPanel', 'adminSettingsPage', 'userDetailsPage'];
     
@@ -533,7 +525,6 @@ setTimeout(function() {
 </div>
 
 <script>
-// تفعيل الخرائط عند الضغط على Add Report
 document.getElementById('dashboardAddReportBtn').addEventListener('click', function() {
     setTimeout(function() {
         if (typeof initLostMap === 'function') initLostMap();
@@ -548,7 +539,6 @@ document.getElementById('nearMeNewBtn')?.addEventListener('click', function() {
     }, 500);
 });
 
-// علامات الخرائط
 setTimeout(function() {
     if (typeof lostSelectMap !== 'undefined' && lostSelectMap) {
         lostSelectMap.off('click');
