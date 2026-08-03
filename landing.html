@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+    <script>
+      if (window.location.hostname === 'lostandfoundpro.vercel.app') {
+        window.location.replace('https://lostandfoundpro.com' + window.location.pathname);
+      }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lost & Found Pro - Global Lost & Found Platform</title>
@@ -9,6 +14,7 @@
     
     <meta property="og:title" content="Lost & Found Pro - Find What You Lost">
     <meta property="og:description" content="Global platform for finding lost items. Report lost or found items and connect with others.">
+    <meta property="og:url" content="https://lostandfoundpro.com/landing.html">
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -63,7 +69,6 @@
         <a href="index.html" class="btn-start">🚀 Get Started Free</a>
     </div>
 
-    <!-- ✅ تم تعديل هذا القسم - إضافة بطاقة الزوار -->
     <div class="stats-bar">
         <div class="stat-box lost"><div class="num" id="statLost">...</div><div class="label">📦 Lost Items</div></div>
         <div class="stat-box found"><div class="num" id="statFound">...</div><div class="label">✅ Found Items</div></div>
@@ -104,14 +109,12 @@
             .then(function() { console.log('SW Registered'); });
         }
         
-        // ✅ دالة زيادة عداد الزوار
         async function incrementVisitor() {
             await db.collection('stats').doc('visitors').set({
                 count: firebase.firestore.FieldValue.increment(1)
             }, { merge: true });
         }
 
-        // ✅ تم تعديل هذه الدالة - إضافة جلب عدد الزوار
         async function loadStats() {
             const lostSnap = await db.collection('lostItems').get();
             const foundSnap = await db.collection('foundItems').get();
@@ -119,7 +122,6 @@
             document.getElementById('statFound').textContent = foundSnap.size;
             document.getElementById('statMatch').textContent = Math.min(lostSnap.size, foundSnap.size);
             
-            // ✅ جلب عدد الزوار
             const visitorDoc = await db.collection('stats').doc('visitors').get();
             const count = visitorDoc.exists ? visitorDoc.data().count || 0 : 0;
             document.getElementById('statVisitors').textContent = count.toLocaleString();
@@ -181,7 +183,6 @@ const translations = {
             document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         }
         
-        // ✅ تشغيل العداد ثم تحميل الإحصائيات
         incrementVisitor().then(() => loadStats());
         setTimeout(initMap, 500);
     </script>
