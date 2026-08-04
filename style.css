@@ -490,22 +490,39 @@ body.rtl-mode .premium-list { text-align: right; }
     background: #1a237e !important;
     color: #fff !important;
 }
+
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
 }
+
 .golden-star {
     animation: pulse 1.5s infinite;
     box-shadow: 0 0 10px #f0a500;
 }
-.saved-item.banned-item { opacity: 0.6; border: 2px dashed #e74c3c; background: #fff5f5; }
-.badge-banned { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+
+.saved-item.banned-item { 
+    opacity: 0.6; 
+    border: 2px dashed #e74c3c; 
+    background: #fff5f5; 
+}
+
+.badge-banned { 
+    background: #e74c3c; 
+    color: white; 
+    padding: 2px 8px; 
+    border-radius: 10px; 
+    font-size: 11px; 
+}
+
 .hidden { display: none !important; }
+
 #dashLost, #dashFound, #dashMatches {
     max-height: 60vh;
     overflow-y: auto;
     padding-right: 8px;
 }
+
 #dashboardMap {
     width: 100% !important;
     height: 250px !important;
@@ -518,6 +535,7 @@ body.rtl-mode .premium-list { text-align: right; }
     visibility: visible !important;
     opacity: 1 !important;
 }
+
 /* ========== القائمة السفلية للموبايل ========== */
 .mobile-bottom-nav {
     display: none;
@@ -574,6 +592,7 @@ body.rtl-mode .premium-list { text-align: right; }
         top: 0;
     }
 }
+
 /* تصغير أزرار البطاقات */
 .saved-item button,
 .saved-item .btn,
