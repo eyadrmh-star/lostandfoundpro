@@ -276,15 +276,195 @@ body.rtl-mode .premium-list { text-align: right; }
 .admin-content { max-width: 1400px; margin: 0 auto; padding: 20px; }
 .admin-stats { display: flex; gap: 20px; flex-wrap: wrap; padding: 16px; background: var(--glass); border-radius: var(--radius); margin-bottom: 20px; font-size: 14px; }
 
-/* ========== تجاوب الجوال ========== */
+/* ================================================
+   ========== تجاوب الجوال - التعديلات النهائية ==========
+   ================================================ */
 @media (max-width: 768px) {
+    /* ====== 1. جعل الإحصائيات (الأرقام) جنب بعض ====== */
+    .stats-cards {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        padding: 4px !important;
+        overflow-x: auto !important;
+    }
+    
+    .stat-card {
+        flex: 1 1 25% !important;
+        min-width: 60px !important;
+        max-width: 25% !important;
+        padding: 8px 4px !important;
+        margin: 0 !important;
+        text-align: center !important;
+        border-radius: 10px !important;
+        box-sizing: border-box !important;
+    }
+    
+    .stat-card .stat-card-icon {
+        font-size: 20px !important;
+    }
+    .stat-card .stat-card-num {
+        font-size: 16px !important;
+    }
+    .stat-card .stat-card-info span:last-child {
+        font-size: 9px !important;
+    }
+    
+    /* ====== 2. جعل شريط التنقل العلوي على نفس السطر ====== */
+    .top-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 10px !important;
+        overflow-x: auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin-top: 36px !important;
+    }
+    
+    .top-nav .nav-brand {
+        font-size: 14px !important;
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+    
+    .top-nav .nav-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        flex: 1 1 auto !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+    
+    .top-nav .nav-actions * {
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        flex: 0 0 auto !important;
+        padding: 4px 8px !important;
+    }
+    
+    .top-nav .nav-user {
+        font-size: 10px !important;
+        margin-right: 4px !important;
+    }
+    
+    /* ====== 3. الأقسام الثلاثة (Lost, Found, Matches) جنب بعض ومتساوية ====== */
+    .reports-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        padding: 4px !important;
+        overflow-x: auto !important;
+        width: 100% !important;
+    }
+    
+    .report-column,
+    #dashLost,
+    #dashFound,
+    #dashMatches {
+        min-width: 33.333% !important;
+        max-width: 33.333% !important;
+        flex: 0 0 33.333% !important;
+        padding: 4px !important;
+        max-height: 55vh !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* ====== 4. البطاقات عرضية (أفقية) وليست طولية ====== */
+    .saved-item {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        padding: 4px 6px !important;
+        margin: 3px 0 !important;
+        gap: 4px !important;
+        min-height: 40px !important;
+        max-height: 55px !important;
+        border-radius: 6px !important;
+        border: 1px solid #ddd !important;
+        background: var(--card, #fff) !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    .saved-item .item-image,
+    .saved-item img {
+        width: 30px !important;
+        height: 30px !important;
+        flex: 0 0 30px !important;
+        border-radius: 4px !important;
+        object-fit: cover !important;
+    }
+    
+    .saved-item .item-title {
+        font-size: 9px !important;
+        font-weight: bold !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex: 1 1 auto !important;
+        min-width: 20px !important;
+    }
+    
+    .saved-item .item-details {
+        font-size: 7px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        flex: 1 1 auto !important;
+        min-width: 15px !important;
+    }
+    
+    .saved-item button,
+    .saved-item .btn {
+        font-size: 7px !important;
+        padding: 2px 5px !important;
+        min-height: 18px !important;
+        border-radius: 8px !important;
+        flex: 0 0 auto !important;
+    }
+    
+    /* ====== 5. العناوين ====== */
+    .column-title {
+        font-size: 11px !important;
+        margin-bottom: 3px !important;
+        padding-bottom: 2px !important;
+    }
+    
+    /* ====== 6. إخفاء القائمة السفلية ====== */
+    .mobile-bottom-nav {
+        display: none !important;
+    }
+    
+    /* ====== 7. منع التمرير الأفقي ====== */
+    body, html {
+        overflow-x: hidden !important;
+        width: 100% !important;
+    }
+    
+    /* ====== 8. ضمان مرونة الحاويات ====== */
+    .container, .dashboard-content, .report-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 4px !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* ====== 9. تعديلات إضافية للجوال ====== */
     .report-container { flex-direction: column; }
     .report-section { min-width: 100%; }
-    .reports-grid { flex-direction: column; }
-    .stats-cards { flex-direction: column; }
     .login-card { padding: 20px 16px; }
-    .top-nav { flex-direction: column; text-align: center; }
-    .nav-actions { justify-content: center; }
     .map-container { height: 250px; }
     .filter-bar { flex-direction: column; }
     #loginPage { flex-direction: column; }
