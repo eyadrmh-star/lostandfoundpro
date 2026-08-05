@@ -4505,49 +4505,6 @@ async function notifyMatchOwner(userEmail, userName, description, city, type) {
     console.log('✅ تم إرسال إشعار + إيميل لصاحب البلاغ');
 }
 
-    
-    // تحديث الأيقونة النشطة
-    document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(function(item) {
-        item.classList.remove('active');
-    });
-    var activeItem = document.querySelector('.mobile-bottom-nav [data-page="' + page + '"]');
-    if (activeItem) activeItem.classList.add('active');
-    
-    // إخفاء القائمة في صفحة تسجيل الدخول
-    var mobileNav = document.getElementById('mobileNav');
-    if (mobileNav) {
-        if (page === 'login') {
-            mobileNav.style.display = 'none';
-        } else {
-            mobileNav.style.display = 'block';
-        }
-    }
-}
-
-// إخفاء القائمة في صفحة تسجيل الدخول
-(function() {
-    var mobileNav = document.getElementById('mobileNav');
-    if (mobileNav) {
-        // إخفاء في البداية
-        mobileNav.style.display = 'none';
-        
-        // مراقبة ظهور Dashboard
-        var observer = new MutationObserver(function() {
-            var loginPage = document.getElementById('loginPage');
-            if (loginPage && !loginPage.classList.contains('hidden')) {
-                mobileNav.style.display = 'none';
-            } else {
-                mobileNav.style.display = 'block';
-            }
-        });
-        
-        var loginPage = document.getElementById('loginPage');
-        if (loginPage) {
-            observer.observe(loginPage, { attributes: true, attributeFilter: ['class'] });
-        }
-    }
-})();
-
 // 📱 مشاركة التطبيق عبر واتساب
 function shareAppOnWhatsApp() {
     var msg = encodeURIComponent(
