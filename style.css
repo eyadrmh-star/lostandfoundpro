@@ -351,3 +351,11 @@ body.rtl-mode .premium-list { text-align: right; }
     padding: 6px 12px !important;
     border-radius: 20px !important;
 }
+@media (max-width: 1200px) {
+  .reports-grid { flex-wrap: nowrap !important; }
+  .report-column { min-width: 280px !important; flex: 1 !important; }
+  .stats-cards { flex-wrap: nowrap !important; }
+  .stat-card { min-width: 120px !important; }
+  .report-container { flex-wrap: nowrap !important; }
+  .top-nav { flex-wrap: nowrap !important; }
+}
