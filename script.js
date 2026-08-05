@@ -440,7 +440,6 @@ function setLang(lang) {
   }
   translatePage();
 }
-
 function getLang() { return currentLang; }
 
 function translatePage() { document.querySelectorAll('[data-t]').forEach(el => { const key = el.getAttribute('data-t'); if (key && t(key)) el.innerText = t(key); }); }
