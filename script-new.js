@@ -621,7 +621,17 @@ async function loadSystemData() {
     setTimeout(() => { initPublicMap(); }, 1000);
 }
 
-function addLog(action, user, details) { activityLogs.unshift({action,user,timestamp:new Date().toISOString(),details}); if(activityLogs.length>200) activityLogs.pop(); }
+async function addLog(action, user, details) {
+    const db = firebase.firestore();
+    await db.collection('activityLogs').add({
+        action: action,
+        user: user,
+        details: details,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    activityLogs.unshift({action,user,timestamp:new Date().toISOString(),details});
+    if(activityLogs.length>200) activityLogs.pop();
+}
 
 // ========== تحديث الواجهات ==========
 function updateAllUI() { updateStats(); renderLists(); updateDashboardMap(); updateDashboardStats(); renderDashboardData(); updateQuickStats(); }
