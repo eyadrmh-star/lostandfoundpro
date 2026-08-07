@@ -734,8 +734,8 @@ function advancedFilterReports() {
     let country = document.getElementById('filterCountryNew2')?.value || '';
 let city = document.getElementById('filterCityNew2')?.value || '';
     
-    let lostItems = document.querySelectorAll('#dashLost .saved-item');
-    let foundItems = document.querySelectorAll('#dashFound .saved-item');
+    let lostItems = document.querySelectorAll('#dashLost > div');
+let foundItems = document.querySelectorAll('#dashFound > div');
     
     function filterItems(items, type) {
         items.forEach(item => {
