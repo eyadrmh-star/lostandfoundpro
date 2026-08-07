@@ -764,9 +764,9 @@ function advancedFilterReports() {
                 matchTime = new Date(itemDate) >= weekAgo;
             }
             
-            // فلتر الدولة والمدينة
-            let matchCountry = !country || itemCountry.includes(country);
-            let matchCity = !city || itemCity.includes(city);
+                        // فلتر الدولة والمدينة
+            let matchCountry = !country || itemCountry.toLowerCase().includes(country.toLowerCase());
+            let matchCity = !city || itemCity.toLowerCase().includes(city.toLowerCase());
             
             item.style.display = (matchSearch && matchCategory && matchTime && matchCountry && matchCity) ? 'flex' : 'none';
         });
