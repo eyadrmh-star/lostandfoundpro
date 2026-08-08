@@ -566,52 +566,20 @@ if ('serviceWorker' in navigator) {
 }
 </script>
     <script>
-setTimeout(function() {
-    var el = document.getElementById('filterCountryNew2');
-    if (el) {
-        el.addEventListener('change', function() {
-            var country = this.value;
-            document.querySelectorAll('#dashLost > div, #dashFound > div').forEach(function(item) {
-                var itemCountry = item.getAttribute('data-country') || '';
-                if (!country || itemCountry.toLowerCase().includes(country.toLowerCase())) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        var el = document.getElementById('filterCountryNew2');
+        if (el) {
+            el.addEventListener('change', function() {
+                var c = this.value.toLowerCase();
+                document.querySelectorAll('#dashLost > div, #dashFound > div').forEach(function(item) {
+                    var ic = (item.getAttribute('data-country') || '').toLowerCase();
+                    item.style.display = (!c || ic.includes(c)) ? 'flex' : 'none';
+                });
             });
-        });
-    }
-}, 3000);
-</script>
-    <script>
-setTimeout(function() {
-    // إضافة الدول إلى الفلتر
-    var sel = document.getElementById('filterCountryNew2');
-    if (sel && typeof geoData !== 'undefined' && sel.options.length <= 1) {
-        geoData.forEach(function(c) {
-            var opt = document.createElement('option');
-            opt.value = c.name;
-            opt.text = c.name;
-            sel.appendChild(opt);
-        });
-    }
-    
-    // ربط حدث التغيير
-    var el = document.getElementById('filterCountryNew2');
-    if (el) {
-        el.addEventListener('change', function() {
-            var country = this.value;
-            document.querySelectorAll('#dashLost > div, #dashFound > div').forEach(function(item) {
-                var itemCountry = item.getAttribute('data-country') || '';
-                if (!country || itemCountry.toLowerCase().includes(country.toLowerCase())) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    }
-}, 3000);
+        }
+    }, 3000);
+});
 </script>
 </body>
     
