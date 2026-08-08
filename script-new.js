@@ -791,6 +791,17 @@ let foundItems = document.querySelectorAll('#dashFound > div');
 document.getElementById('dashboardGlobalSearch')?.addEventListener('keyup', advancedFilterReports);
 document.getElementById('filterCategory')?.addEventListener('change', advancedFilterReports);
 document.getElementById('filterTime')?.addEventListener('change', advancedFilterReports);
+document.getElementById('filterCountryNew2')?.addEventListener('change', function() {
+    var country = this.value;
+    document.querySelectorAll('#dashLost > div, #dashFound > div').forEach(function(item) {
+        var itemCountry = item.getAttribute('data-country') || '';
+        if (!country || itemCountry.toLowerCase().includes(country.toLowerCase())) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
 document.getElementById('filterCountry')?.addEventListener('change', function() {
     advancedFilterReports();
     let country = this.value;
