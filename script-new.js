@@ -3077,14 +3077,6 @@ window.shareMatch = function(lostId, foundId) {
             statsGrid.style.gap = '12px';
         }
 
-        // 2. إخفاء الفلاتر القديمة
-        document.querySelectorAll('#filterCategory, #filterTime, #filterCountry, #filterCity').forEach(function(el) {
-            var parent = el.parentElement;
-            if (parent) parent.style.display = 'none';
-        });
-        document.querySelectorAll('#resetFiltersBtn, #nearMeBtn, #filterRewardBtn, #promoteReportBtn, #refreshDashboardBtn, #dashboardBackupBtn, #dashboardRestoreBtn').forEach(function(el) {
-            el.style.display = 'none';
-        });
 
         // 3. نقل شريط البحث تحت الخريطة وتكبيره
         var searchInput = document.querySelector('#dashboardPage input[placeholder*="Search"]');
