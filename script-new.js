@@ -731,8 +731,8 @@ function advancedFilterReports() {
     let searchTerm = document.getElementById('dashboardGlobalSearch')?.value.toLowerCase() || '';
     let category = document.getElementById('filterCategory')?.value || 'all';
     let timeFilter = document.getElementById('filterTime')?.value || 'all';
-    let country = document.getElementById('filterCountryNew2')?.value || '';
-let city = document.getElementById('filterCityNew2')?.value || '';
+    let country = document.getElementById('filterCountry')?.value || '';
+let city = document.getElementById('filterCity')?.value || '';
     
     let lostItems = document.querySelectorAll('#dashLost > div');
 let foundItems = document.querySelectorAll('#dashFound > div');
