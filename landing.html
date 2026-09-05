@@ -127,124 +127,116 @@
             document.getElementById('statVisitors').textContent = count.toLocaleString();
         }
         
-       function initMap() {
-    // ========== 1. فحص إذا الخريطة موجودة مسبقاً ==========
-    var mapEl = document.getElementById('landingMap');
-    if (!mapEl) return;
-    
-    // إذا الخريطة initialized مسبقاً — نستخدمها
-    if (mapEl._leaflet_map) {
-        window.landingMapInstance = mapEl._leaflet_map;
-        console.log('✅ Map already exists');
-    } else {
-        // إنشاء خريطة جديدة
-        window.landingMapInstance = L.map('landingMap').setView([20, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(window.landingMapInstance);
-        mapEl._leaflet_map = window.landingMapInstance;
-        console.log('✅ Map created fresh');
-    }
-    
-    var map = window.landingMapInstance;
-    
-    // ========== 2. أيقونات ملونة - حجم صغير مع توهج ==========
-    var lostIcon = L.divIcon({
-        className: '',
-        html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:14px;animation:pulse 2s infinite;box-shadow:0 0 12px #e74c3c;">L</div>',
-        iconSize: [30, 30],
-        popupAnchor: [0, -15]
-    });
-    
-    var foundIcon = L.divIcon({
-        className: '',
-        html: '<div style="background:#27ae60;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:14px;animation:pulse 2s infinite;box-shadow:0 0 12px #27ae60;">F</div>',
-        iconSize: [30, 30],
-        popupAnchor: [0, -15]
-    });
-    
-    var rewardIcon = L.divIcon({
-        className: '',
-        html: '<div style="background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:17px;animation:pulse 1s infinite;box-shadow:0 0 16px #f0a500;">$</div>',
-        iconSize: [34, 34],
-        popupAnchor: [0, -17]
-    });
-    
-    // ========== 3. تنظيف العلامات القديمة ==========
-    map.eachLayer(function(layer) {
-        if (layer instanceof L.Marker) map.removeLayer(layer);
-    });
-    
-    // ========== 4. جلب البيانات وعرضها ==========
-    Promise.all([
-        db.collection('lostItems').get(),
-        db.collection('foundItems').get()
-    ]).then(function([lostSnap, foundSnap]) {
-        
-        // ========== البلاغات المفقودة ==========
-        lostSnap.forEach(function(doc) {
-            var d = doc.data();
-            if (d.lat && d.lng) {
-                var icon = d.reward && d.reward.money ? rewardIcon : lostIcon;
-                
-                var imgHTML = (d.images && d.images[0]) ? 
-                    '<div style="text-align:center;"><img src="' + d.images[0] + '" style="max-width:100%;max-height:100px;border-radius:6px;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;"></div>' : '';
-                
-                var rewardHTML = (d.reward && d.reward.money) ? 
-                    '<br><span style="color:#f0a500;font-weight:bold;font-size:16px;">💰 $' + d.reward.moneyAmount + '</span>' : '';
-                
-                var popupContent = '<div style="font-size:14px;line-height:1.5;max-width:280px;padding:8px;">' +
-                    imgHTML +
-                    '<b>🔴 Lost:</b> ' + (d.desc || 'No description') + '<br>' +
-                    '<small style="font-size:12px;">👤 ' + (d.name || 'Unknown') + '<br>' +
-                    '📍 ' + (d.city || 'N/A') + (d.country ? ', ' + d.country : '') + '<br>' +
-                    '📅 ' + (d.date || 'N/A') + '<br>' +
-                    '🏷 ' + (d.category || 'other') + '</small>' +
-                    rewardHTML +
-                    '</div>';
-                
-                L.marker([d.lat, d.lng], {icon: icon})
-                    .addTo(map)
-                    .bindPopup(popupContent, {maxWidth: 300});
+        function initMap() {
+            var mapEl = document.getElementById('landingMap');
+            if (!mapEl) return;
+            
+            if (mapEl._leaflet_map) {
+                window.landingMapInstance = mapEl._leaflet_map;
+            } else {
+                window.landingMapInstance = L.map('landingMap').setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap',
+                    maxZoom: 19
+                }).addTo(window.landingMapInstance);
+                mapEl._leaflet_map = window.landingMapInstance;
             }
-        });
-        
-        // ========== البلاغات الموجودة ==========
-        foundSnap.forEach(function(doc) {
-            var d = doc.data();
-            if (d.lat && d.lng) {
-                var icon = d.reward && d.reward.money ? rewardIcon : foundIcon;
+            
+            var map = window.landingMapInstance;
+            
+            var lostIcon = L.divIcon({
+                className: '',
+                html: '<div style="background:#e74c3c;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:14px;animation:pulse 2s infinite;box-shadow:0 0 12px #e74c3c;">L</div>',
+                iconSize: [30, 30],
+                popupAnchor: [0, -15]
+            });
+            
+            var foundIcon = L.divIcon({
+                className: '',
+                html: '<div style="background:#27ae60;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:14px;animation:pulse 2s infinite;box-shadow:0 0 12px #27ae60;">F</div>',
+                iconSize: [30, 30],
+                popupAnchor: [0, -15]
+            });
+            
+            var rewardIcon = L.divIcon({
+                className: '',
+                html: '<div style="background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:17px;animation:pulse 1s infinite;box-shadow:0 0 16px #f0a500;">$</div>',
+                iconSize: [34, 34],
+                popupAnchor: [0, -17]
+            });
+            
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Marker) map.removeLayer(layer);
+            });
+            
+            Promise.all([
+                db.collection('lostItems').get(),
+                db.collection('foundItems').get()
+            ]).then(function([lostSnap, foundSnap]) {
                 
-                var imgHTML = (d.images && d.images[0]) ? 
-                    '<div style="text-align:center;"><img src="' + d.images[0] + '" style="max-width:100%;max-height:100px;border-radius:6px;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;"></div>' : '';
+                lostSnap.forEach(function(doc) {
+                    var d = doc.data();
+                    if (d.lat && d.lng) {
+                        var icon = d.reward && d.reward.money ? rewardIcon : lostIcon;
+                        
+                        var imgHTML = (d.images && d.images[0]) ? 
+                            '<div style="text-align:center;"><img src="' + d.images[0] + '" style="max-width:100%;max-height:100px;border-radius:6px;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;"></div>' : '';
+                        
+                        var rewardHTML = (d.reward && d.reward.money) ? 
+                            '<br><span style="color:#f0a500;font-weight:bold;font-size:16px;">💰 $' + d.reward.moneyAmount + '</span>' : '';
+                        
+                        var popupContent = '<div style="font-size:14px;line-height:1.5;max-width:280px;padding:8px;">' +
+                            imgHTML +
+                            '<b>🔴 Lost:</b> ' + (d.desc || 'No description') + '<br>' +
+                            '<small style="font-size:12px;">👤 ' + (d.name || 'Unknown') + '<br>' +
+                            '📍 ' + (d.city || 'N/A') + (d.country ? ', ' + d.country : '') + '<br>' +
+                            '📅 ' + (d.date || 'N/A') + '<br>' +
+                            '🏷 ' + (d.category || 'other') + '</small>' +
+                            rewardHTML +
+                            '</div>';
+                        
+                        L.marker([d.lat, d.lng], {icon: icon})
+                            .addTo(map)
+                            .bindPopup(popupContent, {maxWidth: 300});
+                    }
+                });
                 
-                var rewardHTML = (d.reward && d.reward.money) ? 
-                    '<br><span style="color:#f0a500;font-weight:bold;font-size:16px;">💰 $' + d.reward.moneyAmount + '</span>' : '';
+                foundSnap.forEach(function(doc) {
+                    var d = doc.data();
+                    if (d.lat && d.lng) {
+                        var icon = d.reward && d.reward.money ? rewardIcon : foundIcon;
+                        
+                        var imgHTML = (d.images && d.images[0]) ? 
+                            '<div style="text-align:center;"><img src="' + d.images[0] + '" style="max-width:100%;max-height:100px;border-radius:6px;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;"></div>' : '';
+                        
+                        var rewardHTML = (d.reward && d.reward.money) ? 
+                            '<br><span style="color:#f0a500;font-weight:bold;font-size:16px;">💰 $' + d.reward.moneyAmount + '</span>' : '';
+                        
+                        var popupContent = '<div style="font-size:14px;line-height:1.5;max-width:280px;padding:8px;">' +
+                            imgHTML +
+                            '<b>✅ Found:</b> ' + (d.desc || 'No description') + '<br>' +
+                            '<small style="font-size:12px;">👤 ' + (d.name || 'Unknown') + '<br>' +
+                            '📍 ' + (d.city || 'N/A') + (d.country ? ', ' + d.country : '') + '<br>' +
+                            '📅 ' + (d.date || 'N/A') + '<br>' +
+                            '🏷 ' + (d.category || 'other') + '</small>' +
+                            rewardHTML +
+                            '</div>';
+                        
+                        L.marker([d.lat, d.lng], {icon: icon})
+                            .addTo(map)
+                            .bindPopup(popupContent, {maxWidth: 300});
+                    }
+                });
                 
-                var popupContent = '<div style="font-size:14px;line-height:1.5;max-width:280px;padding:8px;">' +
-                    imgHTML +
-                    '<b>✅ Found:</b> ' + (d.desc || 'No description') + '<br>' +
-                    '<small style="font-size:12px;">👤 ' + (d.name || 'Unknown') + '<br>' +
-                    '📍 ' + (d.city || 'N/A') + (d.country ? ', ' + d.country : '') + '<br>' +
-                    '📅 ' + (d.date || 'N/A') + '<br>' +
-                    '🏷 ' + (d.category || 'other') + '</small>' +
-                    rewardHTML +
-                    '</div>';
-                
-                L.marker([d.lat, d.lng], {icon: icon})
-                    .addTo(map)
-                    .bindPopup(popupContent, {maxWidth: 300});
-            }
-        });
-        
-        console.log('✅ All items loaded with small glowing icons + full popups');
-    });
-}
+                console.log('✅ All items loaded with small glowing icons + full popups');
+            });
+        }
 
-const translations = {
-    en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", statVisitors: "👁️ Visitors", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
-    ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", statVisitors: "👁️ زوار", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
-};
+        const translations = {
+            en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", statVisitors: "👁️ Visitors", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
+            ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", statVisitors: "👁️ زوار", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
+        };
+        
         function changeLang(lang) {
             const t = translations[lang];
             document.querySelector('.hero h1').textContent = '🌍 ' + t.heroTitle;
