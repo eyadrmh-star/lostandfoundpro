@@ -171,7 +171,7 @@ const translations = {
             document.documentElement.lang = lang;
             document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         }
-        
+    
         // ✅ تشغيل العداد ثم تحميل الإحصائيات
         incrementVisitor().then(() => loadStats());
         setTimeout(initMap, 500);
