@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found Pro - Global Lost & Found Platform</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a237e">
+    
+    <meta property="og:title" content="Lost & Found Pro - Find What You Lost">
+    <meta property="og:description" content="Global platform for finding lost items. Report lost or found items and connect with others.">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        .hero { background: linear-gradient(135deg, #1a237e, #283593); color: white; text-align: center; padding: 50px 20px 30px; }
+        .hero h1 { font-size: 36px; margin-bottom: 10px; }
+        .hero p { font-size: 18px; opacity: 0.9; margin-bottom: 20px; }
+        .btn-start { background: #f0a500; color: #1a237e; padding: 15px 40px; font-size: 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; transition: all 0.3s; }
+        .btn-start:hover { background: #ffc107; transform: scale(1.05); }
+        .stats-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 30px 20px; max-width: 1100px; margin: 0 auto; }
+        .stat-box { background: white; border-radius: 16px; padding: 20px; text-align: center; flex: 1; min-width: 130px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .stat-box .num { font-size: 32px; font-weight: bold; color: #1a237e; }
+        .stat-box .label { font-size: 14px; color: #666; margin-top: 5px; }
+        .stat-box.lost .num { color: #e74c3c; }
+        .stat-box.found .num { color: #27ae60; }
+        .stat-box.match .num { color: #8e44ad; }
+        .stat-box.visitors { border-top: 3px solid #1a237e; }
+        .stat-box.visitors .num { color: #1a237e; }
+        .map-section { max-width: 100%; margin: 0; padding: 0; }
+        #landingMap { width: 100%; height: 550px; border-radius: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 50px 20px; max-width: 900px; margin: 0 auto; }
+        .step { text-align: center; flex: 1; min-width: 200px; }
+        .step-icon { font-size: 50px; margin-bottom: 15px; }
+        .step h3 { color: #1a237e; margin-bottom: 10px; }
+        .step p { color: #666; }
+        .footer { background: #1a237e; color: white; text-align: center; padding: 30px 20px; margin-top: 0; }
+        .footer a { color: #f0a500; text-decoration: none; margin: 0 10px; }
+        .lang-bar { background: #0d1642; color: white; padding: 8px 20px; text-align: center; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .lang-bar select { padding: 5px 10px; border-radius: 20px; border: 1px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
 
+    <div class="lang-bar">
+        <span>🌍 Lost & Found Pro v3.1</span>
+        <select id="langSelect" onchange="changeLang(this.value)">
+            <option value="en">🇬🇧 English</option>
+            <option value="ar">🇸🇦 العربية</option>
+        </select>
+    </div>
+
+    <div class="hero">
+        <h1>🌍 Lost & Found Pro</h1>
+        <p>The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide</p>
+        <a href="index.html" class="btn-start">🚀 Get Started Free</a>
+    </div>
+
+    <!-- ✅ تم تعديل هذا القسم - إضافة بطاقة الزوار -->
+    <div class="stats-bar">
+        <div class="stat-box lost"><div class="num" id="statLost">...</div><div class="label">📦 Lost Items</div></div>
+        <div class="stat-box found"><div class="num" id="statFound">...</div><div class="label">✅ Found Items</div></div>
+        <div class="stat-box match"><div class="num" id="statMatch">...</div><div class="label">🎯 Matches Made</div></div>
+        <div class="stat-box visitors"><div class="num" id="statVisitors">...</div><div class="label">👁️ Visitors</div></div>
+    </div>
+
+    <div class="map-section">
+        <div id="landingMap"></div>
+    </div>
+
+    <div class="steps">
+        <div class="step"><div class="step-icon">📝</div><h3>1. Report</h3><p>Add a report for lost or found items with description, photos, and videos</p></div>
+        <div class="step"><div class="step-icon">🎯</div><h3>2. Match</h3><p>Our smart system auto-matches reports and notifies you instantly by email</p></div>
+        <div class="step"><div class="step-icon">🤝</div><h3>3. Recover</h3><p>Connect with the other person and recover your lost items safely</p></div>
+    </div>
+
+    <div class="footer">
+        <p>📧 eyadrmh@system.com | 📱 +962775388520</p>
+        <p>© 2025 Lost & Found Worldwide (L&F). All rights reserved.</p>
+        <p><a href="index.html">Login</a> | <a href="privacy.html">Privacy Policy</a></p>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeC8-ZrmsBNG4qx-hydqekrrqA29wTz0A",
+            authDomain: "lostandfoundpro-9a14d.firebaseapp.com",
+            projectId: "lostandfoundpro-9a14d",
+            storageBucket: "lostandfoundpro-9a14d.firebasestorage.app",
+            messagingSenderId: "401878871280",
+            appId: "1:401878871280:web:41dc64b460079664d4e635"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+            .then(function() { console.log('SW Registered'); });
+        }
+        
+        // ✅ دالة زيادة عداد الزوار
+        async function incrementVisitor() {
+            await db.collection('stats').doc('visitors').set({
+                count: firebase.firestore.FieldValue.increment(1)
+            }, { merge: true });
+        }
+
+        // ✅ تم تعديل هذه الدالة - إضافة جلب عدد الزوار
+        async function loadStats() {
+            const lostSnap = await db.collection('lostItems').get();
+            const foundSnap = await db.collection('foundItems').get();
+            document.getElementById('statLost').textContent = lostSnap.size;
+            document.getElementById('statFound').textContent = foundSnap.size;
+            document.getElementById('statMatch').textContent = Math.min(lostSnap.size, foundSnap.size);
+            
+            // ✅ جلب عدد الزوار
+            const visitorDoc = await db.collection('stats').doc('visitors').get();
+            const count = visitorDoc.exists ? visitorDoc.data().count || 0 : 0;
+            document.getElementById('statVisitors').textContent = count.toLocaleString();
+        }
+        
+        function initMap() {
+    var mapEl = document.getElementById('landingMap');
+    if (!mapEl) return;
+    if (mapEl._leaflet_map) {
+        window.landingMapInstance = mapEl._leaflet_map;
+    } else {
+        window.landingMapInstance = L.map('landingMap').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OSM', maxZoom:19}).addTo(window.landingMapInstance);
+        mapEl._leaflet_map = window.landingMapInstance;
+    }
+    var map = window.landingMapInstance;
+    map.eachLayer(function(layer) { if (layer instanceof L.Marker) map.removeLayer(layer); });
+    var lostIcon = L.divIcon({className:'', html:'<div style="background:#e74c3c;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:14px;animation:pulse 2s infinite;box-shadow:0 0 12px #e74c3c;">L</div>', iconSize:[30,30], popupAnchor:[0,-15]});
+    var foundIcon = L.divIcon({className:'', html:'<div style="background:#27ae60;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;font-weight:bold;font-size:14px;animation:pulse 2s infinite;box-shadow:0 0 12px #27ae60;">F</div>', iconSize:[30,30], popupAnchor:[0,-15]});
+    var rewardIcon = L.divIcon({className:'', html:'<div style="background:#f0a500;color:white;border-radius:50%;width:34px;height:34px;text-align:center;line-height:34px;font-weight:bold;font-size:17px;animation:pulse 1s infinite;box-shadow:0 0 16px #f0a500;">$</div>', iconSize:[34,34], popupAnchor:[0,-17]});
+    Promise.all([db.collection('lostItems').get(), db.collection('foundItems').get()]).then(function([lostSnap, foundSnap]) {
+        lostSnap.forEach(function(doc) { var d = doc.data(); if (d.lat && d.lng) { var icon = d.reward && d.reward.money ? rewardIcon : lostIcon; L.marker([d.lat, d.lng], {icon:icon}).addTo(map).bindPopup('<div style="font-size:14px;max-width:280px;padding:8px;">' + (d.images && d.images[0] ? '<img src="'+d.images[0]+'" style="max-width:100%;max-height:100px;border-radius:6px;display:block;margin:0 auto 4px;">' : '') + '<b>🔴 Lost:</b> ' + (d.desc||'') + '<br><small>👤 ' + (d.name||'') + '<br>📍 ' + (d.city||'') + '<br>📅 ' + (d.date||'') + '</small></div>', {maxWidth:300}); }});
+        foundSnap.forEach(function(doc) { var d = doc.data(); if (d.lat && d.lng) { var icon = d.reward && d.reward.money ? rewardIcon : foundIcon; L.marker([d.lat, d.lng], {icon:icon}).addTo(map).bindPopup('<div style="font-size:14px;max-width:280px;padding:8px;">' + (d.images && d.images[0] ? '<img src="'+d.images[0]+'" style="max-width:100%;max-height:100px;border-radius:6px;display:block;margin:0 auto 4px;">' : '') + '<b>✅ Found:</b> ' + (d.desc||'') + '<br><small>👤 ' + (d.name||'') + '<br>📍 ' + (d.city||'') + '<br>📅 ' + (d.date||'') + '</small></div>', {maxWidth:300}); }});
+    });
+}
+
+const translations = {
+    en: { heroTitle: "Lost & Found Pro", heroDesc: "The #1 Global Platform for Finding Lost Items<br>Report what you lost or found and connect with people worldwide", btnStart: "🚀 Get Started Free", statLost: "📦 Lost Items", statFound: "✅ Found Items", statMatch: "🎯 Matches Made", statVisitors: "👁️ Visitors", step1Title: "1. Report", step1Desc: "Add a report for lost or found items with description, photos, and videos", step2Title: "2. Match", step2Desc: "Our smart system auto-matches reports and notifies you instantly by email", step3Title: "3. Recover", step3Desc: "Connect with the other person and recover your lost items safely", footerLogin: "Login", footerPrivacy: "Privacy Policy" },
+    ar: { heroTitle: "Lost & Found Pro", heroDesc: "المنصة العالمية الأولى للعثور على المفقودات<br>أبلغ عن مفقودك أو ما وجدته وتواصل مع الآخرين حول العالم", btnStart: "🚀 ابدأ الآن مجاناً", statLost: "📦 مفقودات", statFound: "✅ موجودات", statMatch: "🎯 تطابقات", statVisitors: "👁️ زوار", step1Title: "1. أبلغ", step1Desc: "أضف بلاغ عن الشيء المفقود أو الموجود مع وصف وصور وفيديو", step2Title: "2. طابق", step2Desc: "نظامنا الذكي يطابق البلاغات تلقائياً وينبهك فوراً بالإيميل", step3Title: "3. استلم", step3Desc: "تواصل مع صاحب البلاغ واستلم ما فقدته بسهولة وأمان", footerLogin: "تسجيل الدخول", footerPrivacy: "سياسة الخصوصية" }
+};
+        function changeLang(lang) {
+            const t = translations[lang];
+            document.querySelector('.hero h1').textContent = '🌍 ' + t.heroTitle;
+            document.querySelector('.hero p').innerHTML = t.heroDesc;
+            document.querySelector('.btn-start').textContent = t.btnStart;
+            document.getElementById('statLost').nextElementSibling.textContent = t.statLost;
+            document.getElementById('statFound').nextElementSibling.textContent = t.statFound;
+            document.getElementById('statMatch').nextElementSibling.textContent = t.statMatch;
+            document.getElementById('statVisitors').nextElementSibling.textContent = t.statVisitors;
+            document.querySelectorAll('.step h3')[0].textContent = t.step1Title;
+            document.querySelectorAll('.step h3')[1].textContent = t.step2Title;
+            document.querySelectorAll('.step h3')[2].textContent = t.step3Title;
+            document.querySelectorAll('.step p')[0].textContent = t.step1Desc;
+            document.querySelectorAll('.step p')[1].textContent = t.step2Desc;
+            document.querySelectorAll('.step p')[2].textContent = t.step3Desc;
+            const footerLinks = document.querySelectorAll('.footer p')[2].querySelectorAll('a');
+            footerLinks[0].textContent = t.footerLogin;
+            footerLinks[1].textContent = t.footerPrivacy;
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+    
+        // ✅ تشغيل العداد ثم تحميل الإحصائيات
+        incrementVisitor().then(() => loadStats());
+        setTimeout(initMap, 500);
+    </script>
+</body>
+</html>
