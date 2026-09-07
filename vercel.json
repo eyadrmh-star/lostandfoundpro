@@ -1,16 +1,5 @@
 {
   "redirects": [
-    { "source": "/", "destination": "/landing.html" },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "lostandfoundpro.vercel.app"
-        }
-      ],
-      "destination": "https://lostandfoundpro.com/:1",
-      "permanent": true
-    }
+    { "source": "/", "destination": "/landing.html" }
   ]
 }
