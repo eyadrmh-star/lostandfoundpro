@@ -3102,6 +3102,7 @@ window.shareMatch = function(lostId, foundId) {
             searchInput.style.width = '100%';
             searchInput.placeholder = '🔍 Search all reports...';
         }
+    }
 
 
     // تطبيق عند التحميل
