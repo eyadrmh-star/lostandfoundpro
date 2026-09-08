@@ -3374,6 +3374,31 @@ window._deletePendingReport = function(id) {
         alert('❌ Error: ' + error.message);
     });
 };
+
+window._deletePendingReport = function(id) {
+    if (!confirm('Delete this report permanently?')) return;
+    var db = firebase.firestore();
+    var numericId = parseInt(id);
+    db.collection('pendingReports').where('id', '==', numericId).get().then(function(snapshot) {
+        if (snapshot.empty) {
+            alert('❌ Report not found');
+            return;
+        }
+        snapshot.forEach(function(doc) {
+            doc.ref.delete().then(function() {
+                var el = document.querySelector('[onclick*="' + id + '"]');
+                if (el) {
+                    var parent = el.closest('div[style*="display:flex;justify-content:space-between"]');
+                    if (parent) parent.remove();
+                }
+                alert('🗑️ Report deleted');
+            });
+        });
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('❌ Error: ' + error.message);
+    });
+};
 // ========================================
 // Login Page Layout - خريطة يسار + فورم يمين
 // ========================================
