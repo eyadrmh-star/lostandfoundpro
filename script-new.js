@@ -828,7 +828,7 @@ async function updateDashboardMap() {
     if (dashboardMap) { dashboardMap.off(); dashboardMap.remove(); dashboardMap = null; }
     if (!document.getElementById('dashboardMap')) return;
     dashboardMap = L.map('dashboardMap').setView([20, 0], 2);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(dashboardMap);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(dashboardMap);
     
     let now = Date.now();
     let weekMs = 7 * 24 * 60 * 60 * 1000;
@@ -2128,7 +2128,7 @@ function initPublicMap() {
         if (!mapEl) return;
         
         publicMap = L.map('publicMap', { zoomControl: false, attributionControl: false }).setView([31.95, 35.9], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(publicMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(publicMap);
 
         // ✨ ضبط ارتفاع الخريطة حسب الفورم
         publicMap.whenReady(function() {
