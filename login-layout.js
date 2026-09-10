@@ -1,6 +1,6 @@
 // login-layout.js
 // تخطيط صفحة تسجيل الدخول + الخريطة + البطاقات
-// © 2025 Lost & Found Worldwide (L&F)
+
 
 window.applyLoginLayout = function() {
     // تعريف db عالمياً
