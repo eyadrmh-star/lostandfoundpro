@@ -4536,5 +4536,4 @@ window._viewPendingReport = async function(id) {
     });
 };
 console.log('✅ All fixes applied');
-}
 });
