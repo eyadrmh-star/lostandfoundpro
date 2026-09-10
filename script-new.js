@@ -3129,7 +3129,7 @@ window.shareMatch = function(lostId, foundId) {
                         console.log('🔍 "' + keyword + '" → Found: ' + found);
         });
     }
-})();
+    
 // ========== صفحة البروفايل ==========
 function openProfile() {
     var u = firebase.auth().currentUser;
