@@ -57,7 +57,7 @@ window.applyLoginLayout = function() {
         if (!existingImg) {
             var personImg = document.createElement('div');
             personImg.className = 'login-person-img';
-            personImg.style.cssText = 'height:300px;width:110%;margin-left:-5%;background-image:url(https://i.postimg.cc/nrHrRZnv/Chat-GPT-Image-May-6-2026-02-11-58-PM.png);background-size:cover;background-position:center 55%;border-radius:15px;margin-bottom:15px;';
+            personImg.style.cssText = 'height:300px;width:110%;margin-left:-5%;background-image:url(login-image.png);background-size:cover;background-position:center 55%;border-radius:15px;margin-bottom:15px;';
             loginCard.insertBefore(personImg, loginCard.firstChild);
         }
     }
