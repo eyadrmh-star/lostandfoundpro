@@ -3,6 +3,11 @@
 // © 2025 Lost & Found Worldwide (L&F)
 
 window.applyLoginLayout = function() {
+    // تعريف db عالمياً
+    if (typeof db !== 'undefined' && !window.db) {
+        window.db = db;
+    }
+    
     // 1. التحقق من وجود صفحة تسجيل الدخول
     var loginPage = document.getElementById('loginPage');
     if (!loginPage) {
@@ -22,12 +27,12 @@ window.applyLoginLayout = function() {
     
     // 3. إظهار صفحة تسجيل الدخول
     loginPage.classList.remove('hidden');
-    loginPage.style.cssText = 'display:flex;flex-direction:row-reverse;min-height:100vh;opacity:1;visibility:visible;';
+    loginPage.style.cssText = 'display:flex;flex-direction:row-reverse;min-height:100vh;opacity:1;visibility:visible;background:#ffffff;';
     
     // 4. تخطيط الخريطة (اليمين)
     var hero = document.querySelector('.login-hero');
     if (hero) {
-        hero.style.cssText = 'flex:1;background:none;background-color:#1a237e;display:block;position:relative;min-height:100vh;';
+        hero.style.cssText = 'flex:1;display:block;position:relative;min-height:100vh;background:#f5f6fa;';
         
         var mapEl = document.getElementById('publicMap');
         if (mapEl && !hero.contains(mapEl)) {
@@ -41,12 +46,12 @@ window.applyLoginLayout = function() {
     // 5. تخطيط الفورم (اليسار)
     var loginContainer = document.querySelector('.login-container');
     if (loginContainer) {
-        loginContainer.style.cssText = 'flex:1;display:flex;align-items:flex-start;justify-content:center;background:#ffffff;padding:20px;overflow-y:auto;';
+        loginContainer.style.cssText = 'flex:1;display:flex;align-items:flex-start;justify-content:center;background:#f5f6fa;padding:20px;overflow-y:auto;';
     }
     
     var loginCard = document.querySelector('.login-card');
     if (loginCard) {
-        loginCard.style.cssText = 'background:white;border-radius:28px;padding:30px;box-shadow:0 25px 60px rgba(0,0,0,0.25);text-align:center;width:100%;max-width:460px;';
+        loginCard.style.cssText = 'background:white;border-radius:28px;padding:30px;box-shadow:0 4px 20px rgba(0,0,0,0.08);text-align:center;width:100%;max-width:460px;';
         
         var existingImg = loginCard.querySelector('.login-person-img');
         if (!existingImg) {
@@ -74,14 +79,20 @@ function initPublicMapLayout() {
     mapEl.innerHTML = '';
     mapEl.classList.remove('leaflet-container', 'leaflet-touch', 'leaflet-fade-anim', 'leaflet-grab', 'leaflet-touch-drag', 'leaflet-touch-zoom');
     
+    var hero = document.querySelector('.login-hero');
+    if (hero) {
+        hero.style.cssText = 'flex:1;display:block;position:relative;min-height:100vh;background:#f5f6fa;';
+    }
+    
+    mapEl.style.cssText = 'width:100%;height:100%;min-height:600px;display:block;position:absolute;top:0;left:0;z-index:1;';
+    
     setTimeout(function() {
         if (!window.L) {
             console.log('⚠️ Leaflet not loaded');
             return;
         }
         if (!window.db) {
-            console.log('⚠️ Firestore not ready');
-            // إعادة المحاولة بعد ثانية
+            console.log('⚠️ Firestore not ready — retry');
             setTimeout(initPublicMapLayout, 1000);
             return;
         }
@@ -116,12 +127,9 @@ function initPublicMapLayout() {
             popupAnchor: [0, -17]
         });
         
-        Promise.all([
-            window.db.collection('lostItems').get(),
-            window.db.collection('foundItems').get()
-        ]).then(function([lostSnap, foundSnap]) {
-            
-            lostSnap.forEach(function(doc) {
+        // جلب البيانات وعرضها
+        window.db.collection('lostItems').get().then(function(snap) {
+            snap.forEach(function(doc) {
                 var d = doc.data();
                 if (d.lat && d.lng) {
                     var icon = d.reward && d.reward.money ? rewardIcon : lostIcon;
@@ -143,8 +151,10 @@ function initPublicMapLayout() {
                             '</div>', {maxWidth: 300});
                 }
             });
-            
-            foundSnap.forEach(function(doc) {
+        });
+        
+        window.db.collection('foundItems').get().then(function(snap) {
+            snap.forEach(function(doc) {
                 var d = doc.data();
                 if (d.lat && d.lng) {
                     var icon = d.reward && d.reward.money ? rewardIcon : foundIcon;
@@ -166,11 +176,9 @@ function initPublicMapLayout() {
                             '</div>', {maxWidth: 300});
                 }
             });
-            
-            console.log('✅ login-layout: الخريطة والبطاقات جاهزة');
-        }).catch(function(err) {
-            console.log('⚠️ login-layout:', err.message);
         });
+        
+        console.log('✅ login-layout: الخريطة والبطاقات جاهزة');
         
     }, 800);
 }
