@@ -1,6 +1,3 @@
-// login-layout.js
-// تخطيط صفحة تسجيل الدخول + الخريطة + البطاقات
-
 
 window.applyLoginLayout = function() {
     // تعريف db عالمياً
