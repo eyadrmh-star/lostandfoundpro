@@ -198,3 +198,36 @@ window.addEventListener('load', function() {
         }
     }, 1500);
 });
+// ========== ربط زر Add New Report ==========
+function bindAddReportButton() {
+    var addBtn = document.getElementById('dashboardAddReportBtn');
+    if (!addBtn) {
+        setTimeout(bindAddReportButton, 500);
+        return;
+    }
+    
+    // إزالة أي listener قديم
+    var newBtn = addBtn.cloneNode(true);
+    addBtn.parentNode.replaceChild(newBtn, addBtn);
+    
+    newBtn.addEventListener('click', function() {
+        var dashPage = document.getElementById('dashboardPage');
+        dashPage.classList.add('hidden');
+        dashPage.style.display = 'none';
+        
+        var mainApp = document.getElementById('mainApp');
+        mainApp.classList.remove('hidden');
+        mainApp.style.display = 'block';
+        
+        if (typeof attachAppEvents === 'function') attachAppEvents();
+        if (typeof initLostMap === 'function') setTimeout(initLostMap, 500);
+        if (typeof initFoundMap === 'function') setTimeout(initFoundMap, 500);
+        
+        console.log('✅ mainApp ظهرت');
+    });
+    
+    console.log('✅ زر Add Report اتربط');
+}
+
+// تشغيل الربط
+setTimeout(bindAddReportButton, 2000);
